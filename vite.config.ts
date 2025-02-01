@@ -29,4 +29,7 @@ export default defineConfig(async () => ({
 			ignored: ["**/src-tauri/**"],
 		},
 	},
+	optimizeDeps: {
+		include: ["solid-markdown > micromark", "solid-markdown > unified"],
+	},
 }));
