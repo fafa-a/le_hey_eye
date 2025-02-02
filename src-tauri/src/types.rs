@@ -44,3 +44,44 @@ pub struct CloudflareError {
     pub code: i32,
     pub message: String,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CloudflareModelTask {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CloudflareModelProperty {
+    pub property_id: String,
+    pub value: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CloudflareModel {
+    pub id: String,
+    pub source: i32,
+    pub name: String,
+    pub description: String,
+    pub task: CloudflareModelTask,
+    pub tags: Vec<String>,
+    pub properties: Vec<CloudflareModelProperty>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CloudflareResultInfo {
+    pub count: i32,
+    pub page: i32,
+    pub per_page: i32,
+    pub total_count: i32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CloudflareModelResponse {
+    pub success: bool,
+    pub result: Vec<CloudflareModel>,
+    pub errors: Vec<CloudflareError>,
+    pub messages: Vec<String>,
+    pub result_info: CloudflareResultInfo,
+}
