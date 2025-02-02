@@ -1,4 +1,5 @@
 import { createSignal } from "solid-js";
+import { invoke } from "@tauri-apps/api/core";
 
 interface CredentialsProps {
 	onClose: () => void;
@@ -8,15 +9,13 @@ export const Credentials = (props: CredentialsProps) => {
 	const [apiToken, setApiToken] = createSignal("");
 	const [accountId, setAccountId] = createSignal("");
 
-	const handleSubmit = () => {
-		// Envoyez les informations d'identification au serveur
-		console.log("API Token:", apiToken());
-		console.log("Account ID:", accountId());
+	const handleSubmit = async () => {
+		await invoke("save_credentials", {
+			accountId: accountId(),
+			apiToken: apiToken(),
+		});
 		props.onClose();
 	};
-
-	//TODO
-	//call save_credentials function
 
 	return (
 		<div class="fixed top-0 left-0 w-full h-full bg-gray-100 bg-opacity-75 flex justify-center items-center">
@@ -46,7 +45,7 @@ export const Credentials = (props: CredentialsProps) => {
 						onInput={(e) => setAccountId(e.currentTarget.value)}
 					/>
 				</div>
-				<div class="flex justify-end">
+				<div class="flex justify-end gap-2">
 					<button
 						type="button"
 						class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition-colors"
@@ -56,7 +55,7 @@ export const Credentials = (props: CredentialsProps) => {
 					</button>
 					<button
 						type="button"
-						class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded ml-4 transition-colors"
+						class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded transition-colors"
 						onClick={props.onClose}
 					>
 						Cancel

@@ -5,7 +5,6 @@ import { Switch, Match } from "solid-js";
 import type { ChatInput, CloudflareResponse } from "../types/cloudflare";
 import { SolidMarkdown } from "solid-markdown";
 import { listen } from "@tauri-apps/api/event";
-import { LazyStore } from "@tauri-apps/plugin-store";
 import { Navigation } from "./components/common/Navigation";
 
 async function generateAIResponse(
@@ -36,11 +35,6 @@ function App() {
 	const [currentStreamedResponse, setCurrentStreamedResponse] =
 		createSignal("");
 
-	const store = new LazyStore("store.json");
-	createEffect(async () => {
-		console.log("Store:", await store.get("some-key"));
-	});
-
 	onMount(() => {
 		const unlisten = listen("stream-response", (event) => {
 			setCurrentStreamedResponse((prev) => (prev + event.payload) as string);
@@ -57,15 +51,6 @@ function App() {
 			return await getAllCloudflareAIModels();
 		},
 	}));
-
-	createEffect(() => {
-		if (models.isSuccess) {
-			console.log("Models:", models.data.result);
-		}
-		if (models.isError) {
-			console.error("Error:", models.error);
-		}
-	});
 
 	const mutation = createMutation(() => ({
 		mutationFn: async (input: ChatInput) => {
