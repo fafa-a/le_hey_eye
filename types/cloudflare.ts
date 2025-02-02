@@ -3,7 +3,7 @@ import type { CloudflareError } from "../src-tauri/bindings/CloudflareError.js";
 import type { CloudflareUsage } from "../src-tauri/bindings/CloudflareUsage.js";
 import type { Message } from "../src-tauri/bindings/Message.js";
 
-export type ChatInput = { messages: Array<Message> };
+export type ChatInput = { messages: Array<Message>; stream: boolean };
 
 export type CloudflareResponse = {
   errors: Array<CloudflareError>;

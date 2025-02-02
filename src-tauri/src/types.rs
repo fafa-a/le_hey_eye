@@ -1,4 +1,7 @@
+use magic_crypt::{new_magic_crypt, MagicCrypt256, MagicCryptTrait};
 use serde::{Deserialize, Serialize};
+use tauri::{Runtime, State};
+use tauri_plugin_store::Store;
 use ts_rs::TS;
 
 #[derive(Debug, Serialize, Deserialize, TS)]
@@ -12,6 +15,7 @@ pub struct Message {
 #[ts(export, export_to = "../../types/cloudflare.ts")]
 pub struct ChatInput {
     pub messages: Vec<Message>,
+    pub stream: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize, TS)]
@@ -84,4 +88,15 @@ pub struct CloudflareModelResponse {
     pub errors: Vec<CloudflareError>,
     pub messages: Vec<String>,
     pub result_info: CloudflareResultInfo,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Credentials {
+    pub account_id: String,
+    pub api_token: String,
+}
+
+pub struct EncryptedStore<R: Runtime> {
+    store: Store<R>,
+    crypto: MagicCrypt256,
 }
