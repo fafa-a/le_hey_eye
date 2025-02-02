@@ -3,9 +3,13 @@ use serde_json::{json, Value};
 use std::env;
 mod types;
 use serde::{Deserialize, Serialize};
-use tauri::Emitter;
+use tauri::{App, Emitter};
 use types::*;
 use futures_util::StreamExt;
+use tauri_plugin_store::StoreExt;
+use tauri::{Runtime, State};
+use magic_crypt::{new_magic_crypt, MagicCryptTrait};
+use std::sync::Mutex;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct StreamResponse {
@@ -161,6 +165,53 @@ async fn get_all_cloudflare_ai_models() -> Result<CloudflareModelResponse, Strin
     Ok(result)
 }
 
+#[tauri::command]
+async fn save_credentials<R: Runtime>(
+    app: tauri::AppHandle<R>,
+    account_id: String,
+    api_token: String,
+) -> Result<(), String> {
+  let store = app.store("credentials.json")
+        .map_err(|e| e.to_string())?;
+
+    let crypto = new_magic_crypt!("your-secret-key", 256); 
+
+    let encrypted_account = crypto.encrypt_str_to_base64(&account_id);
+    let encrypted_token = crypto.encrypt_str_to_base64(&api_token);
+
+    store.set("credentials", json!({
+        "account_id": encrypted_account,
+        "api_token": encrypted_token
+    }));
+
+    Ok(())
+}
+
+#[tauri::command]
+async fn get_credentials<R: Runtime>(
+    app: tauri::AppHandle<R>,
+) -> Result<Credentials, String> {
+  let store = app.store("credentials.json")
+        .map_err(|e| e.to_string())?;
+    let crypto = new_magic_crypt!("your-secret-key", 256);
+
+  let creds = store.get("credentials")
+        .ok_or("No credentials found")?;
+
+
+    let encrypted_account = creds["account_id"].as_str()
+        .ok_or("Invalid account_id format")?;
+    let encrypted_token = creds["api_token"].as_str()
+        .ok_or("Invalid api_token format")?;
+
+    Ok(Credentials {
+        account_id: crypto.decrypt_base64_to_string(encrypted_account)
+            .map_err(|e| e.to_string())?,
+        api_token: crypto.decrypt_base64_to_string(encrypted_token)
+            .map_err(|e| e.to_string())?,
+    })
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -170,6 +221,26 @@ pub fn run() {
             call_cloudflare_api,
             get_all_cloudflare_ai_models
         ])
+            .setup(|app| {
+            // Create a new store or load the existing one
+            // this also put the store in the app's resource table
+            // so your following calls `store` calls (from both rust and js)
+            // will reuse the same store
+            let store = app.store("credentials.json")?;
+
+            // Note that values must be serde_json::Value instances,
+            // otherwise, they will not be compatible with the JavaScript bindings.
+            // store.set("some-key", json!({ "value": 5 }));
+
+            // Get a value from the store.
+            // let value = store.get("some-key").expect("Failed to get value from store");
+            // println!("{}", value); // {"value":5}
+
+            // Remove the store from the resource table
+            // store.close_resource();
+
+            Ok(())
+        })
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
