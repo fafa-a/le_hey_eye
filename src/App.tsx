@@ -62,7 +62,7 @@ function App() {
 
 	const mutation = createMutation(() => ({
 		mutationFn: async (input: any) => {
-			setCurrentStreamedResponse(""); // Réinitialiser la réponse streamée
+			setCurrentStreamedResponse("");
 			const response = await generateAIResponse(input);
 			return response;
 		},
@@ -132,9 +132,9 @@ function App() {
 					)}
 				</div>
 			</div>
-			<div class="border-t border-gray-200 bg-white p-4">
+			<div class="border-t border-gray-200 bg-white p-2">
 				<form class="max-w-4xl mx-auto" onSubmit={handleSubmit}>
-					<div class="flex flex-col gap-4">
+					<div class="flex gap-2">
 						<textarea
 							rows={4}
 							placeholder="Enter a prompt..."
@@ -155,10 +155,7 @@ function App() {
 						>
 							<Switch>
 								<Match when={mutation.isPending}>
-									<div class="flex items-center justify-center gap-2">
-										<div class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-										Génération en cours...
-									</div>
+									<div class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
 								</Match>
 								<Match when={!mutation.isPending}>Send</Match>
 							</Switch>
