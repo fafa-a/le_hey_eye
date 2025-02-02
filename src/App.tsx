@@ -5,6 +5,8 @@ import { Switch, Match } from "solid-js";
 import type { ChatInput, CloudflareResponse } from "../types/cloudflare";
 import { SolidMarkdown } from "solid-markdown";
 import { listen } from "@tauri-apps/api/event";
+import { LazyStore } from "@tauri-apps/plugin-store";
+import { Navigation } from "./components/common/Navigation";
 
 async function generateAIResponse(
 	messages: ChatInput,
@@ -34,6 +36,11 @@ function App() {
 	const [currentStreamedResponse, setCurrentStreamedResponse] =
 		createSignal("");
 
+	const store = new LazyStore("store.json");
+	createEffect(async () => {
+		console.log("Store:", await store.get("some-key"));
+	});
+
 	onMount(() => {
 		const unlisten = listen("stream-response", (event) => {
 			setCurrentStreamedResponse((prev) => (prev + event.payload) as string);
@@ -61,7 +68,7 @@ function App() {
 	});
 
 	const mutation = createMutation(() => ({
-		mutationFn: async (input: any) => {
+		mutationFn: async (input: ChatInput) => {
 			setCurrentStreamedResponse("");
 			const response = await generateAIResponse(input);
 			return response;
@@ -105,6 +112,7 @@ function App() {
 	};
 	return (
 		<main class="flex flex-col h-screen">
+			<Navigation />
 			<div class="flex-1 overflow-y-auto p-4">
 				<div class="space-y-4">
 					<For each={messages().slice(1)}>
