@@ -97,6 +97,11 @@ pub struct Credentials {
 }
 
 pub struct EncryptedStore<R: Runtime> {
-    store: Store<R>,
-    crypto: MagicCrypt256,
+    pub store: Store<R>,
+    pub crypto: MagicCrypt256,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct StreamResponse {
+    pub response: String,
 }

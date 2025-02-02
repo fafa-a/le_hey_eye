@@ -6,10 +6,10 @@ import type { Message } from "../src-tauri/bindings/Message.js";
 export type ChatInput = { messages: Array<Message>; stream: boolean };
 
 export type CloudflareResponse = {
-  errors: Array<CloudflareError>;
-  messages: Array<Message>;
-  result: CloudflareResult;
-  success: boolean;
+	errors: Array<CloudflareError>;
+	messages: Array<Message>;
+	result: CloudflareResult;
+	success: boolean;
 };
 
 export type CloudflareResult = { response: string; usage: CloudflareUsage };
