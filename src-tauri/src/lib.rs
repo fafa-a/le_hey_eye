@@ -88,11 +88,78 @@ async fn call_cloudflare_api(window: tauri::Window,model: String, messages: Valu
     Ok(accumulated_text)
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CloudflareModelTask {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CloudflareModelProperty {
+    pub property_id: String,
+    pub value: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CloudflareModel {
+    pub id: String,
+    pub source: i32,
+    pub name: String,
+    pub description: String,
+    pub task: CloudflareModelTask,
+    pub tags: Vec<String>,
+    pub properties: Vec<CloudflareModelProperty>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CloudflareResultInfo {
+    pub count: i32,
+    pub page: i32,
+    pub per_page: i32,
+    pub total_count: i32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CloudflareResponse {
+    pub success: bool,
+    pub result: Vec<CloudflareModel>,
+    pub errors: Vec<serde_json::Value>,
+    pub messages: Vec<String>,
+    pub result_info: CloudflareResultInfo,
+}
+
+#[tauri::command]
+async fn get_all_cloudflare_ai_models() -> Result<CloudflareResponse, String> {
+    let api_token = env::var("CLOUDFLARE_API_TOKEN")
+        .map_err(|_| "CLOUDFLARE_API_TOKEN not found".to_string())?;
+    println!("get_all_cloudflare_ai_models {}", api_token);
+
+    let account_id = env::var("CLOUDFLARE_ACCOUNT_ID")
+        .map_err(|_| "CLOUDFLARE_ACCOUNT_ID not found".to_string())?;
+
+    let client = reqwest::Client::new();
+    let response = client
+        .get(format!(
+            "https://api.cloudflare.com/client/v4/accounts/{}/ai/models/search",
+            account_id
+        ))
+        .header("Authorization", format!("Bearer {}", api_token))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+    println!("{:?}", response);
+    let result: CloudflareResponse = response.json().await.map_err(|e| e.to_string())?;
+
+    println!("{:?}", result);
+    Ok(result)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![call_cloudflare_api])
+        .invoke_handler(tauri::generate_handler![call_cloudflare_api,get_all_cloudflare_ai_models])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

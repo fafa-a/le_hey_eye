@@ -1,6 +1,6 @@
-import { createSignal, For, onCleanup, onMount } from "solid-js";
+import { createEffect, createSignal, For, onCleanup, onMount } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
-import { createMutation } from "@tanstack/solid-query";
+import { createMutation, createQuery } from "@tanstack/solid-query";
 import { Switch, Match } from "solid-js";
 import type { ChatInput, CloudflareResponse } from "../types/cloudflare";
 import { SolidMarkdown } from "solid-markdown";
@@ -14,6 +14,11 @@ async function generateAIResponse(
 		messages,
 	});
 }
+
+async function getAllCloudflareAIModels(): Promise<string[]> {
+	return await invoke("get_all_cloudflare_ai_models");
+}
+
 const MAX_MESSAGES = 10;
 
 function App() {
@@ -29,7 +34,6 @@ function App() {
 	const [currentStreamedResponse, setCurrentStreamedResponse] =
 		createSignal("");
 
-	// Écouter les événements de streaming
 	onMount(() => {
 		const unlisten = listen("stream-response", (event) => {
 			setCurrentStreamedResponse((prev) => (prev + event.payload) as string);
@@ -38,6 +42,22 @@ function App() {
 		onCleanup(() => {
 			unlisten.then((fn) => fn());
 		});
+	});
+
+	const models = createQuery(() => ({
+		queryKey: ["models"],
+		queryFn: async () => {
+			return await getAllCloudflareAIModels();
+		},
+	}));
+
+	createEffect(() => {
+		if (models.isSuccess) {
+			console.log("Models:", models.data.result);
+		}
+		if (models.isError) {
+			console.error("Error:", models.error);
+		}
 	});
 
 	const mutation = createMutation(() => ({
