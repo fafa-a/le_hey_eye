@@ -1,6 +1,6 @@
 import { createEffect, createSignal, For, onCleanup, onMount } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
-import { createMutation, createQuery } from "@tanstack/solid-query";
+import { createMutation } from "@tanstack/solid-query";
 import { Switch, Match } from "solid-js";
 import type { ChatInput, CloudflareResponse } from "../types/cloudflare";
 import { SolidMarkdown } from "solid-markdown";
@@ -8,22 +8,23 @@ import { listen } from "@tauri-apps/api/event";
 import { Navigation } from "./components/common/Navigation";
 
 async function generateAIResponse(
+	model: string,
 	messages: ChatInput,
 ): Promise<CloudflareResponse> {
+	console.log({ model });
 	return await invoke("call_cloudflare_api", {
-		model: "@cf/meta/llama-3-8b-instruct",
+		model,
 		messages,
 	});
-}
-
-async function getAllCloudflareAIModels(): Promise<string[]> {
-	return await invoke("get_all_cloudflare_ai_models");
 }
 
 const MAX_MESSAGES = 10;
 
 function App() {
 	const [prompt, setPrompt] = createSignal("");
+	const [model, setModel] = createSignal<string>(
+		"@cf/meta/llama-4-8b-instruct",
+	);
 	const [messages, setMessages] = createSignal<
 		Array<{ role: string; content: string }>
 	>([
@@ -45,17 +46,14 @@ function App() {
 		});
 	});
 
-	const models = createQuery(() => ({
-		queryKey: ["models"],
-		queryFn: async () => {
-			return await getAllCloudflareAIModels();
-		},
-	}));
+	createEffect(() => {
+		console.log(model());
+	});
 
 	const mutation = createMutation(() => ({
 		mutationFn: async (input: ChatInput) => {
 			setCurrentStreamedResponse("");
-			const response = await generateAIResponse(input);
+			const response = await generateAIResponse(model(), input);
 			return response;
 		},
 		onSuccess: (data) => {
@@ -97,7 +95,7 @@ function App() {
 	};
 	return (
 		<main class="flex flex-col h-screen">
-			<Navigation />
+			<Navigation setModel={setModel} />
 			<div class="flex-1 overflow-y-auto p-4">
 				<div class="space-y-4">
 					<For each={messages().slice(1)}>

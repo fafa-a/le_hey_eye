@@ -1,1 +1,17 @@
 @import "tailwindcss";
+
+.solid-select-container {
+}
+.solid-select-control {
+}
+solid-select-placeholder {
+}
+.solid-select-input {
+	@apply bg-blue-500 text-white w-full;
+}
+.solid-select-list {
+	@apply max-h-[300px] max-w-[300px] overflow-hidden;
+}
+.solid-select-option {
+	@apply overflow-hidden text-ellipsis;
+}
