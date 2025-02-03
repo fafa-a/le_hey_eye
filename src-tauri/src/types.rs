@@ -49,20 +49,20 @@ pub struct CloudflareError {
     pub message: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, TS)]
 pub struct CloudflareModelTask {
     pub id: String,
     pub name: String,
     pub description: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, TS)]
 pub struct CloudflareModelProperty {
     pub property_id: String,
     pub value: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, TS)]
 pub struct CloudflareModel {
     pub id: String,
     pub source: i32,
@@ -73,7 +73,7 @@ pub struct CloudflareModel {
     pub properties: Vec<CloudflareModelProperty>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, TS)]
 pub struct CloudflareResultInfo {
     pub count: i32,
     pub page: i32,
@@ -81,7 +81,8 @@ pub struct CloudflareResultInfo {
     pub total_count: i32,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/cloudflare.ts")]
 pub struct CloudflareModelResponse {
     pub success: bool,
     pub result: Vec<CloudflareModel>,
@@ -90,7 +91,7 @@ pub struct CloudflareModelResponse {
     pub result_info: CloudflareResultInfo,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, TS)]
 pub struct Credentials {
     pub account_id: String,
     pub api_token: String,
@@ -101,7 +102,7 @@ pub struct EncryptedStore<R: Runtime> {
     pub crypto: MagicCrypt256,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, TS)]
 pub struct StreamResponse {
     pub response: String,
 }

@@ -15,7 +15,11 @@ async fn call_cloudflare_api<R: Runtime>(
     model: String,
     messages: Value,
 ) -> Result<String, String> {
-    let Credentials { account_id, api_token } = get_credentials(app).await?;
+    println!("call_cloudflare_api {}", model);
+    let Credentials {
+        account_id,
+        api_token,
+    } = get_credentials(app).await?;
 
     let mut input_map = messages.as_object().unwrap().clone();
     input_map.insert("stream".to_string(), json!(true));
@@ -72,11 +76,13 @@ async fn call_cloudflare_api<R: Runtime>(
 }
 
 #[tauri::command]
-async fn get_all_cloudflare_ai_models() -> Result<CloudflareModelResponse, String> {
-    let api_token = env::var("CLOUDFLARE_API_TOKEN")
-        .map_err(|_| "CLOUDFLARE_API_TOKEN not found".to_string())?;
-    let account_id = env::var("CLOUDFLARE_ACCOUNT_ID")
-        .map_err(|_| "CLOUDFLARE_ACCOUNT_ID not found".to_string())?;
+async fn get_all_cloudflare_ai_models<R: Runtime>(
+    app: tauri::AppHandle<R>,
+) -> Result<CloudflareModelResponse, String> {
+    let Credentials {
+        account_id,
+        api_token,
+    } = get_credentials(app).await?;
 
     let client = reqwest::Client::new();
     let response = client
