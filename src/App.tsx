@@ -1,17 +1,16 @@
-import { createEffect, createSignal, For, onCleanup, onMount } from "solid-js";
+import { createSignal, For, onCleanup, onMount } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
 import { createMutation } from "@tanstack/solid-query";
-import { Switch, Match } from "solid-js";
 import type { ChatInput, CloudflareResponse } from "../types/cloudflare";
 import { SolidMarkdown } from "solid-markdown";
 import { listen } from "@tauri-apps/api/event";
 import { Navigation } from "./components/common/Navigation";
+import { PromptInput } from "./components/common/PromptInput";
 
 async function generateAIResponse(
 	model: string,
 	messages: ChatInput,
 ): Promise<CloudflareResponse> {
-	console.log({ model });
 	return await invoke("call_cloudflare_api", {
 		model,
 		messages,
@@ -21,9 +20,8 @@ async function generateAIResponse(
 const MAX_MESSAGES = 10;
 
 function App() {
-	const [prompt, setPrompt] = createSignal("");
 	const [model, setModel] = createSignal<string>(
-		"@cf/meta/llama-4-8b-instruct",
+		"@cf/mistral/mistral-7b-instruct-v0.1",
 	);
 	const [messages, setMessages] = createSignal<
 		Array<{ role: string; content: string }>
@@ -44,10 +42,6 @@ function App() {
 		onCleanup(() => {
 			unlisten.then((fn) => fn());
 		});
-	});
-
-	createEffect(() => {
-		console.log(model());
 	});
 
 	const mutation = createMutation(() => ({
@@ -77,12 +71,11 @@ function App() {
 			setCurrentStreamedResponse("");
 		},
 	}));
-	const handleSubmit = (e: Event) => {
-		e.preventDefault();
 
+	const handleSubmit = (prompt: string) => {
 		const userMessage = {
 			role: "user",
-			content: prompt(),
+			content: prompt,
 		};
 		setMessages((prev) => [...prev, userMessage]);
 
@@ -90,8 +83,6 @@ function App() {
 			messages: messages(),
 			stream: true,
 		});
-
-		setPrompt("");
 	};
 	return (
 		<main class="flex flex-col h-screen">
@@ -123,37 +114,11 @@ function App() {
 					)}
 				</div>
 			</div>
-			<div class="border-t border-gray-200 bg-white p-2">
-				<form class="max-w-4xl mx-auto" onSubmit={handleSubmit}>
-					<div class="flex gap-2">
-						<textarea
-							rows={4}
-							placeholder="Enter a prompt..."
-							value={prompt()}
-							class="w-full p-2 border rounded resize-none"
-							onInput={(e) => setPrompt(e.currentTarget.value)}
-							onKeyDown={(e) => {
-								if (e.ctrlKey && e.key === "Enter") {
-									e.preventDefault();
-									e.currentTarget.form?.requestSubmit();
-								}
-							}}
-						/>
-						<button
-							type="submit"
-							disabled={mutation.isPending || !prompt().trim()}
-							class="px-4 py-2 bg-blue-500 text-white rounded disabled:bg-blue-300 hover:bg-blue-600 transition-colors"
-						>
-							<Switch>
-								<Match when={mutation.isPending}>
-									<div class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-								</Match>
-								<Match when={!mutation.isPending}>Send</Match>
-							</Switch>
-						</button>
-					</div>
-				</form>
-			</div>
+			<PromptInput
+				onSubmit={handleSubmit}
+				mutation={mutation}
+				// onSettingsClick={toggleSettings}
+			/>
 		</main>
 	);
 }
