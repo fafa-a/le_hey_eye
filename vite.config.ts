@@ -1,8 +1,13 @@
 import { defineConfig } from "vite";
 import solid from "vite-plugin-solid";
 import tailwindcss from "@tailwindcss/vite";
-// @ts-expect-error process is a nodejs global
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
 const host = process.env.TAURI_DEV_HOST;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
@@ -31,5 +36,12 @@ export default defineConfig(async () => ({
 	},
 	optimizeDeps: {
 		include: ["solid-markdown > micromark", "solid-markdown > unified"],
+	},
+	resolve: {
+		alias: {
+			"@": resolve(__dirname, "./src"),
+			"@components": resolve(__dirname, "./src/components"),
+			"@lib": resolve(__dirname, "./src/libs"),
+		},
 	},
 }));
