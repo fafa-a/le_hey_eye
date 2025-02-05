@@ -4,8 +4,8 @@ import { TextFieldRoot } from "@components/ui/textfield";
 import { createSignal, Switch, Match } from "solid-js";
 import Send from "@components/icons/Send";
 import SettingsAdjust from "@components/icons/SettingsAdjust";
-import { ChatInput, CloudflareResponse } from "../../../types/cloudflare";
-import { CreateMutationResult } from "@tanstack/solid-query";
+import type { ChatInput, CloudflareResponse } from "../../../types/cloudflare";
+import type { CreateMutationResult } from "@tanstack/solid-query";
 
 interface PromptInputProps {
 	onSubmit: (prompt: string) => void;
@@ -29,14 +29,22 @@ export function PromptInput({
 	};
 
 	return (
-		<form class="w-4xl max-w-5xl  mx-auto" onSubmit={handleSubmit}>
-			<div class="flex items-center gap-2 p-2 border rounded resize-none">
-				<TextFieldRoot class="w-full">
+		<form class="w-[95%] mx-auto flex gap-1 p-2" onSubmit={handleSubmit}>
+			<Button
+				type="button"
+				onClick={onSettingsClick}
+				size="sm"
+				class="p-2 hover:bg-gray-100 rounded transition-colors hover:cursor-pointer"
+			>
+				<SettingsAdjust color="black" width="20" height="20" />
+			</Button>
+
+			<div class="flex gap-1 border rounded w-full p-0.5">
+				<TextFieldRoot class="w-full border-none ">
 					<TextArea
-						rows={2}
 						placeholder="Enter a prompt..."
 						value={prompt()}
-						class="w-full border-none shadow-none resize-none"
+						class="w-full border-none shadow-none resize-none focus:border-none focus-visible:ring-0 py-0"
 						onInput={(e) => setPrompt(e.currentTarget.value)}
 						onKeyDown={(
 							e: KeyboardEvent & { currentTarget: HTMLTextAreaElement },
@@ -48,37 +56,26 @@ export function PromptInput({
 						}}
 					/>
 				</TextFieldRoot>
-				<div class="flex flex-col gap-2">
-					<Button
-						type="submit"
-						variant="outline"
-						disabled={mutation.isPending || !prompt().trim()}
-						class="px-4 py-2 bg-purple-400 text-white rounded disabled:bg-purple-300 hover:bg-purple-500 transition-colors"
-					>
-						<Switch>
-							<Match when={mutation.isPending}>
-								<div class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-							</Match>
-							<Match when={!mutation.isPending}>
-								<Send
-									color="black"
-									width="20"
-									height="20"
-									class="hover:cursor-pointer"
-								/>
-							</Match>
-						</Switch>
-					</Button>
-
-					<Button
-						type="button"
-						variant="outline"
-						onClick={onSettingsClick}
-						class="p-2 hover:bg-gray-100 rounded transition-colors hover:cursor-pointer"
-					>
-						<SettingsAdjust color="black" width="20" height="20" />
-					</Button>
-				</div>
+				<Button
+					type="submit"
+					disabled={mutation.isPending || !prompt().trim()}
+					size="sm"
+					class="bg-purple-400 text-white rounded disabled:bg-purple-300 hover:bg-purple-500 transition-colors"
+				>
+					<Switch>
+						<Match when={mutation.isPending}>
+							<div class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+						</Match>
+						<Match when={!mutation.isPending}>
+							<Send
+								color="black"
+								width="20"
+								height="20"
+								class="hover:cursor-pointer"
+							/>
+						</Match>
+					</Switch>
+				</Button>
 			</div>
 		</form>
 	);
