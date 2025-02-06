@@ -7,6 +7,21 @@ import type { Message } from "../src-tauri/bindings/Message.js";
 
 export type ChatInput = { messages: Array<Message>; stream: boolean };
 
+export type ChatRequest = {
+  messages: Array<Message>;
+  functions?: Array<FunctionTool>;
+  tools?: Array<FunctionToolWrapper>;
+  stream: boolean | null;
+  max_tokens: number | null;
+  temperature: number | null;
+  top_p: number | null;
+  top_k: number | null;
+  seed: bigint | null;
+  repetition_penalty: number | null;
+  frequency_penalty: number | null;
+  presence_penalty: number | null;
+};
+
 export type CloudflareModelResponse = {
   success: boolean;
   result: Array<CloudflareModel>;
@@ -23,3 +38,33 @@ export type CloudflareResponse = {
 };
 
 export type CloudflareResult = { response: string; usage: CloudflareUsage };
+
+export type FunctionTool = { name: string; code: string };
+
+export type FunctionToolWrapper = { type: string; function: Tool };
+
+export type PromptSettings = {
+  stream: boolean | null;
+  max_tokens: number | null;
+  temperature: number | null;
+  top_p: number | null;
+  top_k: number | null;
+  seed: bigint | null;
+  repetition_penalty: number | null;
+  frequency_penalty: number | null;
+  presence_penalty: number | null;
+};
+
+export type Tool = {
+  name: string;
+  description: string;
+  parameters: ToolParameters;
+};
+
+export type ToolParameter = { type_field: string; description: string };
+
+export type ToolParameters = {
+  type: string;
+  properties: { [key in string]?: ToolParameter };
+  required: Array<string>;
+};

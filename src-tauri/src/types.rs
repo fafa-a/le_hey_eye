@@ -20,6 +20,71 @@ pub struct ChatInput {
 
 #[derive(Debug, Serialize, Deserialize, TS)]
 #[ts(export, export_to = "../../types/cloudflare.ts")]
+pub struct PromptSettings {
+    pub stream: Option<bool>,
+    pub max_tokens: Option<i32>,
+    pub temperature: Option<f64>,
+    pub top_p: Option<f64>,
+    pub top_k: Option<i32>,
+    pub seed: Option<i64>,
+    pub repetition_penalty: Option<f64>,
+    pub frequency_penalty: Option<f64>,
+    pub presence_penalty: Option<f64>,
+}
+
+#[derive(Debug, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/cloudflare.ts")]
+pub struct FunctionTool {
+    pub name: String,
+    pub code: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/cloudflare.ts")]
+pub struct ToolParameter {
+    pub type_field: String,
+    pub description: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/cloudflare.ts")]
+pub struct ToolParameters {
+    #[serde(rename = "type")]
+    pub type_field: String,
+    pub properties: std::collections::HashMap<String, ToolParameter>,
+    pub required: Vec<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/cloudflare.ts")]
+pub struct Tool {
+    pub name: String,
+    pub description: String,
+    pub parameters: ToolParameters,
+}
+
+#[derive(Debug, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/cloudflare.ts")]
+pub struct FunctionToolWrapper {
+    #[serde(rename = "type")]
+    pub type_field: String,
+    pub function: Tool,
+}
+
+#[derive(Debug, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/cloudflare.ts")]
+pub struct ChatRequest {
+    pub messages: Vec<Message>,
+    #[ts(optional)]
+    pub functions: Option<Vec<FunctionTool>>,
+    #[ts(optional)]
+    pub tools: Option<Vec<FunctionToolWrapper>>,
+    #[serde(flatten)]
+    pub settings: PromptSettings,
+}
+
+#[derive(Debug, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/cloudflare.ts")]
 pub struct CloudflareResponse {
     pub errors: Vec<CloudflareError>,
     pub messages: Vec<Message>,

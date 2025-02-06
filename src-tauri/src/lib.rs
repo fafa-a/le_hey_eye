@@ -13,16 +13,17 @@ async fn call_cloudflare_api<R: Runtime>(
     window: tauri::Window,
     app: tauri::AppHandle<R>,
     model: String,
-    messages: Value,
+    request: ChatRequest
 ) -> Result<String, String> {
-    println!("call_cloudflare_api {}", model);
+    println!("call_cloudflare_api {:?}", request);
+
     let Credentials {
         account_id,
         api_token,
     } = get_credentials(app).await?;
 
-    let mut input_map = messages.as_object().unwrap().clone();
-    input_map.insert("stream".to_string(), json!(true));
+    // let mut input_map = request.as_object().unwrap().clone();
+    // input_map.insert("stream".to_string(), json!(true));
 
     let client = reqwest::Client::new();
     let response = client
@@ -31,11 +32,12 @@ async fn call_cloudflare_api<R: Runtime>(
             account_id, model
         ))
         .header("Authorization", format!("Bearer {}", api_token))
-        .json(&input_map)
+        .json(&request)
         .send()
         .await
         .map_err(|e| e.to_string())?;
 
+    println!("response {:?}", response);
     let mut accumulated_text = String::new();
     let mut buffer = String::new();
 
