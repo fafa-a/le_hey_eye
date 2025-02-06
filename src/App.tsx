@@ -1,7 +1,11 @@
-import { createSignal, For, onCleanup, onMount } from "solid-js";
+import { createSignal, For, onCleanup, onMount, createEffect } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
 import { createMutation } from "@tanstack/solid-query";
-import type { ChatInput, CloudflareResponse } from "../types/cloudflare";
+import type {
+	PromptSettings,
+	ChatRequest,
+	CloudflareResponse,
+} from "../types/cloudflare";
 import { SolidMarkdown } from "solid-markdown";
 import { listen } from "@tauri-apps/api/event";
 import { Navigation } from "./components/common/Navigation";
@@ -10,28 +14,41 @@ import { Sidebar } from "./components/common/Sidebar";
 
 async function generateAIResponse(
 	model: string,
-	messages: ChatInput,
+	request: ChatRequest,
 ): Promise<CloudflareResponse> {
+	console.log("generateAIResponse", model, request);
 	return await invoke("call_cloudflare_api", {
 		model,
-		messages,
+		request,
 	});
 }
-
 const MAX_MESSAGES = 10;
 
 function App() {
 	const [model, setModel] = createSignal<string>(
 		"@cf/mistral/mistral-7b-instruct-v0.1",
 	);
-	const [messages, setMessages] = createSignal<
-		Array<{ role: string; content: string }>
-	>([
-		{
-			role: "system",
-			content: "You are a friendly assistant that helps coding",
-		},
-	]);
+	const [promptSettings, setPromptSettings] = createSignal<PromptSettings>({
+		stream: true,
+		max_tokens: 256,
+		temperature: 0.6,
+		top_p: 0,
+		top_k: 1,
+		seed: BigInt(0),
+		repetition_penalty: 1.1,
+		frequency_penalty: 0.5,
+		presence_penalty: 0.0,
+	});
+
+	const [request, setRequest] = createSignal<ChatRequest>({
+		messages: [
+			{
+				role: "system",
+				content: "You are a helpful assistant.",
+			},
+		],
+		...promptSettings(),
+	});
 	const [currentStreamedResponse, setCurrentStreamedResponse] =
 		createSignal("");
 
@@ -46,28 +63,31 @@ function App() {
 	});
 
 	const mutation = createMutation(() => ({
-		mutationFn: async (input: ChatInput) => {
+		mutationFn: async (request: ChatRequest) => {
 			setCurrentStreamedResponse("");
-			const response = await generateAIResponse(model(), input);
+			const response = await generateAIResponse(model(), request);
 			return response;
 		},
 		onSuccess: (data) => {
-			// setMessages((prev) => [
-			// 	...prev,
-			// 	{
-			// 		role: "assistant",
-			// 		content: currentStreamedResponse(),
-			// 	},
-			// ]);
-			setMessages((prev) => {
-				const newMessages = [
-					...prev,
-					{
-						role: "assistant",
-						content: currentStreamedResponse(),
-					},
-				];
-				return [newMessages[0], ...newMessages.slice(-MAX_MESSAGES)];
+			console.log("data", data);
+			setRequest((prevReq) => {
+				const newRequest = {
+					messages: [
+						...prevReq.messages,
+						{
+							role: "assistant",
+							content: currentStreamedResponse(),
+						},
+					],
+				};
+
+				return {
+					messages: [
+						newRequest.messages[0],
+						...newRequest.messages.slice(-MAX_MESSAGES),
+					],
+					...promptSettings(),
+				};
 			});
 			setCurrentStreamedResponse("");
 		},
@@ -78,13 +98,19 @@ function App() {
 			role: "user",
 			content: prompt,
 		};
-		setMessages((prev) => [...prev, userMessage]);
+		setRequest((prevReq) => ({
+			messages: [...prevReq.messages, userMessage],
+			...promptSettings(),
+		}));
 
 		mutation.mutate({
-			messages: messages(),
-			stream: true,
+			messages: request().messages,
+			...promptSettings(),
 		});
 	};
+	createEffect(() => {
+		console.log("app", model());
+	});
 	return (
 		<main class="flex flex-col h-screen">
 			<Navigation setModel={setModel} />
@@ -93,7 +119,7 @@ function App() {
 				<div class="flex flex-col flex-1">
 					<div class="flex-1 overflow-y-auto p-4">
 						<div class="space-y-4">
-							<For each={messages().slice(1)}>
+							<For each={request().messages.slice(1)}>
 								{(message) => (
 									<div
 										class={`p-4 rounded ${
@@ -122,7 +148,8 @@ function App() {
 						<PromptInput
 							onSubmit={handleSubmit}
 							mutation={mutation}
-							// onSettingsClick={toggleSettings}
+							model={model}
+							setModel={setModel}
 						/>
 					</div>
 				</div>
