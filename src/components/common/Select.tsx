@@ -1,7 +1,7 @@
 import { Select as SolidSelect, createOptions } from "@thisbeyond/solid-select";
 import { createSignal, createEffect } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
-import { createQuery, useQueryClient } from "@tanstack/solid-query";
+import { createQuery } from "@tanstack/solid-query";
 import type { CloudflareModelResponse } from "../../../types/cloudflare";
 
 async function getAllCloudflareAIModels(): Promise<CloudflareModelResponse> {
@@ -59,7 +59,6 @@ export const Select = ({ setModel }: SelectProps) => {
 				onChange={handleChange}
 				placeholder=""
 				autofocus={true}
-				test
 			/>
 			<div class="text-sm mt-2 bg-yellow-500/20 p-3">
 				Value: {JSON.stringify(value())}
