@@ -12,25 +12,29 @@ async function generateAIResponse(
 	model: string,
 	request: ChatRequest,
 ): Promise<StreamResponse> {
-	console.log("Calling API with:", { model, request });
 	try {
 		const response = await invoke("call_cloudflare_api", {
 			model,
 			request,
 		});
-		console.log("API Response:", response);
 		return response as StreamResponse;
 	} catch (error) {
 		console.error("API Error:", error);
 		throw error;
 	}
 }
-const MAX_MESSAGES = 10;
+const MAX_MESSAGES = 4;
 
 function App() {
 	const [model, setModel] = createSignal<string>(
 		"@cf/mistral/mistral-7b-instruct-v0.1",
 	);
+	const [messageHistory, setMessageHistory] = createSignal<Message[]>([
+		{
+			role: "system",
+			content: "You are a helpful assistant.",
+		},
+	]);
 	const [promptSettings, setPromptSettings] = createSignal<
 		Omit<ChatRequest, "messages" | "functions" | "tools" | "lora">
 	>({
@@ -65,6 +69,20 @@ function App() {
 	const [currentStreamedResponse, setCurrentStreamedResponse] =
 		createSignal("");
 
+	const getMessagesForAPI = (
+		messages: Message[],
+		userMessageCount: number,
+	): Message[] => {
+		const systemMessage = messages.find((m) => m.role === "system");
+		if (!systemMessage) return messages;
+
+		const nonSystemMessages = messages.filter((m) => m.role !== "system");
+		const totalMessagesNeeded = userMessageCount * 2;
+		const recentMessages = nonSystemMessages.slice(-totalMessagesNeeded);
+
+		return [systemMessage, ...recentMessages];
+	};
+
 	onMount(() => {
 		const unlisten = listen("stream-response", (event) => {
 			setCurrentStreamedResponse((prev) => (prev + event.payload) as string);
@@ -78,8 +96,9 @@ function App() {
 	const mutation = createMutation(() => ({
 		mutationFn: async (messages: Message[]): Promise<StreamResponse> => {
 			setCurrentStreamedResponse("");
+			const apiMessages = getMessagesForAPI(messages, MAX_MESSAGES);
 			const apiRequest: ChatRequest = {
-				messages,
+				messages: apiMessages,
 				stream: promptSettings().stream,
 				max_tokens: promptSettings().max_tokens,
 				top_p: promptSettings().top_p,
@@ -94,16 +113,15 @@ function App() {
 			return await generateAIResponse(model(), apiRequest);
 		},
 		onSuccess: (data) => {
-			console.log("data", data);
-			setRequest((prevReq: any) => {
+			const newAssistantMessage: Message = {
+				role: "assistant",
+				content: currentStreamedResponse(),
+			};
+
+			setMessageHistory((prev) => [...prev, newAssistantMessage]);
+			setRequest((prevReq: ChatRequest) => {
 				return {
-					messages: [
-						prevReq.messages[0],
-						{
-							role: "assistant",
-							content: currentStreamedResponse(),
-						},
-					],
+					messages: getMessagesForAPI(messageHistory(), MAX_MESSAGES),
 					stream: promptSettings().stream,
 					max_tokens: promptSettings().max_tokens,
 					top_p: promptSettings().top_p,
@@ -124,18 +142,12 @@ function App() {
 			role: "user",
 			content: prompt,
 		};
-		const updatedMessages = [...request().messages, userMessage];
-		setRequest((prevReq) => ({
-			...prevReq,
-			messages: updatedMessages,
-		}));
 
-		mutation.mutate(updatedMessages);
+		const updatedHistory = [...messageHistory(), userMessage];
+		setMessageHistory(updatedHistory);
+
+		mutation.mutate(updatedHistory);
 	};
-
-	createEffect(() => {
-		console.log("app", model());
-	});
 
 	return (
 		<main class="flex flex-col h-screen">
@@ -145,7 +157,7 @@ function App() {
 				<div class="flex flex-col flex-1">
 					<div class="flex-1 overflow-y-auto p-4">
 						<div class="space-y-4">
-							<For each={request().messages.slice(1)}>
+							<For each={messageHistory().slice(1)}>
 								{(message) => (
 									<div
 										class={`p-4 rounded ${
