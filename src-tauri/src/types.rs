@@ -1,13 +1,24 @@
-use magic_crypt::{new_magic_crypt, MagicCrypt256, MagicCryptTrait};
+use magic_crypt::MagicCrypt256;
 use serde::{Deserialize, Serialize};
-use tauri::{Runtime, State};
+use tauri::Runtime;
 use tauri_plugin_store::Store;
 use ts_rs::TS;
 
 #[derive(Debug, Serialize, Deserialize, TS)]
-#[ts(export)]
+#[ts(export, export_to = "../../types/cloudflare.ts")]
+pub enum MessageRole {
+    #[serde(rename = "system")]
+    System,
+    #[serde(rename = "user")]
+    User,
+    #[serde(rename = "assistant")]
+    Assistant,
+}
+
+#[derive(Debug, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/cloudflare.ts")]
 pub struct Message {
-    pub role: String,
+    pub role: MessageRole,
     pub content: String,
 }
 
@@ -26,9 +37,76 @@ pub struct PromptSettings {
     pub temperature: Option<f64>,
     pub top_p: Option<f64>,
     pub top_k: Option<i32>,
-    pub seed: Option<i64>,
+    pub seed: Option<i32>,
     pub repetition_penalty: Option<f64>,
     pub frequency_penalty: Option<f64>,
+    pub presence_penalty: Option<f64>,
+}
+
+#[derive(Debug, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/cloudflare.ts")]
+pub struct PromptRequest {
+    pub prompt: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub raw: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stream: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_tokens: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub temperature: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub top_p: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub top_k: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub seed: Option<i32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub repetition_penalty: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub frequency_penalty: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub presence_penalty: Option<f64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lora: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/cloudflare.ts")]
+pub struct MessagesRequest {
+    pub messages: Vec<Message>,
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub functions: Option<Vec<FunctionTool>>,
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tools: Option<Vec<FunctionToolWrapper>>,
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stream: Option<bool>,
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_tokens: Option<i32>,
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub temperature: Option<f64>,
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub top_p: Option<f64>,
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub top_k: Option<i32>,
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub seed: Option<i32>,
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub repetition_penalty: Option<f64>,
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub frequency_penalty: Option<f64>,
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub presence_penalty: Option<f64>,
 }
 
@@ -76,11 +154,41 @@ pub struct FunctionToolWrapper {
 pub struct ChatRequest {
     pub messages: Vec<Message>,
     #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stream: Option<bool>,
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_tokens: Option<i32>,
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub temperature: Option<f64>,
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub top_p: Option<f64>,
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub top_k: Option<i32>,
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub seed: Option<i32>,
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub repetition_penalty: Option<f64>,
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub frequency_penalty: Option<f64>,
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub presence_penalty: Option<f64>,
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub lora: Option<String>,
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub functions: Option<Vec<FunctionTool>>,
     #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub tools: Option<Vec<FunctionToolWrapper>>,
-    #[serde(flatten)]
-    pub settings: PromptSettings,
 }
 
 #[derive(Debug, Serialize, Deserialize, TS)]
@@ -168,6 +276,7 @@ pub struct EncryptedStore<R: Runtime> {
 }
 
 #[derive(Debug, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/cloudflare.ts")]
 pub struct StreamResponse {
     pub response: String,
 }

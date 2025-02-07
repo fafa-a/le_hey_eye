@@ -1,11 +1,7 @@
 import { createSignal, For, onCleanup, onMount, createEffect } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
 import { createMutation } from "@tanstack/solid-query";
-import type {
-	PromptSettings,
-	ChatRequest,
-	CloudflareResponse,
-} from "../types/cloudflare";
+import type { Message, ChatRequest, StreamResponse } from "../types/cloudflare";
 import { SolidMarkdown } from "solid-markdown";
 import { listen } from "@tauri-apps/api/event";
 import { Navigation } from "./components/common/Navigation";
@@ -15,12 +11,19 @@ import { Sidebar } from "./components/common/Sidebar";
 async function generateAIResponse(
 	model: string,
 	request: ChatRequest,
-): Promise<CloudflareResponse> {
-	console.log("generateAIResponse", model, request);
-	return await invoke("call_cloudflare_api", {
-		model,
-		request,
-	});
+): Promise<StreamResponse> {
+	console.log("Calling API with:", { model, request });
+	try {
+		const response = await invoke("call_cloudflare_api", {
+			model,
+			request,
+		});
+		console.log("API Response:", response);
+		return response as StreamResponse;
+	} catch (error) {
+		console.error("API Error:", error);
+		throw error;
+	}
 }
 const MAX_MESSAGES = 10;
 
@@ -28,13 +31,15 @@ function App() {
 	const [model, setModel] = createSignal<string>(
 		"@cf/mistral/mistral-7b-instruct-v0.1",
 	);
-	const [promptSettings, setPromptSettings] = createSignal<PromptSettings>({
+	const [promptSettings, setPromptSettings] = createSignal<
+		Omit<ChatRequest, "messages" | "functions" | "tools" | "lora">
+	>({
 		stream: true,
 		max_tokens: 256,
 		temperature: 0.6,
-		top_p: 0,
+		top_p: 0.1,
 		top_k: 1,
-		seed: BigInt(0),
+		seed: 1,
 		repetition_penalty: 1.1,
 		frequency_penalty: 0.5,
 		presence_penalty: 0.0,
@@ -47,7 +52,15 @@ function App() {
 				content: "You are a helpful assistant.",
 			},
 		],
-		...promptSettings(),
+		stream: promptSettings().stream,
+		max_tokens: promptSettings().max_tokens,
+		temperature: promptSettings().temperature,
+		top_p: promptSettings().top_p,
+		top_k: promptSettings().top_k,
+		seed: promptSettings().seed,
+		repetition_penalty: promptSettings().repetition_penalty,
+		frequency_penalty: promptSettings().frequency_penalty,
+		presence_penalty: promptSettings().presence_penalty,
 	});
 	const [currentStreamedResponse, setCurrentStreamedResponse] =
 		createSignal("");
@@ -63,30 +76,43 @@ function App() {
 	});
 
 	const mutation = createMutation(() => ({
-		mutationFn: async (request: ChatRequest) => {
+		mutationFn: async (messages: Message[]): Promise<StreamResponse> => {
 			setCurrentStreamedResponse("");
-			const response = await generateAIResponse(model(), request);
-			return response;
+			const apiRequest: ChatRequest = {
+				messages,
+				stream: promptSettings().stream,
+				max_tokens: promptSettings().max_tokens,
+				top_p: promptSettings().top_p,
+				top_k: promptSettings().top_k,
+				seed: promptSettings().seed,
+				repetition_penalty: promptSettings().repetition_penalty,
+				frequency_penalty: promptSettings().frequency_penalty,
+				presence_penalty: promptSettings().presence_penalty,
+				temperature: promptSettings().temperature,
+			};
+
+			return await generateAIResponse(model(), apiRequest);
 		},
 		onSuccess: (data) => {
 			console.log("data", data);
-			setRequest((prevReq) => {
-				const newRequest = {
+			setRequest((prevReq: any) => {
+				return {
 					messages: [
-						...prevReq.messages,
+						prevReq.messages[0],
 						{
 							role: "assistant",
 							content: currentStreamedResponse(),
 						},
 					],
-				};
-
-				return {
-					messages: [
-						newRequest.messages[0],
-						...newRequest.messages.slice(-MAX_MESSAGES),
-					],
-					...promptSettings(),
+					stream: promptSettings().stream,
+					max_tokens: promptSettings().max_tokens,
+					top_p: promptSettings().top_p,
+					top_k: promptSettings().top_k,
+					seed: promptSettings().seed,
+					repetition_penalty: promptSettings().repetition_penalty,
+					frequency_penalty: promptSettings().frequency_penalty,
+					presence_penalty: promptSettings().presence_penalty,
+					temperature: promptSettings().temperature,
 				};
 			});
 			setCurrentStreamedResponse("");
@@ -94,23 +120,23 @@ function App() {
 	}));
 
 	const handleSubmit = (prompt: string) => {
-		const userMessage = {
+		const userMessage: Message = {
 			role: "user",
 			content: prompt,
 		};
+		const updatedMessages = [...request().messages, userMessage];
 		setRequest((prevReq) => ({
-			messages: [...prevReq.messages, userMessage],
-			...promptSettings(),
+			...prevReq,
+			messages: updatedMessages,
 		}));
 
-		mutation.mutate({
-			messages: request().messages,
-			...promptSettings(),
-		});
+		mutation.mutate(updatedMessages);
 	};
+
 	createEffect(() => {
 		console.log("app", model());
 	});
+
 	return (
 		<main class="flex flex-col h-screen">
 			<Navigation setModel={setModel} />

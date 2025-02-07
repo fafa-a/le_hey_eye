@@ -13,8 +13,8 @@ async fn call_cloudflare_api<R: Runtime>(
     window: tauri::Window,
     app: tauri::AppHandle<R>,
     model: String,
-    request: ChatRequest
-) -> Result<String, String> {
+    request: ChatRequest,
+) -> Result<StreamResponse, String> {
     println!("call_cloudflare_api {:?}", request);
 
     let Credentials {
@@ -37,7 +37,12 @@ async fn call_cloudflare_api<R: Runtime>(
         .await
         .map_err(|e| e.to_string())?;
 
-    println!("response {:?}", response);
+    if response.status() == 400 {
+        let error_body = response.text().await.map_err(|e| e.to_string())?;
+        println!("Error response body: {}", error_body);
+        return Err(format!("API Error: {}", error_body));
+    }
+    
     let mut accumulated_text = String::new();
     let mut buffer = String::new();
 
@@ -56,7 +61,9 @@ async fn call_cloudflare_api<R: Runtime>(
 
             if let Some(data) = line.strip_prefix("data: ") {
                 if data == "[DONE]" {
-                    return Ok(accumulated_text);
+                    return Ok(StreamResponse {
+                        response: accumulated_text,
+                    });
                 }
 
                 match serde_json::from_str::<StreamResponse>(data) {
@@ -74,7 +81,9 @@ async fn call_cloudflare_api<R: Runtime>(
         }
     }
 
-    Ok(accumulated_text)
+    Ok(StreamResponse {
+        response: accumulated_text,
+    })
 }
 
 #[tauri::command]
