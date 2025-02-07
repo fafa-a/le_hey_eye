@@ -24,7 +24,7 @@ import {
 } from "../ui/popover";
 import type { PopoverTriggerProps } from "@kobalte/core/popover";
 import { ComboboxModels } from "./ComboboxModels";
-import { Toggle } from "./Toggle";
+import CustomSwitch from "./Switch";
 
 interface PromptInputProps {
 	onSubmit: (prompt: string) => void;
@@ -87,7 +87,7 @@ export function PromptInput({
 							<ComboboxModels setModel={setModel} />
 							<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
 								<TextFieldLabel class="text-right">Stream</TextFieldLabel>
-								<Toggle
+								<CustomSwitch
 									onChange={(value) => {
 										setPromptSettings((prev) => ({
 											...prev,

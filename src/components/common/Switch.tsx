@@ -1,12 +1,12 @@
 import { Switch, SwitchControl, SwitchThumb } from "@/components/ui/switch";
-import { Accessor, createSignal, type Setter } from "solid-js";
+import { createSignal, type Setter } from "solid-js";
 
-interface ToggleProps {
+interface SwitchProps {
 	onChange: Setter<boolean>;
 	value: boolean;
 }
 
-export function Toggle({ onChange, value }: ToggleProps) {
+function CustomSwitch({ onChange, value }: SwitchProps) {
 	const [checked, setChecked] = createSignal(value);
 
 	const handleChange = () => {
@@ -27,3 +27,5 @@ export function Toggle({ onChange, value }: ToggleProps) {
 		</Switch>
 	);
 }
+
+export default CustomSwitch;
