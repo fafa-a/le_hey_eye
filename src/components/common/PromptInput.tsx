@@ -8,10 +8,7 @@ import {
 import { createSignal, Switch, Match, Accessor, Setter } from "solid-js";
 import Send from "@components/icons/Send";
 import SettingsAdjust from "@components/icons/SettingsAdjust";
-import type {
-	ChatRequest,
-	CloudflareResponse,
-} from "../../../types/cloudflare";
+import type { Message, StreamResponse } from "../../../types/cloudflare";
 import type { CreateMutationResult } from "@tanstack/solid-query";
 import {
 	Popover,
@@ -25,12 +22,7 @@ import { ComboboxModels } from "./ComboboxModels";
 
 interface PromptInputProps {
 	onSubmit: (prompt: string) => void;
-	mutation: CreateMutationResult<
-		CloudflareResponse,
-		Error,
-		ChatRequest,
-		unknown
-	>;
+	mutation: CreateMutationResult<StreamResponse, Error, Message[], unknown>;
 	model: Accessor<string>;
 	setModel: Setter<string>;
 }

@@ -6,6 +6,7 @@ import {
 	ComboboxInput,
 } from "@/components/ui/combobox";
 import { createFilter } from "@kobalte/core";
+
 import { createEffect, createSignal, type Setter } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -59,11 +60,15 @@ export function ComboboxModels({ setModel }: ComboboxModelsProps) {
 				<ComboboxItem
 					item={props.item}
 					class="bg-white hover:bg-gray-100 hover:cursor-pointer"
-					onClick={() => setModel(props.item.rawValue)}
 				>
 					{props.item.rawValue}
 				</ComboboxItem>
 			)}
+			onSelect={(e: Event) => {
+				if ((e.target as HTMLSelectElement).value.trim() !== "") {
+					setModel((e.target as HTMLSelectElement).value);
+				}
+			}}
 			class="w-full bg-white"
 		>
 			<ComboboxTrigger>

@@ -44,6 +44,7 @@ export const Select = ({ setModel }: SelectProps) => {
 		);
 	};
 	const handleChange = (value) => {
+		console.log("value", value);
 		setValue(value);
 		setModel(value.name);
 	};
