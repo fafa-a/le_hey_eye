@@ -8,7 +8,12 @@ import {
 import { createSignal, Switch, Match, Accessor, Setter } from "solid-js";
 import Send from "@components/icons/Send";
 import SettingsAdjust from "@components/icons/SettingsAdjust";
-import type { Message, StreamResponse } from "../../../types/cloudflare";
+import type {
+	ChatRequest,
+	Message,
+	PromptSettings,
+	StreamResponse,
+} from "../../../types/cloudflare";
 import type { CreateMutationResult } from "@tanstack/solid-query";
 import {
 	Popover,
@@ -19,12 +24,19 @@ import {
 } from "../ui/popover";
 import type { PopoverTriggerProps } from "@kobalte/core/popover";
 import { ComboboxModels } from "./ComboboxModels";
+import { Toggle } from "./Toggle";
 
 interface PromptInputProps {
 	onSubmit: (prompt: string) => void;
 	mutation: CreateMutationResult<StreamResponse, Error, Message[], unknown>;
 	model: Accessor<string>;
 	setModel: Setter<string>;
+	setPromptSettings: Setter<
+		Omit<ChatRequest, "messages" | "functions" | "tools">
+	>;
+	promptSettings: Accessor<
+		Omit<ChatRequest, "messages" | "functions" | "tools">
+	>;
 }
 
 export function PromptInput({
@@ -32,6 +44,8 @@ export function PromptInput({
 	mutation,
 	model,
 	setModel,
+	setPromptSettings,
+	promptSettings,
 }: PromptInputProps) {
 	const [prompt, setPrompt] = createSignal("");
 
@@ -72,19 +86,57 @@ export function PromptInput({
 						<PopoverDescription class="grid gap-2">
 							<ComboboxModels setModel={setModel} />
 							<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
-								<TextFieldLabel class="text-right">Width</TextFieldLabel>
-								<TextField value="100%" class="col-span-2 h-8" />
+								<TextFieldLabel class="text-right">Stream</TextFieldLabel>
+								<Toggle
+									onChange={(value) => {
+										setPromptSettings((prev) => ({
+											...prev,
+											stream: !!value,
+										}));
+									}}
+									value={promptSettings().stream ?? false}
+								/>
 							</TextFieldRoot>
 							<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
-								<TextFieldLabel class="text-right">Max. width</TextFieldLabel>
-								<TextField value="300px" class="col-span-2 h-8" />
+								<TextFieldLabel class="text-right">Max. tokens</TextFieldLabel>
+								<TextField value="256" class="col-span-2 h-8" />
 							</TextFieldRoot>
 							<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
-								<TextFieldLabel class="text-right">Height</TextFieldLabel>
+								<TextFieldLabel class="text-right">Temperature</TextFieldLabel>
 								<TextField value="25px" class="col-span-2 h-8" />
 							</TextFieldRoot>
 							<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
-								<TextFieldLabel class="text-right">Max. height</TextFieldLabel>
+								<TextFieldLabel class="text-right">Top p</TextFieldLabel>
+								<TextField value="none" class="col-span-2 h-8" />
+							</TextFieldRoot>
+							<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
+								<TextFieldLabel class="text-right">Top k</TextFieldLabel>
+								<TextField value="none" class="col-span-2 h-8" />
+							</TextFieldRoot>
+							<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
+								<TextFieldLabel class="text-right">Seed</TextFieldLabel>
+								<TextField value="none" class="col-span-2 h-8" />
+							</TextFieldRoot>
+							<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
+								<TextFieldLabel class="text-right">
+									Repetition penalty
+								</TextFieldLabel>
+								<TextField value="none" class="col-span-2 h-8" />
+							</TextFieldRoot>
+							<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
+								<TextFieldLabel class="text-right">
+									Frequency penalty
+								</TextFieldLabel>
+								<TextField value="none" class="col-span-2 h-8" />
+							</TextFieldRoot>
+							<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
+								<TextFieldLabel class="text-right">
+									Presence penalty
+								</TextFieldLabel>
+								<TextField value="none" class="col-span-2 h-8" />
+							</TextFieldRoot>
+							<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
+								<TextFieldLabel class="text-right">Lora</TextFieldLabel>
 								<TextField value="none" class="col-span-2 h-8" />
 							</TextFieldRoot>
 						</PopoverDescription>

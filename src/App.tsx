@@ -1,4 +1,4 @@
-import { createSignal, For, onCleanup, onMount, createEffect } from "solid-js";
+import { createEffect, createSignal, For, onCleanup, onMount } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
 import { createMutation } from "@tanstack/solid-query";
 import type { Message, ChatRequest, StreamResponse } from "../types/cloudflare";
@@ -36,7 +36,7 @@ function App() {
 		},
 	]);
 	const [promptSettings, setPromptSettings] = createSignal<
-		Omit<ChatRequest, "messages" | "functions" | "tools" | "lora">
+		Omit<ChatRequest, "messages" | "functions" | "tools">
 	>({
 		stream: true,
 		max_tokens: 256,
@@ -148,7 +148,9 @@ function App() {
 
 		mutation.mutate(updatedHistory);
 	};
-
+	createEffect(() => {
+		console.log("promptSettings", promptSettings());
+	});
 	return (
 		<main class="flex flex-col h-screen">
 			<Navigation setModel={setModel} />
@@ -188,6 +190,8 @@ function App() {
 							mutation={mutation}
 							model={model}
 							setModel={setModel}
+							setPromptSettings={setPromptSettings}
+							promptSettings={promptSettings}
 						/>
 					</div>
 				</div>
