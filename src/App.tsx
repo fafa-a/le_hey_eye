@@ -1,12 +1,13 @@
 import { createEffect, createSignal, For, onCleanup, onMount } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
-import { createMutation } from "@tanstack/solid-query";
+import { createMutation, createQuery } from "@tanstack/solid-query";
 import type { Message, ChatRequest, StreamResponse } from "../types/cloudflare";
 import { SolidMarkdown } from "solid-markdown";
 import { listen } from "@tauri-apps/api/event";
 import { Navigation } from "./components/common/Navigation";
 import { PromptInput } from "./components/common/PromptInput";
 import { Sidebar } from "./components/common/Sidebar";
+import { Button } from "./components/ui/button";
 
 async function generateAIResponse(
 	model: string,
@@ -23,6 +24,19 @@ async function generateAIResponse(
 		throw error;
 	}
 }
+
+async function getCloudflareModelDetails(model: string): Promise<any> {
+	try {
+		const response = await invoke("get_cloudflare_ai_models_details", {
+			model,
+		});
+		return response;
+	} catch (error) {
+		console.error("API Error:", error);
+		throw error;
+	}
+}
+
 const MAX_MESSAGES = 4;
 
 function App() {
@@ -92,6 +106,16 @@ function App() {
 			unlisten.then((fn) => fn());
 		});
 	});
+
+	const details = createQuery<any>(() => ({
+		queryKey: ["details"],
+		queryFn: async () => {
+			return await getCloudflareModelDetails(model());
+		},
+		onSuccess: (data) => {
+			console.log("data", data);
+		},
+	}));
 
 	const mutation = createMutation(() => ({
 		mutationFn: async (messages: Message[]): Promise<StreamResponse> => {
@@ -184,6 +208,7 @@ function App() {
 							)}
 						</div>
 					</div>
+					<Button onClick={() => details.refetch()}>refetch</Button>
 					<div class="flex-shrink-0 pb-2">
 						<PromptInput
 							onSubmit={handleSubmit}

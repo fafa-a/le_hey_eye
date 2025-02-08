@@ -42,7 +42,7 @@ async fn call_cloudflare_api<R: Runtime>(
         println!("Error response body: {}", error_body);
         return Err(format!("API Error: {}", error_body));
     }
-    
+
     let mut accumulated_text = String::new();
     let mut buffer = String::new();
 
@@ -135,6 +135,33 @@ async fn save_credentials<R: Runtime>(
 }
 
 #[tauri::command]
+async fn get_cloudflare_ai_models_details<R: Runtime>(
+    app: tauri::AppHandle<R>,
+    model: String,
+) -> Result<CloudFlareModelDetailsResponse, String> {
+    let Credentials {
+        account_id,
+        api_token,
+    } = get_credentials(app).await?;
+
+    let client = reqwest::Client::new();
+    let response = client
+        .get(format!(
+            "https://api.cloudflare.com/client/v4/accounts/{}/ai/models/schema?model={}",
+            account_id, model
+        ))
+        .header("Authorization", format!("Bearer {}", api_token))
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let result: CloudFlareModelDetailsResponse =
+        response.json().await.map_err(|e| e.to_string())?;
+
+    Ok(result)
+}
+
+#[tauri::command]
 async fn get_credentials<R: Runtime>(app: tauri::AppHandle<R>) -> Result<Credentials, String> {
     let store = app.store("credentials.json").map_err(|e| e.to_string())?;
     let crypto = new_magic_crypt!("magic-key", 256);
@@ -173,7 +200,8 @@ pub fn run() {
             call_cloudflare_api,
             get_all_cloudflare_ai_models,
             save_credentials,
-            get_credentials
+            get_credentials,
+            get_cloudflare_ai_models_details
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

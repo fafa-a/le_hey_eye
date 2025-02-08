@@ -1,5 +1,6 @@
 use magic_crypt::MagicCrypt256;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use tauri::Runtime;
 use tauri_plugin_store::Store;
 use ts_rs::TS;
@@ -279,4 +280,10 @@ pub struct EncryptedStore<R: Runtime> {
 #[ts(export, export_to = "../../types/cloudflare.ts")]
 pub struct StreamResponse {
     pub response: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CloudFlareModelDetailsResponse {
+    pub result: std::collections::HashMap<String, Value>,
+    pub success: bool,
 }
