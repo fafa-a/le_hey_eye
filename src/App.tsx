@@ -8,6 +8,7 @@ import { Navigation } from "./components/common/Navigation";
 import { PromptInput } from "./components/common/PromptInput";
 import { Sidebar } from "./components/common/Sidebar";
 import { Button } from "./components/ui/button";
+import SettingsPopover from "./components/common/SettingsPopover";
 
 async function generateAIResponse(
 	model: string,
@@ -209,7 +210,15 @@ function App() {
 						</div>
 					</div>
 					{/* <Button onClick={() => details.refetch()}>refetch</Button> */}
-					<div class="flex-shrink-0 pb-2">
+					<div class="flex-shrink-0 pb-2 space-y-1">
+						<div class="flex justify-end pr-0.5">
+							<SettingsPopover
+								model={model}
+								setModel={setModel}
+								promptSettings={promptSettings}
+								setPromptSettings={setPromptSettings}
+							/>
+						</div>
 						<PromptInput
 							onSubmit={handleSubmit}
 							mutation={mutation}

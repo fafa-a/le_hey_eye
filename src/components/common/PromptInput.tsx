@@ -44,7 +44,7 @@ export function PromptInput({
 
 	return (
 		<form class="w-full flex" onSubmit={handleSubmit}>
-			<div class="flex gap-1 w-full p-0.5 ">
+			<div class="flex gap-1 w-full p-0.5 hover:inset-shadow-2xs hover:transition-colors duration-2000 ease-in-out">
 				<TextFieldRoot class="w-full border-none ">
 					<TextArea
 						placeholder="Write here..."
@@ -61,29 +61,27 @@ export function PromptInput({
 						}}
 					/>
 				</TextFieldRoot>
-				<div class="flex gap-1">
-					<Button
-						type="submit"
-						disabled={mutation.isPending || !prompt().trim()}
-						// class="w-[30px] bg-purple-200 text-white rounded disabled:bg-purple-100 hover:bg-purple-300 hover:cursor-pointer transition-colors grid place-content-center"
-						class="w-[30px] text-white hover:bg-gray-100 hover:cursor-pointer grid place-content-center"
-					>
-						<Switch>
-							<Match when={mutation.isPending}>
-								<div class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-							</Match>
-							<Match when={!mutation.isPending}>
-								<Send width={20} height={20} class="text-slate-500" />
-							</Match>
-						</Switch>
-					</Button>
-					<SettingsPopover
-						model={model}
-						setModel={setModel}
-						promptSettings={promptSettings}
-						setPromptSettings={setPromptSettings}
-					/>
-				</div>
+				<Button
+					type="submit"
+					disabled={mutation.isPending || !prompt().trim()}
+					// class="w-[30px] bg-purple-200 text-white rounded disabled:bg-purple-100 hover:bg-purple-300 hover:cursor-pointer transition-colors grid place-content-center"
+					class="w-[30px] text-white hover:bg-gray-100 hover:cursor-pointer grid place-items-center"
+				>
+					<Switch>
+						<Match when={mutation.isPending}>
+							<div class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+						</Match>
+						<Match when={!mutation.isPending}>
+							<Send width={20} height={20} class="text-slate-500" />
+						</Match>
+					</Switch>
+				</Button>
+				{/* <SettingsPopover */}
+				{/* 	model={model} */}
+				{/* 	setModel={setModel} */}
+				{/* 	promptSettings={promptSettings} */}
+				{/* 	setPromptSettings={setPromptSettings} */}
+				{/* /> */}
 			</div>
 		</form>
 	);

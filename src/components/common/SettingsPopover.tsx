@@ -39,7 +39,7 @@ const SettingsPopover = ({
 					<Button
 						{...props}
 						type="button"
-						class="p-2 hover:bg-gray-100 rounded transition-colors hover:cursor-pointer"
+						class="w-[30px] text-white hover:bg-gray-100 hover:cursor-pointer grid place-items-center"
 					>
 						<SettingsAdjust class="text-slate-500" width="20" height="20" />
 					</Button>
