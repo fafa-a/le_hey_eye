@@ -25,6 +25,9 @@ import {
 import type { PopoverTriggerProps } from "@kobalte/core/popover";
 import { ComboboxModels } from "./ComboboxModels";
 import CustomSwitch from "./Switch";
+import SliderComponent from "./Slider";
+import { NumberField } from "@components/ui/number-field";
+import CustomNumberField from "./CustomNumberField";
 
 interface PromptInputProps {
 	onSubmit: (prompt: string) => void;
@@ -72,7 +75,7 @@ export function PromptInput({
 						</Button>
 					)}
 				/>
-				<PopoverContent class="w-80 bg-white">
+				<PopoverContent class="w-[450px] bg-white">
 					<div class="grid gap-4">
 						<PopoverTitle class="space-y-2">
 							<h4 class="font-medium leading-none">Chat Settings</h4>
@@ -99,45 +102,156 @@ export function PromptInput({
 							</TextFieldRoot>
 							<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
 								<TextFieldLabel class="text-right">Max. tokens</TextFieldLabel>
-								<TextField value="256" class="col-span-2 h-8" />
+								<div class="col-span-2 h-8">
+									<SliderComponent
+										value={promptSettings().max_tokens ?? 256}
+										onChange={(value) => {
+											setPromptSettings((prev) => ({
+												...prev,
+												max_tokens: +value,
+											}));
+										}}
+										minValue={256}
+										maxValue={8192}
+									/>
+								</div>
 							</TextFieldRoot>
 							<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
 								<TextFieldLabel class="text-right">Temperature</TextFieldLabel>
-								<TextField value="25px" class="col-span-2 h-8" />
+								<div class="col-span-2 h-8">
+									<SliderComponent
+										value={promptSettings().temperature ?? 0.6}
+										onChange={(value) => {
+											setPromptSettings((prev) => ({
+												...prev,
+												temperature: +value,
+											}));
+										}}
+										minValue={0.6}
+										maxValue={5}
+										step={0.1}
+									/>
+								</div>
 							</TextFieldRoot>
 							<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
 								<TextFieldLabel class="text-right">Top p</TextFieldLabel>
-								<TextField value="none" class="col-span-2 h-8" />
+								<div class="col-span-2 h-8">
+									<SliderComponent
+										value={promptSettings().top_p ?? 0.1}
+										onChange={(value) => {
+											setPromptSettings((prev) => ({
+												...prev,
+												top_p: +value,
+											}));
+										}}
+										minValue={0}
+										maxValue={2}
+										step={0.1}
+									/>
+								</div>
 							</TextFieldRoot>
 							<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
 								<TextFieldLabel class="text-right">Top k</TextFieldLabel>
-								<TextField value="none" class="col-span-2 h-8" />
+								<div class="col-span-2 h-8">
+									<SliderComponent
+										value={promptSettings().top_k ?? 1}
+										onChange={(value) => {
+											setPromptSettings((prev) => ({
+												...prev,
+												top_k: +value,
+											}));
+										}}
+										minValue={1}
+										maxValue={50}
+									/>
+								</div>
 							</TextFieldRoot>
 							<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
 								<TextFieldLabel class="text-right">Seed</TextFieldLabel>
-								<TextField value="none" class="col-span-2 h-8" />
+								<div class="col-span-2 h-8">
+									<SliderComponent
+										value={promptSettings().seed ?? 1}
+										onChange={(value) => {
+											setPromptSettings((prev) => ({
+												...prev,
+												seed: +value,
+											}));
+										}}
+										minValue={1}
+										maxValue={9999999999}
+										step={10}
+									/>
+								</div>
 							</TextFieldRoot>
 							<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
 								<TextFieldLabel class="text-right">
 									Repetition penalty
 								</TextFieldLabel>
-								<TextField value="none" class="col-span-2 h-8" />
+								<div class="col-span-2 h-8">
+									<SliderComponent
+										value={promptSettings().repetition_penalty ?? 0}
+										onChange={(value) => {
+											setPromptSettings((prev) => ({
+												...prev,
+												repetition_penalty: +value,
+											}));
+										}}
+										minValue={0}
+										maxValue={2}
+										step={0.1}
+									/>
+								</div>
 							</TextFieldRoot>
 							<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
 								<TextFieldLabel class="text-right">
 									Frequency penalty
 								</TextFieldLabel>
-								<TextField value="none" class="col-span-2 h-8" />
+								<div class="col-span-2 h-8">
+									<SliderComponent
+										value={promptSettings().frequency_penalty ?? 0}
+										onChange={(value) => {
+											setPromptSettings((prev) => ({
+												...prev,
+												frequency_penalty: +value,
+											}));
+										}}
+										minValue={0}
+										maxValue={2}
+										step={0.1}
+									/>
+								</div>{" "}
 							</TextFieldRoot>
 							<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
 								<TextFieldLabel class="text-right">
 									Presence penalty
 								</TextFieldLabel>
-								<TextField value="none" class="col-span-2 h-8" />
+								<div class="col-span-2 h-8">
+									<SliderComponent
+										value={promptSettings().presence_penalty ?? 0}
+										onChange={(value) => {
+											setPromptSettings((prev) => ({
+												...prev,
+												presence_penalty: +value,
+											}));
+										}}
+										minValue={0}
+										maxValue={2}
+										step={0.1}
+									/>
+								</div>
 							</TextFieldRoot>
 							<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
 								<TextFieldLabel class="text-right">Lora</TextFieldLabel>
-								<TextField value="none" class="col-span-2 h-8" />
+								<TextField
+									value={promptSettings().lora ?? ""}
+									class="col-span-2 h-8"
+									onInput={(e) =>
+										setPromptSettings((prev) => ({
+											...prev,
+											lora: e.currentTarget.value,
+										}))
+									}
+								/>
 							</TextFieldRoot>
 						</PopoverDescription>
 					</div>
