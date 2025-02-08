@@ -15,7 +15,7 @@ export function Sidebar() {
         transition-all
         duration-300
         ease-in-out
-        border-r
+        shadow-md
         ${isCollapsed() ? "w-[60px]" : "w-[20%] max-w-[300px] min-w-[200px]"}
       `}
 		>

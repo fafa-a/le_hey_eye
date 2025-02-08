@@ -177,7 +177,7 @@ function App() {
 	});
 	return (
 		<main class="flex flex-col h-screen">
-			<Navigation setModel={setModel} />
+			{/* <Navigation setModel={setModel} /> */}
 			<div class="flex-1 flex">
 				<Sidebar />
 				<div class="flex flex-col flex-1">
@@ -208,7 +208,7 @@ function App() {
 							)}
 						</div>
 					</div>
-					<Button onClick={() => details.refetch()}>refetch</Button>
+					{/* <Button onClick={() => details.refetch()}>refetch</Button> */}
 					<div class="flex-shrink-0 pb-2">
 						<PromptInput
 							onSubmit={handleSubmit}
