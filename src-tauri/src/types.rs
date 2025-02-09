@@ -21,6 +21,9 @@ pub enum MessageRole {
 pub struct Message {
     pub role: MessageRole,
     pub content: String,
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tokens_used: Option<u32>,
 }
 
 #[derive(Debug, Serialize, Deserialize, TS)]
@@ -208,7 +211,7 @@ pub struct CloudflareResult {
     pub usage: CloudflareUsage,
 }
 
-#[derive(Debug, Serialize, Deserialize, TS)]
+#[derive(Debug, Serialize, Deserialize, TS, Clone)]
 #[ts(export)]
 pub struct CloudflareUsage {
     pub completion_tokens: i32,
@@ -280,6 +283,7 @@ pub struct EncryptedStore<R: Runtime> {
 #[ts(export, export_to = "../../types/cloudflare.ts")]
 pub struct StreamResponse {
     pub response: String,
+    pub usage: Option<CloudflareUsage>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

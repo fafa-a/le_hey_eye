@@ -9,6 +9,7 @@ import { PromptInput } from "./components/common/PromptInput";
 import { Sidebar } from "./components/common/Sidebar";
 import { Button } from "./components/ui/button";
 import SettingsPopover from "./components/common/SettingsPopover";
+import ChatMessage from "./components/common/ChatMessage";
 
 async function generateAIResponse(
 	model: string,
@@ -114,7 +115,7 @@ function App() {
 			return await getCloudflareModelDetails(model());
 		},
 		onSuccess: (data) => {
-			console.log("data", data);
+			console.log("details: ", data);
 		},
 	}));
 
@@ -138,9 +139,13 @@ function App() {
 			return await generateAIResponse(model(), apiRequest);
 		},
 		onSuccess: (data) => {
+			if ("usage" in data) {
+				console.log("data.usage :", data.usage);
+			}
 			const newAssistantMessage: Message = {
 				role: "assistant",
 				content: currentStreamedResponse(),
+				tokens_used: data.usage?.total_tokens,
 			};
 
 			setMessageHistory((prev) => [...prev, newAssistantMessage]);
@@ -173,9 +178,7 @@ function App() {
 
 		mutation.mutate(updatedHistory);
 	};
-	createEffect(() => {
-		console.log("promptSettings", promptSettings());
-	});
+
 	return (
 		<main class="flex flex-col h-screen">
 			{/* <Navigation setModel={setModel} /> */}
@@ -185,26 +188,16 @@ function App() {
 					<div class="flex-1 overflow-y-auto p-4">
 						<div class="space-y-4">
 							<For each={messageHistory().slice(1)}>
-								{(message) => (
-									<div
-										class={`p-4 rounded ${
-											message.role === "user"
-												? "bg-blue-100 ml-auto max-w-[80%]"
-												: "bg-gray-100 mr-auto max-w-[80%]"
-										}`}
-									>
-										<SolidMarkdown>{message.content}</SolidMarkdown>
-									</div>
-								)}
+								{(message) => <ChatMessage message={message} />}
 							</For>
 							{currentStreamedResponse() && (
-								<div class="p-4 bg-gray-100 rounded mr-auto max-w-[80%]">
+								<div class="p-4 rounded mr-9">
 									<SolidMarkdown>{currentStreamedResponse()}</SolidMarkdown>
 								</div>
 							)}
 							{mutation.isPending && !currentStreamedResponse() && (
-								<div class="p-4 bg-gray-100 rounded mr-auto max-w-[80%]">
-									<div class="animate-pulse">Thinking...</div>
+								<div class="p-4 rounded w-full">
+									<div class="animate-pulse text-slate-500">Thinking...</div>
 								</div>
 							)}
 						</div>

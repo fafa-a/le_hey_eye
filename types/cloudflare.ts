@@ -43,7 +43,11 @@ export type FunctionTool = { name: string; code: string };
 
 export type FunctionToolWrapper = { type: string; function: Tool };
 
-export type Message = { role: MessageRole; content: string };
+export type Message = {
+	role: MessageRole;
+	content: string;
+	tokens_used?: number;
+};
 
 export type MessageRole = "system" | "user" | "assistant";
 
@@ -89,7 +93,10 @@ export type PromptSettings = {
 	presence_penalty: number | null;
 };
 
-export type StreamResponse = { response: string };
+export type StreamResponse = {
+	response: string;
+	usage: CloudflareUsage | null;
+};
 
 export type Tool = {
 	name: string;

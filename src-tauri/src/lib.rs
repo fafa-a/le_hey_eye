@@ -1,4 +1,4 @@
-use serde_json::{json, Value};
+use serde_json::json;
 use std::env;
 mod types;
 use futures_util::StreamExt;
@@ -15,15 +15,10 @@ async fn call_cloudflare_api<R: Runtime>(
     model: String,
     request: ChatRequest,
 ) -> Result<StreamResponse, String> {
-    println!("call_cloudflare_api {:?}", request);
-
     let Credentials {
         account_id,
         api_token,
     } = get_credentials(app).await?;
-
-    // let mut input_map = request.as_object().unwrap().clone();
-    // input_map.insert("stream".to_string(), json!(true));
 
     let client = reqwest::Client::new();
     let response = client
@@ -47,6 +42,7 @@ async fn call_cloudflare_api<R: Runtime>(
     let mut buffer = String::new();
 
     let mut stream = response.bytes_stream();
+    let mut tokens_usage = None;
 
     while let Some(chunk) = stream.next().await {
         let chunk = chunk.map_err(|e| e.to_string())?;
@@ -63,12 +59,16 @@ async fn call_cloudflare_api<R: Runtime>(
                 if data == "[DONE]" {
                     return Ok(StreamResponse {
                         response: accumulated_text,
+                        usage: tokens_usage,
                     });
                 }
 
                 match serde_json::from_str::<StreamResponse>(data) {
                     Ok(stream_response) => {
                         accumulated_text.push_str(&stream_response.response);
+                        if let Some(usage) = &stream_response.usage {
+                            tokens_usage = Some(usage.clone());
+                        }
                         window
                             .emit("stream-response", &stream_response.response)
                             .map_err(|e| e.to_string())?;
@@ -83,6 +83,7 @@ async fn call_cloudflare_api<R: Runtime>(
 
     Ok(StreamResponse {
         response: accumulated_text,
+        usage: tokens_usage,
     })
 }
 
