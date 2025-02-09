@@ -11,7 +11,7 @@ export function Sidebar() {
 			class={`
         flex
         flex-col
-        h-full
+        h-screen
         transition-all
         duration-300
         ease-in-out
@@ -47,6 +47,7 @@ export function Sidebar() {
 				<Button
 					onClick={() => setIsCollapsed(!isCollapsed())}
 					size="sm"
+					variant="outline"
 					class="p-2 hover:bg-gray-100 rounded transition-colors hover:cursor-pointer"
 				>
 					<Show

@@ -10,6 +10,7 @@ import { Sidebar } from "./components/common/Sidebar";
 import { Button } from "./components/ui/button";
 import SettingsPopover from "./components/common/SettingsPopover";
 import ChatMessage from "./components/common/ChatMessage";
+import Test from "./components/test";
 
 async function generateAIResponse(
 	model: string,
@@ -182,7 +183,7 @@ function App() {
 	return (
 		<main class="flex flex-col h-screen">
 			{/* <Navigation setModel={setModel} /> */}
-			<div class="flex-1 flex">
+			<div class="flex-1 flex h-full">
 				<Sidebar />
 				<div class="flex flex-col flex-1">
 					<div class="flex-1 overflow-y-auto p-4">

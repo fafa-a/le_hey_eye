@@ -64,8 +64,8 @@ export function PromptInput({
 				<Button
 					type="submit"
 					disabled={mutation.isPending || !prompt().trim()}
-					// class="w-[30px] bg-purple-200 text-white rounded disabled:bg-purple-100 hover:bg-purple-300 hover:cursor-pointer transition-colors grid place-content-center"
 					class="w-[30px] text-white hover:bg-gray-100 hover:cursor-pointer grid place-items-center"
+					variant="outline"
 				>
 					<Switch>
 						<Match when={mutation.isPending}>

@@ -40,6 +40,7 @@ const SettingsPopover = ({
 						{...props}
 						type="button"
 						class="w-[30px] text-white hover:bg-gray-100 hover:cursor-pointer grid place-items-center"
+						variant="outline"
 					>
 						<SettingsAdjust class="text-slate-500" width="20" height="20" />
 					</Button>
