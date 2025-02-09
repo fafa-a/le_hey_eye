@@ -47,7 +47,7 @@ export function Sidebar() {
 				<Button
 					onClick={() => setIsCollapsed(!isCollapsed())}
 					size="sm"
-					variant="outline"
+					variant="ghost"
 					class="p-2 hover:bg-gray-100 rounded transition-colors hover:cursor-pointer"
 				>
 					<Show
