@@ -5,15 +5,19 @@ import {
 	PopoverDescription,
 	PopoverTitle,
 	PopoverTrigger,
-} from "../ui/popover";
-import { Button } from "../ui/button";
-import SettingsAdjust from "../icons/SettingsAdjust";
+} from "@components/ui/popover";
+import { Button } from "@components/ui/button";
+import SettingsAdjust from "@icons/SettingsAdjust";
 import type { ChatRequest } from "types/cloudflare";
 import type { Accessor, Setter } from "solid-js";
-import { ComboboxModels } from "./ComboboxModels";
-import { TextField, TextFieldLabel, TextFieldRoot } from "../ui/textfield";
-import CustomSwitch from "./Switch";
-import SliderComponent from "./Slider";
+import { ComboboxModels } from "./components/ComboboxModels";
+import {
+	TextField,
+	TextFieldLabel,
+	TextFieldRoot,
+} from "@components/ui/textfield";
+import CustomSwitch from "@components/common/Switch";
+import SliderComponent from "@components/common/Slider";
 
 interface SettingsPopoverProps {
 	model: Accessor<string>;

@@ -9,7 +9,6 @@ import type {
 	Message,
 	StreamResponse,
 } from "../../../types/cloudflare";
-import SettingsPopover from "./SettingsPopover";
 
 interface PromptInputProps {
 	onSubmit: (prompt: string) => void;

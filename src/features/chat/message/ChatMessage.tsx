@@ -1,6 +1,6 @@
 import { SolidMarkdown } from "solid-markdown";
-import type { Message, MessageRole } from "../../../types/cloudflare";
-import { Button } from "../ui/button";
+import type { Message, MessageRole } from "../../../../types/cloudflare";
+import { Button } from "@components/ui/button";
 import Edit from "@icons/Edit";
 import Copy from "@icons/Copy";
 import Delete from "@icons/Trash";
@@ -83,14 +83,12 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
 				}}
 			>
 				<div
-					class="p-1 rounded max-w-[80%] break-words"
+					class="p-1 rounded overflow-y-auto break-words"
 					classList={{
 						"bg-slate-50": message.role === "user",
-						"border border-slate-100": message.role === "assistant",
 					}}
 				>
 					<SolidMarkdown>{message.content}</SolidMarkdown>
-
 					<ChatMessageFooter
 						role={message.role}
 						tokens_used={message.tokens_used}

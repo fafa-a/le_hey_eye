@@ -1,16 +1,13 @@
-import { createEffect, createSignal, For, onCleanup, onMount } from "solid-js";
+import { createSignal, For, onCleanup, onMount } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
 import { createMutation, createQuery } from "@tanstack/solid-query";
 import type { Message, ChatRequest, StreamResponse } from "../types/cloudflare";
 import { SolidMarkdown } from "solid-markdown";
 import { listen } from "@tauri-apps/api/event";
-import { Navigation } from "./components/common/Navigation";
-import { PromptInput } from "./components/common/PromptInput";
+import { PromptInput } from "@features/chat/prompt/PromptInput";
 import { Sidebar } from "./components/common/Sidebar";
-import { Button } from "./components/ui/button";
-import SettingsPopover from "./components/common/SettingsPopover";
-import ChatMessage from "./components/common/ChatMessage";
-import Test from "./components/test";
+import SettingsPopover from "@features/chat/settings/SettingsPopover";
+import ChatMessage from "@/features/chat/message/ChatMessage";
 
 async function generateAIResponse(
 	model: string,
@@ -49,7 +46,8 @@ function App() {
 	const [messageHistory, setMessageHistory] = createSignal<Message[]>([
 		{
 			role: "system",
-			content: "You are a helpful assistant.",
+			content:
+				"You are a helpful coding assistant. If you send me some code, please format it with markdown.",
 		},
 	]);
 	const [promptSettings, setPromptSettings] = createSignal<
@@ -203,7 +201,6 @@ function App() {
 							)}
 						</div>
 					</div>
-					{/* <Button onClick={() => details.refetch()}>refetch</Button> */}
 					<div class="flex-shrink-0 pb-2 space-y-1">
 						<div class="flex justify-end pr-0.5">
 							<SettingsPopover
