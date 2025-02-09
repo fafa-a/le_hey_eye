@@ -202,7 +202,7 @@ function App() {
 						</div>
 					</div>
 					<div class="flex-shrink-0 pb-2 space-y-1">
-						<div class="flex justify-end pr-0.5">
+						<div class="flex justify-end mr-3">
 							<SettingsPopover
 								model={model}
 								setModel={setModel}

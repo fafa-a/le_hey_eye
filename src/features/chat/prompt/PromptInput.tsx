@@ -3,12 +3,18 @@ import Send from "@components/icons/Send";
 import { TextArea } from "@components/ui/textarea";
 import { TextFieldRoot } from "@components/ui/textfield";
 import type { CreateMutationResult } from "@tanstack/solid-query";
-import { Accessor, Match, Setter, Switch, createSignal } from "solid-js";
+import {
+	type Accessor,
+	Match,
+	type Setter,
+	Switch,
+	createSignal,
+} from "solid-js";
 import type {
 	ChatRequest,
 	Message,
 	StreamResponse,
-} from "../../../types/cloudflare";
+} from "../../../../types/cloudflare";
 
 interface PromptInputProps {
 	onSubmit: (prompt: string) => void;
@@ -23,14 +29,7 @@ interface PromptInputProps {
 	>;
 }
 
-export function PromptInput({
-	onSubmit,
-	mutation,
-	model,
-	setModel,
-	setPromptSettings,
-	promptSettings,
-}: PromptInputProps) {
+export function PromptInput({ onSubmit, mutation }: PromptInputProps) {
 	const [prompt, setPrompt] = createSignal("");
 
 	const handleSubmit = (e: Event) => {
@@ -43,7 +42,7 @@ export function PromptInput({
 
 	return (
 		<form class="w-full flex" onSubmit={handleSubmit}>
-			<div class="flex gap-1 w-full p-0.5 hover:inset-shadow-2xs hover:transition-colors duration-2000 ease-in-out">
+			<div class="flex gap-1 w-full p-0.5 border-t border-slate-50 hover:border-slate-200 transition-colors duration-2000 ease-in-out">
 				<TextFieldRoot class="w-full border-none ">
 					<TextArea
 						placeholder="Write here..."
@@ -75,12 +74,6 @@ export function PromptInput({
 						</Match>
 					</Switch>
 				</Button>
-				{/* <SettingsPopover */}
-				{/* 	model={model} */}
-				{/* 	setModel={setModel} */}
-				{/* 	promptSettings={promptSettings} */}
-				{/* 	setPromptSettings={setPromptSettings} */}
-				{/* /> */}
 			</div>
 		</form>
 	);
