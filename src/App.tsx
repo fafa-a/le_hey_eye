@@ -1,4 +1,4 @@
-import { createSignal, For, onCleanup, onMount } from "solid-js";
+import { createEffect, createSignal, For, onCleanup, onMount } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
 import { createMutation, createQuery } from "@tanstack/solid-query";
 import type { Message, ChatRequest, StreamResponse } from "../types/cloudflare";
@@ -8,6 +8,8 @@ import { PromptInput } from "@features/chat/prompt/PromptInput";
 import { Sidebar } from "./components/common/Sidebar";
 import SettingsPopover from "@features/chat/settings/SettingsPopover";
 import ChatMessage from "@/features/chat/message/ChatMessage";
+import { unwrap } from "solid-js/store";
+import { topicsStore } from "@/features/chat/store/messageStore";
 
 async function generateAIResponse(
 	model: string,
@@ -177,6 +179,11 @@ function App() {
 
 		mutation.mutate(updatedHistory);
 	};
+
+	createEffect(() => {
+		console.log("topicStore", unwrap(topicsStore));
+		console.log("Topics number:", topicsStore.length);
+	});
 
 	return (
 		<main class="flex flex-col h-screen">
