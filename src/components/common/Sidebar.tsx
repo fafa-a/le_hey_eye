@@ -1,10 +1,54 @@
-import { createSignal, Show } from "solid-js";
+import { createEffect, createSignal, For, Show } from "solid-js";
 import SidePanelClose from "@icons/SidePanelClose";
 import SidePanelOpen from "@icons/SidePanelOpen";
 import { Button } from "@/components/ui/button";
+import {
+	addMessage,
+	addTopic,
+	topicsStore,
+} from "@/features/chat/store/messageStore";
+import { uid } from "uid";
+import { unwrap } from "solid-js/store";
+import TopicListEntry from "./TopicListEntry";
 
 export function Sidebar() {
 	const [isCollapsed, setIsCollapsed] = createSignal(false);
+	const [topicId, setTopicId] = createSignal("");
+	const [topicActive, setTopicActive] = createSignal("");
+
+	createEffect(() => {
+		console.log("topicsStore: ", unwrap(topicsStore));
+		console.log("Topics number: ", topicsStore.length);
+	});
+	const handleNewTopic = () => {
+		const newTopicId = uid(16);
+		setTopicId(newTopicId);
+		addTopic({
+			id: newTopicId,
+			name: "New Conversation",
+		});
+		setTopicActive(newTopicId);
+	};
+	createEffect(() => {
+		for (const topic of topicsStore) {
+			console.log("-".repeat(100));
+			console.log("topicID: ", topic.id);
+			for (const message of topic.messages) {
+				console.log("message: ", message);
+			}
+		}
+	});
+
+	createEffect(() => {
+		console.log({ topicId: topicId() });
+	});
+
+	createEffect(() => {
+		console.log({ topicActive: topicActive() });
+	});
+	createEffect(() => {
+		console.log("topicId === topicActive: ", topicId() === topicActive());
+	});
 
 	return (
 		<aside
@@ -29,17 +73,36 @@ export function Sidebar() {
 						</div>
 					}
 				>
-					<div class="space-y-4">
-						<div class="flex items-center space-x-3">
-							<div class="w-8 h-8 bg-gray-200 rounded-full" />
-							<span>Chat 1</span>
-						</div>
-						<div class="flex items-center space-x-3">
-							<div class="w-8 h-8 bg-gray-200 rounded-full" />
-							<span>Chat 2</span>
-						</div>
-					</div>
+					<For each={topicsStore}>
+						{(topic) => (
+							<TopicListEntry
+								topicId={topic.id}
+								topicName={topic.name}
+								isActive={topic.id === topicActive()}
+								onClick={() => setTopicActive(topic.id)}
+							/>
+						)}
+					</For>
 				</Show>
+				<Button
+					variant="outline"
+					class="p-2 hover:bg-gray-100 rounded transition-colors hover:cursor-pointer"
+					onClick={handleNewTopic}
+				>
+					<span> + New Chat</span>
+				</Button>
+				<Button
+					variant="outline"
+					class="p-2 hover:bg-gray-100 rounded transition-colors hover:cursor-pointer"
+					onClick={() => {
+						addMessage(topicId(), {
+							content: "Hello world",
+							timestamp: new Date(),
+						});
+					}}
+				>
+					<span> + New Message</span>
+				</Button>
 			</div>
 			<div
 				class={`flex-shrink-0 flex items-center pb-2 ${!isCollapsed() ? "justify-end pr-2" : "justify-center"}`}
