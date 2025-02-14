@@ -1,10 +1,10 @@
 import { createEffect } from "solid-js";
 import { createStore, unwrap } from "solid-js/store";
+import type { Message } from "types/cloudflare";
 import { uid } from "uid";
 
-interface Message {
+export interface TopicMessage extends Message {
 	id: string;
-	content: string;
 	timestamp: Date;
 }
 
@@ -12,20 +12,17 @@ interface Topic {
 	id: string;
 	name: string;
 	createdAt: Date;
-	messages: Message[];
+	messages: TopicMessage[];
 }
 
 const [topicsStore, setTopicsStore] = createStore<Topic[]>([]);
-
-// const addTopic = (topic: Omit<Topic, "createdAt" | "messages">) => {
-// 	console.log(topic);
-// 	const newTopic: Topic = {
-// 		createdAt: new Date(),
-// 		messages: [],
-// 		...topic,
-// 	};
-// 	setTopicsStore((topics) => [...topics, newTopic]);
-// };
+const systemMessage: TopicMessage = {
+	id: uid(16),
+	role: "system",
+	content:
+		"You are a helpful assistant. If you send me some code, please format it with markdown.",
+	timestamp: new Date(),
+};
 
 const addTopic = (topic: Omit<Topic, "createdAt" | "messages">) => {
 	setTopicsStore((prev) => {
@@ -35,7 +32,7 @@ const addTopic = (topic: Omit<Topic, "createdAt" | "messages">) => {
 			{
 				...topic,
 				createdAt: new Date(),
-				messages: [],
+				messages: [systemMessage],
 			},
 		];
 		console.log("New state:", newState);
@@ -65,8 +62,8 @@ const editTopicName = (id: string, name: string) => {
 	);
 };
 
-const addMessage = (topicId: string, message: Omit<Message, "id">) => {
-	const newMessage: Message = {
+const addMessage = (topicId: string, message: Omit<TopicMessage, "id">) => {
+	const newMessage: TopicMessage = {
 		id: uid(16),
 		...message,
 	};

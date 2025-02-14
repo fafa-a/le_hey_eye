@@ -45,6 +45,9 @@ function App() {
 	const [model, setModel] = createSignal<string>(
 		"@cf/mistral/mistral-7b-instruct-v0.1",
 	);
+	const [topicId, setTopicId] = createSignal("");
+	const [topicActive, setTopicActive] = createSignal("");
+
 	const [messageHistory, setMessageHistory] = createSignal<Message[]>([
 		{
 			role: "system",
@@ -183,13 +186,22 @@ function App() {
 	createEffect(() => {
 		console.log("topicStore", unwrap(topicsStore));
 		console.log("Topics number:", topicsStore.length);
+		console.log("Topics name: ", topicsStore.at(-1)?.name);
+	});
+	createEffect(() => {
+		console.log("topicActive: ", topicActive());
 	});
 
 	return (
 		<main class="flex flex-col h-screen">
 			{/* <Navigation setModel={setModel} /> */}
 			<div class="flex-1 flex h-full">
-				<Sidebar />
+				<Sidebar
+					topicId={topicId()}
+					setTopicId={setTopicId}
+					topicActive={topicActive()}
+					setTopicActive={setTopicActive}
+				/>
 				<div class="flex flex-col flex-1">
 					<div class="flex-1 overflow-y-auto p-4">
 						<div class="space-y-4">
@@ -224,6 +236,7 @@ function App() {
 							setModel={setModel}
 							setPromptSettings={setPromptSettings}
 							promptSettings={promptSettings}
+							topicId={topicActive()}
 						/>
 					</div>
 				</div>

@@ -1,4 +1,4 @@
-import { createEffect, createSignal, For, Show } from "solid-js";
+import { createEffect, createSignal, For, type Setter, Show } from "solid-js";
 import SidePanelClose from "@icons/SidePanelClose";
 import SidePanelOpen from "@icons/SidePanelOpen";
 import { Button } from "@/components/ui/button";
@@ -10,11 +10,18 @@ import {
 import { uid } from "uid";
 import { unwrap } from "solid-js/store";
 import TopicListEntry from "./TopicListEntry";
+interface SidebarProps {
+	topicId: string;
+	setTopicId: Setter<string>;
+	topicActive: string;
+	setTopicActive: Setter<string>;
+}
 
-export function Sidebar() {
+export function Sidebar(props: SidebarProps) {
+	const { setTopicId, setTopicActive } = props;
+	const topicId = () => props.topicId;
+	const topicActive = () => props.topicActive;
 	const [isCollapsed, setIsCollapsed] = createSignal(false);
-	const [topicId, setTopicId] = createSignal("");
-	const [topicActive, setTopicActive] = createSignal("");
 
 	createEffect(() => {
 		console.log("topicsStore: ", unwrap(topicsStore));
@@ -91,18 +98,18 @@ export function Sidebar() {
 				>
 					<span> + New Chat</span>
 				</Button>
-				<Button
-					variant="outline"
-					class="p-2 hover:bg-gray-100 rounded transition-colors hover:cursor-pointer"
-					onClick={() => {
-						addMessage(topicId(), {
-							content: "Hello world",
-							timestamp: new Date(),
-						});
-					}}
-				>
-					<span> + New Message</span>
-				</Button>
+				{/* <Button */}
+				{/* 	variant="outline" */}
+				{/* 	class="p-2 hover:bg-gray-100 rounded transition-colors hover:cursor-pointer" */}
+				{/* 	onClick={() => { */}
+				{/* 		addMessage(topicId(), { */}
+				{/* 			content: "Hello world", */}
+				{/* 			timestamp: new Date(), */}
+				{/* 		}); */}
+				{/* 	}} */}
+				{/* > */}
+				{/* 	<span> + New Message</span> */}
+				{/* </Button> */}
 			</div>
 			<div
 				class={`flex-shrink-0 flex items-center pb-2 ${!isCollapsed() ? "justify-end pr-2" : "justify-center"}`}

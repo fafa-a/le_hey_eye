@@ -8,6 +8,7 @@ import {
 	Match,
 	type Setter,
 	Switch,
+	createEffect,
 	createSignal,
 } from "solid-js";
 import type {
@@ -15,6 +16,7 @@ import type {
 	Message,
 	StreamResponse,
 } from "../../../../types/cloudflare";
+import { addMessage, type TopicMessage } from "../store/messageStore";
 
 interface PromptInputProps {
 	onSubmit: (prompt: string) => void;
@@ -27,15 +29,29 @@ interface PromptInputProps {
 	promptSettings: Accessor<
 		Omit<ChatRequest, "messages" | "functions" | "tools">
 	>;
+	topicId: string;
 }
 
-export function PromptInput({ onSubmit, mutation }: PromptInputProps) {
+export function PromptInput(props: PromptInputProps) {
+	const { onSubmit, mutation } = props;
+	const topicId = () => props.topicId;
+
+	createEffect(() => {
+		console.log("topicId: ", topicId());
+	});
+
 	const [prompt, setPrompt] = createSignal("");
 
 	const handleSubmit = (e: Event) => {
 		e.preventDefault();
 		if (prompt().trim()) {
 			onSubmit(prompt());
+			const message: Omit<TopicMessage, "id"> = {
+				role: "user",
+				content: prompt(),
+				timestamp: new Date(),
+			};
+			addMessage(topicId(), message);
 			setPrompt("");
 		}
 	};
