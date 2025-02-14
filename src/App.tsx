@@ -9,7 +9,11 @@ import { Sidebar } from "./components/common/Sidebar";
 import SettingsPopover from "@features/chat/settings/SettingsPopover";
 import ChatMessage from "@/features/chat/message/ChatMessage";
 import { unwrap } from "solid-js/store";
-import { topicsStore } from "@/features/chat/store/messageStore";
+import {
+	addMessage,
+	type TopicMessage,
+	topicsStore,
+} from "@/features/chat/store/messageStore";
 
 async function generateAIResponse(
 	model: string,
@@ -48,13 +52,21 @@ function App() {
 	const [topicId, setTopicId] = createSignal("");
 	const [topicActive, setTopicActive] = createSignal("");
 
-	const [messageHistory, setMessageHistory] = createSignal<Message[]>([
-		{
-			role: "system",
-			content:
-				"You are a helpful coding assistant. If you send me some code, please format it with markdown.",
-		},
-	]);
+	const [messageHistory, setMessageHistory] = createSignal<
+		Omit<TopicMessage, "id">[]
+	>([]);
+
+	createEffect(() => {
+		console.log("*".repeat(100));
+		console.log("topicsStore: ", unwrap(topicsStore));
+		const topicMessages = topicsStore.find(
+			(topic) => topic.id === topicActive(),
+		)?.messages;
+		setMessageHistory(topicMessages || []);
+		console.log("TOPICMESSAGES: ", unwrap(topicMessages));
+		console.log("*".repeat(100));
+	}, topicsStore);
+
 	const [promptSettings, setPromptSettings] = createSignal<
 		Omit<ChatRequest, "messages" | "functions" | "tools">
 	>({
@@ -146,11 +158,17 @@ function App() {
 			if ("usage" in data) {
 				console.log("data.usage :", data.usage);
 			}
-			const newAssistantMessage: Message = {
+			// const newAssistantMessage: Message = {
+			// 	role: "assistant",
+			// 	content: currentStreamedResponse(),
+			// 	tokens_used: data.usage?.total_tokens,
+			// };
+			const newAssistantMessage: Omit<TopicMessage, "id"> = {
 				role: "assistant",
 				content: currentStreamedResponse(),
-				tokens_used: data.usage?.total_tokens,
+				timestamp: new Date(),
 			};
+			addMessage(topicActive(), newAssistantMessage);
 
 			setMessageHistory((prev) => [...prev, newAssistantMessage]);
 			setRequest((prevReq: ChatRequest) => {
@@ -172,9 +190,10 @@ function App() {
 	}));
 
 	const handleSubmit = (prompt: string) => {
-		const userMessage: Message = {
+		const userMessage: Omit<TopicMessage, "id"> = {
 			role: "user",
 			content: prompt,
+			timestamp: new Date(),
 		};
 
 		const updatedHistory = [...messageHistory(), userMessage];
