@@ -1,10 +1,10 @@
-import { createEffect, createSignal, Show } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { Button } from "@components/ui/button";
 import { TextField, TextFieldRoot } from "@components/ui/textfield";
-import { editTopicName, removeTopic } from "@/features/chat/store/messageStore";
 import PopoverConfirmAction from "./PopoverConfirmAction";
 import Edit from "@icons/Edit";
 import Delete from "@icons/Trash";
+import { useTopics } from "@/context/topicsContext";
 
 interface TopicListEntryProps {
 	topicId: string;
@@ -13,15 +13,12 @@ interface TopicListEntryProps {
 	onClick: () => void;
 }
 function TopicListEntry(props: TopicListEntryProps) {
-	const { topicId, topicName, onClick } = props;
+	const { topicId, onClick } = props;
 	const isActive = () => props.isActive;
+	const topicName = () => props.topicName;
+	const { editTopicName, removeTopic } = useTopics();
 
 	const [isEditing, setIsEditing] = createSignal(false);
-
-	createEffect(() => {
-		console.log("TOPIC LIST ENTRY EFFECT");
-		console.log({ topicId, isActive });
-	});
 
 	const handleSubmit = (e: SubmitEvent) => {
 		e.preventDefault();
@@ -41,7 +38,7 @@ function TopicListEntry(props: TopicListEntryProps) {
 								type="text"
 								placeholder="New Topic"
 								id="topicName"
-								value={topicName}
+								value={topicName()}
 								autofocus
 							/>
 							<Button
@@ -62,9 +59,13 @@ function TopicListEntry(props: TopicListEntryProps) {
 						e.stopPropagation();
 						onClick?.();
 					}}
+					onKeyDown={(e: KeyboardEvent) => {
+						e.stopPropagation();
+						onClick?.();
+					}}
 				>
 					<div class="w-8 h-8 bg-gray-200 rounded-full" />
-					<p class="text-sm">{topicName}</p>
+					<p class="text-sm">{topicName()}</p>
 				</div>
 			</Show>
 
@@ -72,7 +73,7 @@ function TopicListEntry(props: TopicListEntryProps) {
 				<Button
 					size="xs"
 					variant="ghost"
-					onClick={(e) => {
+					onClick={(e: MouseEvent) => {
 						e.stopPropagation();
 						setIsEditing(true);
 					}}
@@ -92,7 +93,7 @@ function TopicListEntry(props: TopicListEntryProps) {
 						removeTopic(topicId);
 					}}
 					actionType="delete"
-					sourceName={topicName}
+					sourceName={topicName()}
 				/>
 			</div>
 		</div>

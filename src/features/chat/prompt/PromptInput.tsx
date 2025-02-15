@@ -8,7 +8,6 @@ import {
 	Match,
 	type Setter,
 	Switch,
-	createEffect,
 	createSignal,
 } from "solid-js";
 import type {
@@ -16,7 +15,8 @@ import type {
 	Message,
 	StreamResponse,
 } from "../../../../types/cloudflare";
-import { addMessage, type TopicMessage } from "../store/messageStore";
+import type { TopicMessage } from "@/context/topicsContext";
+import { useTopics } from "@/context/topicsContext";
 
 interface PromptInputProps {
 	onSubmit: (prompt: string) => void;
@@ -35,10 +35,7 @@ interface PromptInputProps {
 export function PromptInput(props: PromptInputProps) {
 	const { onSubmit, mutation } = props;
 	const topicId = () => props.topicId;
-
-	createEffect(() => {
-		console.log("topicId: ", topicId());
-	});
+	const { addMessage } = useTopics();
 
 	const [prompt, setPrompt] = createSignal("");
 

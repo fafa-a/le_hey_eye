@@ -1,15 +1,10 @@
-import { createEffect, createSignal, For, type Setter, Show } from "solid-js";
+import { createSignal, For, type Setter, Show } from "solid-js";
 import SidePanelClose from "@icons/SidePanelClose";
 import SidePanelOpen from "@icons/SidePanelOpen";
 import { Button } from "@/components/ui/button";
-import {
-	addMessage,
-	addTopic,
-	topicsStore,
-} from "@/features/chat/store/messageStore";
 import { uid } from "uid";
-import { unwrap } from "solid-js/store";
 import TopicListEntry from "./TopicListEntry";
+import { useTopics } from "@/context/topicsContext";
 interface SidebarProps {
 	topicId: string;
 	setTopicId: Setter<string>;
@@ -18,15 +13,11 @@ interface SidebarProps {
 }
 
 export function Sidebar(props: SidebarProps) {
-	const { setTopicId, setTopicActive } = props;
-	const topicId = () => props.topicId;
-	const topicActive = () => props.topicActive;
 	const [isCollapsed, setIsCollapsed] = createSignal(false);
+	const { setTopicId, setTopicActive } = props;
+	const topicActive = () => props.topicActive;
+	const { topics, addTopic } = useTopics();
 
-	createEffect(() => {
-		console.log("topicsStore: ", unwrap(topicsStore));
-		console.log("Topics number: ", topicsStore.length);
-	});
 	const handleNewTopic = () => {
 		const newTopicId = uid(16);
 		setTopicId(newTopicId);
@@ -36,26 +27,6 @@ export function Sidebar(props: SidebarProps) {
 		});
 		setTopicActive(newTopicId);
 	};
-	createEffect(() => {
-		for (const topic of topicsStore) {
-			console.log("-".repeat(100));
-			console.log("topicID: ", topic.id);
-			for (const message of topic.messages) {
-				console.log("message: ", message);
-			}
-		}
-	});
-
-	createEffect(() => {
-		console.log({ topicId: topicId() });
-	});
-
-	createEffect(() => {
-		console.log({ topicActive: topicActive() });
-	});
-	createEffect(() => {
-		console.log("topicId === topicActive: ", topicId() === topicActive());
-	});
 
 	return (
 		<aside
@@ -80,7 +51,7 @@ export function Sidebar(props: SidebarProps) {
 						</div>
 					}
 				>
-					<For each={topicsStore}>
+					<For each={topics}>
 						{(topic) => (
 							<TopicListEntry
 								topicId={topic.id}
@@ -98,18 +69,6 @@ export function Sidebar(props: SidebarProps) {
 				>
 					<span> + New Chat</span>
 				</Button>
-				{/* <Button */}
-				{/* 	variant="outline" */}
-				{/* 	class="p-2 hover:bg-gray-100 rounded transition-colors hover:cursor-pointer" */}
-				{/* 	onClick={() => { */}
-				{/* 		addMessage(topicId(), { */}
-				{/* 			content: "Hello world", */}
-				{/* 			timestamp: new Date(), */}
-				{/* 		}); */}
-				{/* 	}} */}
-				{/* > */}
-				{/* 	<span> + New Message</span> */}
-				{/* </Button> */}
 			</div>
 			<div
 				class={`flex-shrink-0 flex items-center pb-2 ${!isCollapsed() ? "justify-end pr-2" : "justify-center"}`}

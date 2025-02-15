@@ -1,4 +1,12 @@
-import { createEffect, createSignal, For, onCleanup, onMount } from "solid-js";
+import {
+	createEffect,
+	createMemo,
+	createSignal,
+	For,
+	onCleanup,
+	onMount,
+	Show,
+} from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
 import { createMutation, createQuery } from "@tanstack/solid-query";
 import type { Message, ChatRequest, StreamResponse } from "../types/cloudflare";
@@ -9,11 +17,8 @@ import { Sidebar } from "./components/common/Sidebar";
 import SettingsPopover from "@features/chat/settings/SettingsPopover";
 import ChatMessage from "@/features/chat/message/ChatMessage";
 import { unwrap } from "solid-js/store";
-import {
-	addMessage,
-	type TopicMessage,
-	topicsStore,
-} from "@/features/chat/store/messageStore";
+import type { TopicMessage } from "@/context/topicsContext";
+import { useTopics } from "@/context/topicsContext";
 
 async function generateAIResponse(
 	model: string,
@@ -46,6 +51,7 @@ async function getCloudflareModelDetails(model: string): Promise<any> {
 const MAX_MESSAGES = 4;
 
 function App() {
+	const { topics, addMessage } = useTopics();
 	const [model, setModel] = createSignal<string>(
 		"@cf/mistral/mistral-7b-instruct-v0.1",
 	);
@@ -58,14 +64,13 @@ function App() {
 
 	createEffect(() => {
 		console.log("*".repeat(100));
-		console.log("topicsStore: ", unwrap(topicsStore));
-		const topicMessages = topicsStore.find(
+		console.log("topics: ", unwrap(topics));
+		const topicMessages = topics.find(
 			(topic) => topic.id === topicActive(),
 		)?.messages;
 		setMessageHistory(topicMessages || []);
-		console.log("TOPICMESSAGES: ", unwrap(topicMessages));
 		console.log("*".repeat(100));
-	}, topicsStore);
+	}, topics);
 
 	const [promptSettings, setPromptSettings] = createSignal<
 		Omit<ChatRequest, "messages" | "functions" | "tools">
@@ -154,15 +159,7 @@ function App() {
 
 			return await generateAIResponse(model(), apiRequest);
 		},
-		onSuccess: (data) => {
-			if ("usage" in data) {
-				console.log("data.usage :", data.usage);
-			}
-			// const newAssistantMessage: Message = {
-			// 	role: "assistant",
-			// 	content: currentStreamedResponse(),
-			// 	tokens_used: data.usage?.total_tokens,
-			// };
+		onSuccess: () => {
 			const newAssistantMessage: Omit<TopicMessage, "id"> = {
 				role: "assistant",
 				content: currentStreamedResponse(),
@@ -170,8 +167,7 @@ function App() {
 			};
 			addMessage(topicActive(), newAssistantMessage);
 
-			setMessageHistory((prev) => [...prev, newAssistantMessage]);
-			setRequest((prevReq: ChatRequest) => {
+			setRequest(() => {
 				return {
 					messages: getMessagesForAPI(messageHistory(), MAX_MESSAGES),
 					stream: promptSettings().stream,
@@ -195,22 +191,23 @@ function App() {
 			content: prompt,
 			timestamp: new Date(),
 		};
-
 		const updatedHistory = [...messageHistory(), userMessage];
-		setMessageHistory(updatedHistory);
 
 		mutation.mutate(updatedHistory);
 	};
 
-	createEffect(() => {
-		console.log("topicStore", unwrap(topicsStore));
-		console.log("Topics number:", topicsStore.length);
-		console.log("Topics name: ", topicsStore.at(-1)?.name);
-	});
-	createEffect(() => {
-		console.log("topicActive: ", topicActive());
+	// Create a memoized signal for the current topic's messages
+	const currentTopicMessages = createMemo(() => {
+		const currentTopic = topics.find((topic) => topic.id === topicActive());
+		return currentTopic?.messages || [];
 	});
 
+	// Create a memoized signal for the displayable messages
+	const displayMessages = createMemo(() => {
+		// Skip the first message (system message) and add any streaming message
+		const messages = currentTopicMessages().slice(1);
+		return messages;
+	});
 	return (
 		<main class="flex flex-col h-screen">
 			{/* <Navigation setModel={setModel} /> */}
@@ -224,19 +221,19 @@ function App() {
 				<div class="flex flex-col flex-1">
 					<div class="flex-1 overflow-y-auto p-4">
 						<div class="space-y-4">
-							<For each={messageHistory().slice(1)}>
+							<For each={displayMessages()}>
 								{(message) => <ChatMessage message={message} />}
 							</For>
-							{currentStreamedResponse() && (
+							<Show when={currentStreamedResponse()}>
 								<div class="p-4 rounded mr-9">
 									<SolidMarkdown>{currentStreamedResponse()}</SolidMarkdown>
 								</div>
-							)}
-							{mutation.isPending && !currentStreamedResponse() && (
+							</Show>
+							<Show when={mutation.isPending && !currentStreamedResponse()}>
 								<div class="p-4 rounded w-full">
 									<div class="animate-pulse text-slate-500">Thinking...</div>
 								</div>
-							)}
+							</Show>
 						</div>
 					</div>
 					<div class="flex-shrink-0 pb-2 space-y-1">
