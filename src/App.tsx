@@ -64,6 +64,7 @@ function App() {
 	const [topicId, setTopicId] = createSignal("");
 	const [topicActive, setTopicActive] = createSignal("");
 
+	const [isCollapsed, setIsCollapsed] = createSignal(false);
 	const [messageHistory, setMessageHistory] = createSignal<
 		Omit<TopicMessage, "id">[]
 	>([]);
@@ -215,23 +216,32 @@ function App() {
 		return messages;
 	});
 	return (
-		<main class="flex flex-col h-screen">
+		<main class="flex flex-col h-screen w-full">
 			{/* <Navigation setModel={setModel} /> */}
-			<div class="flex-1 flex h-full">
-				<Sidebar
-					topicId={topicId()}
-					setTopicId={setTopicId}
-					topicActive={topicActive()}
-					setTopicActive={setTopicActive}
-				/>
-				<div class="flex flex-col flex-1">
+			<div class="flex-1 flex h-full ">
+				<div
+					classList={{
+						"w-[60px]": isCollapsed(),
+						"w-[20%] max-w-[300px] min-w-[200px]": !isCollapsed(),
+					}}
+				>
+					<Sidebar
+						isCollapsed={isCollapsed()}
+						setIsCollapsed={setIsCollapsed}
+						topicId={topicId()}
+						setTopicId={setTopicId}
+						topicActive={topicActive()}
+						setTopicActive={setTopicActive}
+					/>
+				</div>
+				<div class="flex-1 flex flex-col overflow-hidden">
 					<div class="flex-1 overflow-y-auto p-4">
-						<div class="space-y-4">
+						<div class="space-y-4 max-w-full">
 							<For each={displayMessages()}>
 								{(message) => <ChatMessage message={message} />}
 							</For>
 							<Show when={currentStreamedResponse()}>
-								<div class="p-4 rounded mr-9">
+								<div class="p-4 rounded mr-9 break-words bg-red-500">
 									<SolidMarkdown>{currentStreamedResponse()}</SolidMarkdown>
 								</div>
 							</Show>
