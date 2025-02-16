@@ -33,7 +33,7 @@ export function Sidebar(props: SidebarProps) {
 		setTopicId(newTopicId);
 		addTopic({
 			id: newTopicId,
-			name: "New Conversation",
+			name: "New Conversation long long long long long long long long long long long long long long long long long long long long long long long long long long long",
 		});
 		setTopicActive(newTopicId);
 	};
@@ -64,6 +64,8 @@ export function Sidebar(props: SidebarProps) {
 										isActive={topic.id === topicActive()}
 										onClick={() => setTopicActive(topic.id)}
 										bgColor={topic.bgColor}
+										setIsCollapsed={setIsCollapsed}
+										isCollapsed={isCollapsed()}
 									/>
 								)}
 							</For>
@@ -79,6 +81,8 @@ export function Sidebar(props: SidebarProps) {
 									isActive={topic.id === topicActive()}
 									onClick={() => setTopicActive(topic.id)}
 									bgColor={topic.bgColor}
+									setIsCollapsed={setIsCollapsed}
+									isCollapsed={isCollapsed()}
 								/>
 							)}
 						</For>

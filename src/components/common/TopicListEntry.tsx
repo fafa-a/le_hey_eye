@@ -1,11 +1,8 @@
-import { createEffect, createSignal, Show } from "solid-js";
-import { Button } from "@components/ui/button";
-import { TextField, TextFieldRoot } from "@components/ui/textfield";
-import PopoverConfirmAction from "./PopoverConfirmAction";
-import Edit from "@icons/Edit";
-import Delete from "@icons/Trash";
 import { useTopics } from "@/context/topicsContext";
-import ThreeDots from "@icons/ThreeDots";
+import { TextField, TextFieldRoot } from "@components/ui/textfield";
+import { type Setter, Show, createEffect, createSignal } from "solid-js";
+import PopoverConfirmAction from "./PopoverConfirmAction";
+import TopicListEntryTools from "./TopicListEntryTools";
 
 interface TopicListEntryProps {
 	topicId: string;
@@ -13,30 +10,45 @@ interface TopicListEntryProps {
 	isActive: boolean;
 	onClick: () => void;
 	bgColor: string;
+	setIsCollapsed: Setter<boolean>;
+	isCollapsed: boolean;
 }
 
 function TopicListEntry(props: TopicListEntryProps) {
-	const { topicId, onClick } = props;
+	const { topicId, onClick, setIsCollapsed } = props;
 	const isActive = () => props.isActive;
 	const topicName = () => props.topicName;
-	const { editTopicName, removeTopic } = useTopics();
-
+	const isCollapsed = () => props.isCollapsed;
+	const { editTopicName } = useTopics();
 	const [isEditing, setIsEditing] = createSignal(false);
 	const [settingsOpen, setSettingsOpen] = createSignal(false);
+	let formRef: HTMLFormElement;
+
+	const setFormRef = (el: HTMLFormElement) => {
+		formRef = el;
+	};
 
 	const handleSubmit = (e: SubmitEvent) => {
 		e.preventDefault();
-		const form = e.target as HTMLFormElement;
-		editTopicName(topicId, form.topicName.value);
+		if (!formRef) return;
+		editTopicName(topicId, formRef.topicName.value);
 		setIsEditing(false);
+		setSettingsOpen(false);
 	};
 
 	return (
-		<div class={`flex max-h-8 rounded-l-full`}>
+		<div
+			class={`flex w-full max-h-9 ${props.bgColor}/10 rounded-l-full hover:${props.bgColor}/50`}
+			classList={{
+				[`opacity-100 border ${props.bgColor.replace("bg-", "border-")}`]:
+					isActive(),
+				"opacity-50": !isActive(),
+			}}
+		>
 			<Show
 				when={!isEditing()}
 				fallback={
-					<form class="flex flex-col space-y-2" onSubmit={handleSubmit}>
+					<form ref={setFormRef} onSubmit={handleSubmit}>
 						<TextFieldRoot>
 							<TextField
 								type="text"
@@ -44,21 +56,14 @@ function TopicListEntry(props: TopicListEntryProps) {
 								id="topicName"
 								value={topicName()}
 								autofocus
+								class="w-full rounded-l-full overflow-hidden text-ellipsis focus-visible:ring-0 focus-visible:outline-none"
 							/>
-							<Button
-								variant="outline"
-								type="submit"
-								class="p-2 hover:bg-gray-100 rounded transition-colors hover:cursor-pointer"
-							>
-								<span>Save</span>
-							</Button>
 						</TextFieldRoot>
 					</form>
 				}
 			>
 				<div
-					class={`flex ${props.bgColor}/10 rounded-l-full items-center space-x-3 hover:${props.bgColor}/50 hover:cursor-pointer`}
-					classList={{ "opacity-100": isActive(), "opacity-60": !isActive() }}
+					class={`flex flex-1 overflow-hidden gap-0.5 ${props.bgColor}/10 rounded-l-full items-center hover:cursor-pointer`}
 					onClick={(e) => {
 						e.stopPropagation();
 						onClick?.();
@@ -68,61 +73,31 @@ function TopicListEntry(props: TopicListEntryProps) {
 						onClick?.();
 					}}
 				>
-					<div class={`w-8 h-8 ${props.bgColor} rounded-full`} />
-					<div class="overflow-hidden whitespace-nowrap">
-						<p class="text-sm overflow-hidden text-ellipsis">{topicName()}</p>
-					</div>
-				</div>
-			</Show>
-			<Show
-				when={!settingsOpen()}
-				fallback={
-					<div class={`flex flex-col h-full ${props.bgColor}/10 z-10`}>
-						<Button
-							size="xs"
-							variant="ghost"
-							onClick={(e: MouseEvent) => {
-								e.stopPropagation();
-								setIsEditing(true);
-							}}
-							class={`hover:${props.bgColor}/50`}
-						>
-							<Edit />
-						</Button>
-						<PopoverConfirmAction
-							triggerComponent={
-								<Button
-									size="xs"
-									variant="ghost"
-									class={`hover:${props.bgColor}/50`}
-								>
-									<Delete />
-								</Button>
-							}
-							triggerComponentSize="xs"
-							triggerComponentVariant="ghost"
-							onConfirm={() => {
-								removeTopic(topicId);
-							}}
-							actionType="delete"
-							sourceName={topicName()}
-						/>
-					</div>
-				}
-			>
-				<div class={`grid place-items-center ${props.bgColor}/10`}>
-					<Button
-						size="xs"
-						variant="ghost"
-						onClick={(e: MouseEvent) => {
+					<div
+						class={`flex-shrink-0 w-8 h-8 ${props.bgColor} rounded-full`}
+						ondblclick={(e) => {
 							e.stopPropagation();
-							setSettingsOpen(true);
+							setIsCollapsed(!props.isCollapsed);
 						}}
-					>
-						<ThreeDots />
-					</Button>
+					/>
+					<div class="flex-1 min-w-0">
+						<p class="text-sm overflow-hidden text-ellipsis whitespace-nowrap">
+							{topicName()}
+						</p>
+					</div>
 				</div>
 			</Show>
+			<TopicListEntryTools
+				topicId={topicId}
+				topicName={topicName()}
+				isActive={isActive()}
+				bgColor={props.bgColor}
+				setSettingsOpen={setSettingsOpen}
+				onSubmit={handleSubmit}
+				isEditing={isEditing()}
+				setIsEditing={setIsEditing}
+				settingsOpen={settingsOpen()}
+			/>
 		</div>
 	);
 }

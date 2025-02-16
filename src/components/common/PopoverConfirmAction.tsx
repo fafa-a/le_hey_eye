@@ -17,6 +17,7 @@ interface PopoverDemoProps {
 		| "lg"
 		| "icon"
 		| "xs"
+		| "2xs"
 		| null
 		| undefined;
 	triggerComponentVariant:
@@ -31,6 +32,7 @@ interface PopoverDemoProps {
 	onConfirm: () => void;
 	actionType: "delete" | "save";
 	sourceName: string;
+	triggerComponentClass?: string;
 }
 const PopoverConfirmAction = ({
 	triggerComponent,
@@ -39,6 +41,7 @@ const PopoverConfirmAction = ({
 	onConfirm,
 	actionType,
 	sourceName,
+	triggerComponentClass,
 }: PopoverDemoProps) => {
 	const [isOpen, setIsOpen] = createSignal(false);
 	const actionTitle = actionType === "delete" && "deletion";
@@ -52,6 +55,7 @@ const PopoverConfirmAction = ({
 						{...props}
 						size={triggerComponentSize}
 						variant={triggerComponentVariant}
+						class={triggerComponentClass}
 					>
 						{triggerComponent}
 					</Button>

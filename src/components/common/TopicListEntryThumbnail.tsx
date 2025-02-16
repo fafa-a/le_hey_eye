@@ -1,4 +1,4 @@
-import { createEffect } from "solid-js";
+import { createEffect, type Setter } from "solid-js";
 import CustomTooltip from "./CustomTooltip";
 
 interface TopicListEntryThumbnailProps {
@@ -7,12 +7,15 @@ interface TopicListEntryThumbnailProps {
 	isActive: boolean;
 	onClick: () => void;
 	bgColor: string;
+	setIsCollapsed: Setter<boolean>;
+	isCollapsed: boolean;
 }
 
 function TopicListEntryThumbnail(props: TopicListEntryThumbnailProps) {
-	const { onClick } = props;
+	const { onClick, setIsCollapsed } = props;
 	const isActive = () => props.isActive;
 	const topicName = () => props.topicName;
+	const isCollapsed = () => props.isCollapsed;
 	createEffect(() => {
 		console.log("bgColor: ", props.bgColor);
 	});
@@ -29,6 +32,10 @@ function TopicListEntryThumbnail(props: TopicListEntryThumbnailProps) {
 				onKeyDown={(e: KeyboardEvent) => {
 					e.stopPropagation();
 					onClick?.();
+				}}
+				ondblclick={(e) => {
+					e.stopPropagation();
+					setIsCollapsed(!props.isCollapsed);
 				}}
 			/>
 		</CustomTooltip>
