@@ -3,6 +3,15 @@ import { createStore } from "solid-js/store";
 import type { MessageRole } from "types/cloudflare";
 import { uid } from "uid";
 
+const generateRandomColor = () => {
+	const colors = ["red", "blue", "green", "yellow", "purple", "pink", "indigo"];
+	const shades = ["200", "300", "400", "500"];
+
+	const randomColor = colors[Math.floor(Math.random() * colors.length)];
+	const randomShade = shades[Math.floor(Math.random() * shades.length)];
+	return `bg-${randomColor}-${randomShade}`;
+};
+
 export interface TopicMessage {
 	id: string;
 	role: MessageRole;
@@ -16,11 +25,12 @@ interface Topic {
 	name: string;
 	createdAt: Date;
 	messages: TopicMessage[];
+	bgColor: string;
 }
 
 interface TopicsContextValue {
 	topics: Topic[];
-	addTopic: (topic: Omit<Topic, "createdAt" | "messages">) => void;
+	addTopic: (topic: Omit<Topic, "createdAt" | "messages" | "bgColor">) => void;
 	removeTopic: (id: string) => void;
 	editTopicName: (id: string, name: string) => void;
 	addMessage: (topicId: string, message: Omit<TopicMessage, "id">) => void;
@@ -40,13 +50,16 @@ const systemMessage: TopicMessage = {
 export function TopicsProvider(props: { children: JSX.Element }) {
 	const [topics, setTopics] = createStore<Topic[]>([]);
 
-	const addTopic = (topic: Omit<Topic, "createdAt" | "messages">) => {
+	const addTopic = (
+		topic: Omit<Topic, "createdAt" | "messages" | "bgColor">,
+	) => {
 		setTopics((prev) => [
 			...prev,
 			{
 				...topic,
 				createdAt: new Date(),
 				messages: [systemMessage],
+				bgColor: generateRandomColor(),
 			},
 		]);
 	};

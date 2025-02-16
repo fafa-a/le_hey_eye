@@ -9,7 +9,12 @@ import {
 } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
 import { createMutation, createQuery } from "@tanstack/solid-query";
-import type { Message, ChatRequest, StreamResponse } from "../types/cloudflare";
+import type {
+	Message,
+	ChatRequest,
+	StreamResponse,
+	CloudflareModelResponse,
+} from "../types/cloudflare";
 import { SolidMarkdown } from "solid-markdown";
 import { listen } from "@tauri-apps/api/event";
 import { PromptInput } from "@features/chat/prompt/PromptInput";
@@ -36,12 +41,13 @@ async function generateAIResponse(
 	}
 }
 
-async function getCloudflareModelDetails(model: string): Promise<any> {
+async function getCloudflareModelDetails(
+	model: string,
+): Promise<CloudflareModelResponse> {
 	try {
-		const response = await invoke("get_cloudflare_ai_models_details", {
+		return (await invoke("get_cloudflare_ai_models_details", {
 			model,
-		});
-		return response;
+		})) as CloudflareModelResponse;
 	} catch (error) {
 		console.error("API Error:", error);
 		throw error;
@@ -130,14 +136,14 @@ function App() {
 		});
 	});
 
-	const details = createQuery<any>(() => ({
+	const details = createQuery(() => ({
 		queryKey: ["details"],
 		queryFn: async () => {
 			return await getCloudflareModelDetails(model());
 		},
-		onSuccess: (data) => {
-			console.log("details: ", data);
-		},
+		// onSuccess: (data) => {
+		// 	console.log("details: ", data);
+		// },
 	}));
 
 	const mutation = createMutation(() => ({
