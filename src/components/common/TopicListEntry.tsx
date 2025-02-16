@@ -1,17 +1,20 @@
-import { createSignal, Show } from "solid-js";
+import { createEffect, createSignal, Show } from "solid-js";
 import { Button } from "@components/ui/button";
 import { TextField, TextFieldRoot } from "@components/ui/textfield";
 import PopoverConfirmAction from "./PopoverConfirmAction";
 import Edit from "@icons/Edit";
 import Delete from "@icons/Trash";
 import { useTopics } from "@/context/topicsContext";
+import ThreeDots from "@icons/ThreeDots";
 
 interface TopicListEntryProps {
 	topicId: string;
 	topicName: string;
 	isActive: boolean;
 	onClick: () => void;
+	bgColor: string;
 }
+
 function TopicListEntry(props: TopicListEntryProps) {
 	const { topicId, onClick } = props;
 	const isActive = () => props.isActive;
@@ -19,6 +22,7 @@ function TopicListEntry(props: TopicListEntryProps) {
 	const { editTopicName, removeTopic } = useTopics();
 
 	const [isEditing, setIsEditing] = createSignal(false);
+	const [settingsOpen, setSettingsOpen] = createSignal(false);
 
 	const handleSubmit = (e: SubmitEvent) => {
 		e.preventDefault();
@@ -28,7 +32,7 @@ function TopicListEntry(props: TopicListEntryProps) {
 	};
 
 	return (
-		<div>
+		<div class={`flex max-h-8 rounded-l-full`}>
 			<Show
 				when={!isEditing()}
 				fallback={
@@ -53,8 +57,8 @@ function TopicListEntry(props: TopicListEntryProps) {
 				}
 			>
 				<div
-					class="flex items-center space-x-3 hover:bg-gray-400 hover:cursor-pointer"
-					classList={{ "bg-red-100": isActive() }}
+					class={`flex ${props.bgColor}/10 rounded-l-full items-center space-x-3 hover:${props.bgColor}/50 hover:cursor-pointer`}
+					classList={{ "opacity-100": isActive(), "opacity-60": !isActive() }}
 					onClick={(e) => {
 						e.stopPropagation();
 						onClick?.();
@@ -64,38 +68,61 @@ function TopicListEntry(props: TopicListEntryProps) {
 						onClick?.();
 					}}
 				>
-					<div class="w-8 h-8 bg-gray-200 rounded-full" />
-					<p class="text-sm">{topicName()}</p>
+					<div class={`w-8 h-8 ${props.bgColor} rounded-full`} />
+					<div class="overflow-hidden whitespace-nowrap">
+						<p class="text-sm overflow-hidden text-ellipsis">{topicName()}</p>
+					</div>
 				</div>
 			</Show>
-
-			<div class="flex">
-				<Button
-					size="xs"
-					variant="ghost"
-					onClick={(e: MouseEvent) => {
-						e.stopPropagation();
-						setIsEditing(true);
-					}}
-				>
-					<Edit />
-				</Button>
-
-				<PopoverConfirmAction
-					triggerComponent={
-						<Button size="xs" variant="ghost">
-							<Delete />
+			<Show
+				when={!settingsOpen()}
+				fallback={
+					<div class={`flex flex-col h-full ${props.bgColor}/10 z-10`}>
+						<Button
+							size="xs"
+							variant="ghost"
+							onClick={(e: MouseEvent) => {
+								e.stopPropagation();
+								setIsEditing(true);
+							}}
+							class={`hover:${props.bgColor}/50`}
+						>
+							<Edit />
 						</Button>
-					}
-					triggerComponentSize="xs"
-					triggerComponentVariant="ghost"
-					onConfirm={() => {
-						removeTopic(topicId);
-					}}
-					actionType="delete"
-					sourceName={topicName()}
-				/>
-			</div>
+						<PopoverConfirmAction
+							triggerComponent={
+								<Button
+									size="xs"
+									variant="ghost"
+									class={`hover:${props.bgColor}/50`}
+								>
+									<Delete />
+								</Button>
+							}
+							triggerComponentSize="xs"
+							triggerComponentVariant="ghost"
+							onConfirm={() => {
+								removeTopic(topicId);
+							}}
+							actionType="delete"
+							sourceName={topicName()}
+						/>
+					</div>
+				}
+			>
+				<div class={`grid place-items-center ${props.bgColor}/10`}>
+					<Button
+						size="xs"
+						variant="ghost"
+						onClick={(e: MouseEvent) => {
+							e.stopPropagation();
+							setSettingsOpen(true);
+						}}
+					>
+						<ThreeDots />
+					</Button>
+				</div>
+			</Show>
 		</div>
 	);
 }
