@@ -15,16 +15,16 @@ function TopicListEntryThumbnail(props: TopicListEntryThumbnailProps) {
 	const { onClick, setIsCollapsed } = props;
 	const isActive = () => props.isActive;
 	const topicName = () => props.topicName;
-	const isCollapsed = () => props.isCollapsed;
-	createEffect(() => {
-		console.log("bgColor: ", props.bgColor);
-	});
 
 	return (
 		<CustomTooltip content={topicName()} placement="right-start">
 			<div
 				class={`w-8 h-8 ${props.bgColor} rounded-full hover:opacity-100`}
-				classList={{ "opacity-100": isActive(), "opacity-60": !isActive() }}
+				classList={{
+					[`opacity-100 border ${props.bgColor}/10 ${props.bgColor.replace("bg-", "border-")}`]:
+						isActive(),
+					"opacity-100": !isActive(),
+				}}
 				onClick={(e) => {
 					e.stopPropagation();
 					onClick?.();

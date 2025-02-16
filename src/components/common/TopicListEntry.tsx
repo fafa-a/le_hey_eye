@@ -1,8 +1,8 @@
 import { useTopics } from "@/context/topicsContext";
 import { TextField, TextFieldRoot } from "@components/ui/textfield";
 import { type Setter, Show, createEffect, createSignal } from "solid-js";
-import PopoverConfirmAction from "./PopoverConfirmAction";
 import TopicListEntryTools from "./TopicListEntryTools";
+import CustomTooltip from "./CustomTooltip";
 
 interface TopicListEntryProps {
 	topicId: string;
@@ -18,14 +18,18 @@ function TopicListEntry(props: TopicListEntryProps) {
 	const { topicId, onClick, setIsCollapsed } = props;
 	const isActive = () => props.isActive;
 	const topicName = () => props.topicName;
-	const isCollapsed = () => props.isCollapsed;
 	const { editTopicName } = useTopics();
 	const [isEditing, setIsEditing] = createSignal(false);
 	const [settingsOpen, setSettingsOpen] = createSignal(false);
 	let formRef: HTMLFormElement;
+	let inputRef: HTMLInputElement;
 
 	const setFormRef = (el: HTMLFormElement) => {
 		formRef = el;
+	};
+
+	const setInputRef = (el: HTMLInputElement) => {
+		inputRef = el;
 	};
 
 	const handleSubmit = (e: SubmitEvent) => {
@@ -36,27 +40,34 @@ function TopicListEntry(props: TopicListEntryProps) {
 		setSettingsOpen(false);
 	};
 
+	createEffect(() => {
+		if (isEditing() && inputRef) {
+			inputRef.focus();
+			inputRef.select();
+		}
+	});
+
 	return (
 		<div
-			class={`flex w-full max-h-9 ${props.bgColor}/10 rounded-l-full hover:${props.bgColor}/50`}
+			class={`flex max-w-full max-h-9 ${props.bgColor}/10 rounded-l-full hover:${props.bgColor}/50`}
 			classList={{
 				[`opacity-100 border ${props.bgColor.replace("bg-", "border-")}`]:
 					isActive(),
-				"opacity-50": !isActive(),
+				"opacity-60": !isActive(),
 			}}
 		>
 			<Show
 				when={!isEditing()}
 				fallback={
-					<form ref={setFormRef} onSubmit={handleSubmit}>
+					<form ref={setFormRef} onSubmit={handleSubmit} class="w-full ">
 						<TextFieldRoot>
 							<TextField
+								ref={setInputRef}
 								type="text"
 								placeholder="New Topic"
 								id="topicName"
 								value={topicName()}
-								autofocus
-								class="w-full rounded-l-full overflow-hidden text-ellipsis focus-visible:ring-0 focus-visible:outline-none"
+								class="w-full max-h-8 rounded-l-full overflow-hidden text-ellipsis focus-visible:ring-0 focus-visible:outline-none"
 							/>
 						</TextFieldRoot>
 					</form>
@@ -80,11 +91,13 @@ function TopicListEntry(props: TopicListEntryProps) {
 							setIsCollapsed(!props.isCollapsed);
 						}}
 					/>
-					<div class="flex-1 min-w-0">
-						<p class="text-sm overflow-hidden text-ellipsis whitespace-nowrap">
-							{topicName()}
-						</p>
-					</div>
+					<CustomTooltip content={topicName()} placement="right-end">
+						<div class="flex-1 min-w-0">
+							<p class="text-sm overflow-hidden text-ellipsis whitespace-nowrap">
+								{topicName()}
+							</p>
+						</div>
+					</CustomTooltip>
 				</div>
 			</Show>
 			<TopicListEntryTools
