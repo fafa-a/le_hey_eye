@@ -5,6 +5,7 @@ import Edit from "@icons/Edit";
 import Copy from "@icons/Copy";
 import Delete from "@icons/Trash";
 import Regenerate from "@icons/Reset";
+import { createEffect } from "solid-js";
 
 interface ChatMessageToolbarProps {
 	role: MessageRole;
@@ -58,7 +59,7 @@ const ChatMessageFooter = ({ role, tokens_used }: ChatMessageFooterProps) => {
 	);
 
 	return (
-		<div class="flex items-center gap-2">
+		<div class="flex items-center gap-2 mb-2">
 			<ChatMessageToolbar role={role} />
 			<span class="text-xs text-gray-300">{formattedTime}</span>
 			{role === "assistant" && tokens_used && (
@@ -73,8 +74,11 @@ interface ChatMessageProps {
 }
 
 const ChatMessage = ({ message }: ChatMessageProps) => {
+	createEffect(() => {
+		console.log("message: ", message);
+	});
 	return (
-		<div class="flex flex-col gap-1 w-full">
+		<div class="flex flex-col gap-1 w-full overflow-scroll">
 			<div
 				class="flex w-full"
 				classList={{
@@ -88,7 +92,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
 						"bg-slate-50": message.role === "user",
 					}}
 				>
-					<div class="overflow-x-scroll break-words">
+					<div class="overflow-x-scroll break-words whitespace-pre">
 						<SolidMarkdown>{message.content}</SolidMarkdown>
 					</div>
 					<ChatMessageFooter

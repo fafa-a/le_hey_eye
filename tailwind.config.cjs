@@ -2,9 +2,10 @@
 module.exports = {
 	darkMode: ["class", '[data-kb-theme="dark"]'],
 	content: [
-		"src/routes/**/*.{ts,tsx}",
+		"src/**/*.{ts,tsx}",
 		"src/components/**/*.{ts,tsx}",
 		"src/features/**/*.{ts,tsx}",
+		"src/components/common/**/*.{ts,tsx}",
 	],
 	prefix: "",
 	safelist: [

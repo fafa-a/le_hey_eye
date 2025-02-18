@@ -215,66 +215,190 @@ function App() {
 		const messages = currentTopicMessages().slice(1);
 		return messages;
 	});
+
 	return (
-		<main class="flex flex-col h-screen w-full">
-			{/* <Navigation setModel={setModel} /> */}
-			<div class="flex-1 flex h-full ">
-				<div
-					classList={{
-						"w-[60px]": isCollapsed(),
-						"w-[20%] max-w-[300px] min-w-[200px]": !isCollapsed(),
-					}}
-				>
-					<Sidebar
-						isCollapsed={isCollapsed()}
-						setIsCollapsed={setIsCollapsed}
-						topicId={topicId()}
-						setTopicId={setTopicId}
-						topicActive={topicActive()}
-						setTopicActive={setTopicActive}
-					/>
-				</div>
-				<div class="flex-1 flex flex-col overflow-hidden">
-					<div class="flex-1 overflow-y-auto p-4">
-						<div class="space-y-4 max-w-full">
-							<For each={displayMessages()}>
-								{(message) => <ChatMessage message={message} />}
-							</For>
-							<Show when={currentStreamedResponse()}>
-								<div class="p-4 rounded mr-9 break-words bg-red-500">
-									<SolidMarkdown>{currentStreamedResponse()}</SolidMarkdown>
-								</div>
-							</Show>
-							<Show when={mutation.isPending && !currentStreamedResponse()}>
-								<div class="p-4 rounded w-full">
-									<div class="animate-pulse text-slate-500">Thinking...</div>
-								</div>
-							</Show>
-						</div>
+		<div class="h-screen flex overflow-hidden">
+			<div
+				class="h-full transition-all flex-shrink-0"
+				classList={{
+					"w-[60px] ": isCollapsed(),
+					"w-[20%] max-w-[300px] min-w-[200px]": !isCollapsed(),
+				}}
+			>
+				<Sidebar
+					isCollapsed={isCollapsed()}
+					setIsCollapsed={setIsCollapsed}
+					topicId={topicId()}
+					setTopicId={setTopicId}
+					topicActive={topicActive()}
+					setTopicActive={setTopicActive}
+				/>
+			</div>
+
+			<div class="flex flex-col flex-1 w-full min-w-0">
+				<div class="h-[85%] overflow-y-auto w-full">
+					<div class="space-y-4 w-full p-3">
+						<For each={displayMessages()}>
+							{(message) => <ChatMessage message={message} />}
+						</For>
+						<Show when={currentStreamedResponse()}>
+							<div class="rounded break-words">
+								<SolidMarkdown>{currentStreamedResponse()}</SolidMarkdown>
+							</div>
+						</Show>
+						<Show when={mutation.isPending && !currentStreamedResponse()}>
+							<div class="p-4 rounded w-full">
+								<div class="animate-pulse text-slate-500">Thinking...</div>
+							</div>
+						</Show>
 					</div>
-					<div class="flex-shrink-0 pb-2 space-y-1">
-						<div class="flex justify-end mr-3">
-							<SettingsPopover
-								model={model}
-								setModel={setModel}
-								promptSettings={promptSettings}
-								setPromptSettings={setPromptSettings}
-							/>
-						</div>
-						<PromptInput
-							onSubmit={handleSubmit}
-							mutation={mutation}
+				</div>
+
+				<div class="h-[15%] mr-3">
+					<div class="flex justify-end">
+						<SettingsPopover
 							model={model}
 							setModel={setModel}
-							setPromptSettings={setPromptSettings}
 							promptSettings={promptSettings}
-							topicId={topicActive()}
+							setPromptSettings={setPromptSettings}
 						/>
 					</div>
+					<PromptInput
+						onSubmit={handleSubmit}
+						mutation={mutation}
+						model={model}
+						setModel={setModel}
+						setPromptSettings={setPromptSettings}
+						promptSettings={promptSettings}
+						topicId={topicActive()}
+					/>
 				</div>
 			</div>
-		</main>
+		</div>
 	);
+
+	// return (
+	// 	<main class="grid h-screen bg-white grid-cols-[auto_1fr] grid-rows-[1fr_auto]">
+	// 		<div
+	// 			class={`h-full transition-all duration-300 ${
+	// 				isCollapsed()
+	// 					? "w-[60px] bg-red-500"
+	// 					: "w-[20%] max-w-[300px] min-w-[200px] bg-blue-500"
+	// 			}`}
+	// 		>
+	// 			<Sidebar
+	// 				isCollapsed={isCollapsed()}
+	// 				setIsCollapsed={setIsCollapsed}
+	// 				topicId={topicId()}
+	// 				setTopicId={setTopicId}
+	// 				topicActive={topicActive()}
+	// 				setTopicActive={setTopicActive}
+	// 			/>
+	// 		</div>
+	//
+	// 		<div class="flex flex-col h-full">
+	// 			<div class="flex-grow overflow-y-auto p-4">
+	// 				<div class="space-y-4 max-w-full">
+	// 					<For each={displayMessages()}>
+	// 						{(message) => <ChatMessage message={message} />}
+	// 					</For>
+	// 					<Show when={currentStreamedResponse()}>
+	// 						<div class="p-4 rounded mr-9 break-words bg-red-500">
+	// 							<SolidMarkdown>{currentStreamedResponse()}</SolidMarkdown>
+	// 						</div>
+	// 					</Show>
+	// 					<Show when={mutation.isPending && !currentStreamedResponse()}>
+	// 						<div class="p-4 rounded w-full">
+	// 							<div class="animate-pulse text-slate-500">Thinking...</div>
+	// 						</div>
+	// 					</Show>
+	// 				</div>
+	// 			</div>
+	//
+	// 			<div class="flex-shrink-0 pb-2 space-y-1 p-4 bg-gray-100 border-t">
+	// 				<PromptInput
+	// 					onSubmit={handleSubmit}
+	// 					mutation={mutation}
+	// 					model={model}
+	// 					setModel={setModel}
+	// 					setPromptSettings={setPromptSettings}
+	// 					promptSettings={promptSettings}
+	// 					topicId={topicActive()}
+	// 				/>
+	// 			</div>
+	// 		</div>
+	//
+	// 		<div class="flex justify-end p-4 bg-gray-100 border-t">
+	// 			<SettingsPopover
+	// 				model={model}
+	// 				setModel={setModel}
+	// 				promptSettings={promptSettings}
+	// 				setPromptSettings={setPromptSettings}
+	// 			/>
+	// 		</div>
+	// 	</main>
+	// );
+	// return (
+	// 	<main class="flex flex-col h-screen bg-white">
+	// 		<div class="flex h-full">
+	// 			<div
+	// 				class="h-full"
+	// 				classList={{
+	// 					"w-[60px] shrink-0 bg-red-500": isCollapsed(),
+	// 					"w-[20%] max-w-[300px] min-w-[200px] shrink-0 bg-blue-500":
+	// 						!isCollapsed(),
+	// 				}}
+	// 			>
+	// 				<Sidebar
+	// 					isCollapsed={isCollapsed()}
+	// 					setIsCollapsed={setIsCollapsed}
+	// 					topicId={topicId()}
+	// 					setTopicId={setTopicId}
+	// 					topicActive={topicActive()}
+	// 					setTopicActive={setTopicActive}
+	// 				/>
+	// 			</div>
+	// 			<div class="flex-1 flex flex-col">
+	// 				<div class="flex-grow overflow-y-auto">
+	// 					<div class="space-y-4 max-w-full">
+	// 						<For each={displayMessages()}>
+	// 							{(message) => <ChatMessage message={message} />}
+	// 						</For>
+	// 						<Show when={currentStreamedResponse()}>
+	// 							<div class="p-4 rounded mr-9 break-words bg-red-500">
+	// 								<SolidMarkdown>{currentStreamedResponse()}</SolidMarkdown>
+	// 							</div>
+	// 						</Show>
+	// 						<Show when={mutation.isPending && !currentStreamedResponse()}>
+	// 							<div class="p-4 rounded w-full">
+	// 								<div class="animate-pulse text-slate-500">Thinking...</div>
+	// 							</div>
+	// 						</Show>
+	// 					</div>
+	// 				</div>
+	// 				<div class="flex-shrink-0 pb-2 space-y-1">
+	// 					<div class="flex justify-end mr-3">
+	// 						<SettingsPopover
+	// 							model={model}
+	// 							setModel={setModel}
+	// 							promptSettings={promptSettings}
+	// 							setPromptSettings={setPromptSettings}
+	// 						/>
+	// 					</div>
+	// 					<PromptInput
+	// 						onSubmit={handleSubmit}
+	// 						mutation={mutation}
+	// 						model={model}
+	// 						setModel={setModel}
+	// 						setPromptSettings={setPromptSettings}
+	// 						promptSettings={promptSettings}
+	// 						topicId={topicActive()}
+	// 					/>
+	// 				</div>
+	// 			</div>
+	// 		</div>
+	// 	</main>
+	// );
 }
 
 export default App;

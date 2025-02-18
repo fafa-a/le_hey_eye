@@ -1,11 +1,4 @@
-import {
-	createEffect,
-	createMemo,
-	createSignal,
-	For,
-	type Setter,
-	Show,
-} from "solid-js";
+import { For, type Setter, Show } from "solid-js";
 import SidePanelClose from "@icons/SidePanelClose";
 import SidePanelOpen from "@icons/SidePanelOpen";
 import { Button } from "@/components/ui/button";
@@ -16,6 +9,8 @@ import Add from "../icons/Add";
 import TopicListEntryThumbnail from "./TopicListEntryThumbnail";
 
 interface SidebarProps {
+	isCollapsed: boolean;
+	setIsCollapsed: Setter<boolean>;
 	topicId: string;
 	setTopicId: Setter<string>;
 	topicActive: string;
@@ -23,9 +18,9 @@ interface SidebarProps {
 }
 
 export function Sidebar(props: SidebarProps) {
-	const [isCollapsed, setIsCollapsed] = createSignal(false);
-	const { setTopicId, setTopicActive } = props;
+	const { setTopicId, setTopicActive, setIsCollapsed } = props;
 	const topicActive = () => props.topicActive;
+	const isCollapsed = () => props.isCollapsed;
 	const { topics, addTopic } = useTopics();
 
 	const handleNewTopic = () => {
@@ -33,29 +28,29 @@ export function Sidebar(props: SidebarProps) {
 		setTopicId(newTopicId);
 		addTopic({
 			id: newTopicId,
-			name: "New Conversation long long long long long long long long long long long long long long long long long long long long long long long long long long long",
+			name: "New Conversation long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long",
 		});
 		setTopicActive(newTopicId);
 	};
 
 	return (
 		<aside
-			class={`
+			class="
         flex
         flex-col
-        h-screen
+        flex-1
+        h-full
         transition-all
         duration-300
         ease-in-out
         shadow-md
-        ${isCollapsed() ? "w-[60px]" : "w-[20%] max-w-[300px] min-w-[200px]"}
-      `}
+        "
 		>
 			<div class="flex-1 p-4">
 				<Show
 					when={!isCollapsed()}
 					fallback={
-						<div class="flex flex-col gap-1 w-full">
+						<div class="flex flex-col gap-1">
 							<For each={topics}>
 								{(topic) => (
 									<TopicListEntryThumbnail
