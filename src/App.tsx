@@ -166,11 +166,12 @@ function App() {
 
 			return await generateAIResponse(model(), apiRequest);
 		},
-		onSuccess: () => {
+		onSuccess: (response) => {
 			const newAssistantMessage: Omit<TopicMessage, "id"> = {
 				role: "assistant",
 				content: currentStreamedResponse(),
 				timestamp: new Date(),
+				tokens_used: response.usage?.total_tokens,
 			};
 			addMessage(topicActive(), newAssistantMessage);
 
@@ -214,6 +215,9 @@ function App() {
 		// Skip the first message (system message) and add any streaming message
 		const messages = currentTopicMessages().slice(1);
 		return messages;
+	});
+	createEffect(() => {
+		console.log("displayMessages: ", displayMessages());
 	});
 
 	return (
