@@ -42,13 +42,20 @@ const TopicsContext = createContext<TopicsContextValue>();
 const systemMessage: TopicMessage = {
 	id: uid(16),
 	role: "system",
-	content:
-		"You are a helpful assistant. If you send me some code, please format it with markdown.",
+	content: "You are a helpful assistant.",
 	timestamp: new Date(),
 };
 
+const initialTopic: Topic = {
+	id: uid(16),
+	name: "New Topic",
+	createdAt: new Date(),
+	messages: [systemMessage],
+	bgColor: generateRandomColor(),
+};
+
 export function TopicsProvider(props: { children: JSX.Element }) {
-	const [topics, setTopics] = createStore<Topic[]>([]);
+	const [topics, setTopics] = createStore<Topic[]>([initialTopic]);
 
 	const addTopic = (
 		topic: Omit<Topic, "createdAt" | "messages" | "bgColor">,

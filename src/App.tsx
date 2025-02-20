@@ -62,12 +62,27 @@ function App() {
 		"@cf/mistral/mistral-7b-instruct-v0.1",
 	);
 	const [topicId, setTopicId] = createSignal("");
-	const [topicActive, setTopicActive] = createSignal("");
+	const [topicActive, setTopicActive] = createSignal(topics.at(0)?.id || "");
 
 	const [isCollapsed, setIsCollapsed] = createSignal(false);
 	const [messageHistory, setMessageHistory] = createSignal<
 		Omit<TopicMessage, "id">[]
 	>([]);
+	const [messagesContainer, setMessagesContainer] =
+		createSignal<HTMLDivElement>();
+
+	createEffect(() => {
+		displayMessages();
+		currentStreamedResponse();
+
+		setTimeout(() => {
+			const container = messagesContainer();
+			if (container) {
+				container.scrollTop = container.scrollHeight - container.offsetHeight;
+				container.scrollTop = container.scrollHeight;
+			}
+		}, 0);
+	});
 
 	createEffect(() => {
 		console.log("*".repeat(100));
@@ -167,6 +182,7 @@ function App() {
 			return await generateAIResponse(model(), apiRequest);
 		},
 		onSuccess: (response) => {
+			console.log("response: ", response);
 			const newAssistantMessage: Omit<TopicMessage, "id"> = {
 				role: "assistant",
 				content: currentStreamedResponse(),
@@ -204,20 +220,14 @@ function App() {
 		mutation.mutate(updatedHistory);
 	};
 
-	// Create a memoized signal for the current topic's messages
 	const currentTopicMessages = createMemo(() => {
 		const currentTopic = topics.find((topic) => topic.id === topicActive());
 		return currentTopic?.messages || [];
 	});
 
-	// Create a memoized signal for the displayable messages
 	const displayMessages = createMemo(() => {
-		// Skip the first message (system message) and add any streaming message
 		const messages = currentTopicMessages().slice(1);
 		return messages;
-	});
-	createEffect(() => {
-		console.log("displayMessages: ", displayMessages());
 	});
 
 	return (
@@ -239,8 +249,8 @@ function App() {
 				/>
 			</div>
 
-			<div class="flex flex-col flex-1 w-full min-w-0">
-				<div class="h-[85%] overflow-y-auto w-full">
+			<div class="flex flex-col flex-1 w-full min-w-0 h-full">
+				<div class="h-[85%] overflow-y-auto w-full" ref={setMessagesContainer}>
 					<div class="space-y-4 w-full p-3">
 						<For each={displayMessages()}>
 							{(message) => <ChatMessage message={message} />}
@@ -257,8 +267,8 @@ function App() {
 						</Show>
 					</div>
 				</div>
-
-				<div class="h-[15%] mr-3">
+				{/* TODO set the height and add a full screen or resize panel */}
+				<div class="h-[15%] min-h-[110px] max-h-[55%] mr-3 overflow-scroll">
 					<div class="flex justify-end">
 						<SettingsPopover
 							model={model}
@@ -280,129 +290,6 @@ function App() {
 			</div>
 		</div>
 	);
-
-	// return (
-	// 	<main class="grid h-screen bg-white grid-cols-[auto_1fr] grid-rows-[1fr_auto]">
-	// 		<div
-	// 			class={`h-full transition-all duration-300 ${
-	// 				isCollapsed()
-	// 					? "w-[60px] bg-red-500"
-	// 					: "w-[20%] max-w-[300px] min-w-[200px] bg-blue-500"
-	// 			}`}
-	// 		>
-	// 			<Sidebar
-	// 				isCollapsed={isCollapsed()}
-	// 				setIsCollapsed={setIsCollapsed}
-	// 				topicId={topicId()}
-	// 				setTopicId={setTopicId}
-	// 				topicActive={topicActive()}
-	// 				setTopicActive={setTopicActive}
-	// 			/>
-	// 		</div>
-	//
-	// 		<div class="flex flex-col h-full">
-	// 			<div class="flex-grow overflow-y-auto p-4">
-	// 				<div class="space-y-4 max-w-full">
-	// 					<For each={displayMessages()}>
-	// 						{(message) => <ChatMessage message={message} />}
-	// 					</For>
-	// 					<Show when={currentStreamedResponse()}>
-	// 						<div class="p-4 rounded mr-9 break-words bg-red-500">
-	// 							<SolidMarkdown>{currentStreamedResponse()}</SolidMarkdown>
-	// 						</div>
-	// 					</Show>
-	// 					<Show when={mutation.isPending && !currentStreamedResponse()}>
-	// 						<div class="p-4 rounded w-full">
-	// 							<div class="animate-pulse text-slate-500">Thinking...</div>
-	// 						</div>
-	// 					</Show>
-	// 				</div>
-	// 			</div>
-	//
-	// 			<div class="flex-shrink-0 pb-2 space-y-1 p-4 bg-gray-100 border-t">
-	// 				<PromptInput
-	// 					onSubmit={handleSubmit}
-	// 					mutation={mutation}
-	// 					model={model}
-	// 					setModel={setModel}
-	// 					setPromptSettings={setPromptSettings}
-	// 					promptSettings={promptSettings}
-	// 					topicId={topicActive()}
-	// 				/>
-	// 			</div>
-	// 		</div>
-	//
-	// 		<div class="flex justify-end p-4 bg-gray-100 border-t">
-	// 			<SettingsPopover
-	// 				model={model}
-	// 				setModel={setModel}
-	// 				promptSettings={promptSettings}
-	// 				setPromptSettings={setPromptSettings}
-	// 			/>
-	// 		</div>
-	// 	</main>
-	// );
-	// return (
-	// 	<main class="flex flex-col h-screen bg-white">
-	// 		<div class="flex h-full">
-	// 			<div
-	// 				class="h-full"
-	// 				classList={{
-	// 					"w-[60px] shrink-0 bg-red-500": isCollapsed(),
-	// 					"w-[20%] max-w-[300px] min-w-[200px] shrink-0 bg-blue-500":
-	// 						!isCollapsed(),
-	// 				}}
-	// 			>
-	// 				<Sidebar
-	// 					isCollapsed={isCollapsed()}
-	// 					setIsCollapsed={setIsCollapsed}
-	// 					topicId={topicId()}
-	// 					setTopicId={setTopicId}
-	// 					topicActive={topicActive()}
-	// 					setTopicActive={setTopicActive}
-	// 				/>
-	// 			</div>
-	// 			<div class="flex-1 flex flex-col">
-	// 				<div class="flex-grow overflow-y-auto">
-	// 					<div class="space-y-4 max-w-full">
-	// 						<For each={displayMessages()}>
-	// 							{(message) => <ChatMessage message={message} />}
-	// 						</For>
-	// 						<Show when={currentStreamedResponse()}>
-	// 							<div class="p-4 rounded mr-9 break-words bg-red-500">
-	// 								<SolidMarkdown>{currentStreamedResponse()}</SolidMarkdown>
-	// 							</div>
-	// 						</Show>
-	// 						<Show when={mutation.isPending && !currentStreamedResponse()}>
-	// 							<div class="p-4 rounded w-full">
-	// 								<div class="animate-pulse text-slate-500">Thinking...</div>
-	// 							</div>
-	// 						</Show>
-	// 					</div>
-	// 				</div>
-	// 				<div class="flex-shrink-0 pb-2 space-y-1">
-	// 					<div class="flex justify-end mr-3">
-	// 						<SettingsPopover
-	// 							model={model}
-	// 							setModel={setModel}
-	// 							promptSettings={promptSettings}
-	// 							setPromptSettings={setPromptSettings}
-	// 						/>
-	// 					</div>
-	// 					<PromptInput
-	// 						onSubmit={handleSubmit}
-	// 						mutation={mutation}
-	// 						model={model}
-	// 						setModel={setModel}
-	// 						setPromptSettings={setPromptSettings}
-	// 						promptSettings={promptSettings}
-	// 						topicId={topicActive()}
-	// 					/>
-	// 				</div>
-	// 			</div>
-	// 		</div>
-	// 	</main>
-	// );
 }
 
 export default App;
