@@ -54,10 +54,7 @@ export function PromptInput(props: PromptInputProps) {
 	};
 
 	return (
-		<form
-			class="w-full flex bg-red-500 h-[calc(100%-40px)]"
-			onSubmit={handleSubmit}
-		>
+		<form class="w-full flex  h-[calc(100%-40px)]" onSubmit={handleSubmit}>
 			<div class="flex gap-1 w-full p-0.5 border-t border-slate-50 hover:border-slate-200 transition-colors duration-2000 ease-in-out">
 				<TextFieldRoot class="w-full border-none ">
 					<TextArea

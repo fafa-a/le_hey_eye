@@ -21,9 +21,8 @@ function TopicListEntryThumbnail(props: TopicListEntryThumbnailProps) {
 			<div
 				class={`w-8 h-8 ${props.bgColor} rounded-full hover:opacity-100`}
 				classList={{
-					[`opacity-100 border ${props.bgColor}/10 ${props.bgColor.replace("bg-", "border-")}`]:
-						isActive(),
-					"opacity-100": !isActive(),
+					"opacity-100": isActive(),
+					"opacity-20": !isActive(),
 				}}
 				onClick={(e) => {
 					e.stopPropagation();
