@@ -16,6 +16,9 @@ import type {
 	CloudflareModelResponse,
 } from "../types/cloudflare";
 import { SolidMarkdown } from "solid-markdown";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import remarkBreaks from "remark-breaks";
 import { listen } from "@tauri-apps/api/event";
 import { PromptInput } from "@features/chat/prompt/PromptInput";
 import { Sidebar } from "./components/common/Sidebar";
@@ -24,6 +27,11 @@ import ChatMessage from "@/features/chat/message/ChatMessage";
 import { unwrap } from "solid-js/store";
 import type { TopicMessage } from "@/context/topicsContext";
 import { useTopics } from "@/context/topicsContext";
+import { CodeInput } from "@srsholmes/solid-code-input";
+import Prism from "prismjs";
+import "prismjs/themes/prism-twilight.min.css";
+import { Highlight } from "solid-highlight";
+import Markdown from "./components/common/Markdown";
 
 async function generateAIResponse(
 	model: string,
@@ -256,8 +264,8 @@ function App() {
 							{(message) => <ChatMessage message={message} />}
 						</For>
 						<Show when={currentStreamedResponse()}>
-							<div class="rounded break-words">
-								<SolidMarkdown>{currentStreamedResponse()}</SolidMarkdown>
+							<div class="w-full min-w-0 overflow-hidden">
+								<Markdown>{currentStreamedResponse()}</Markdown>
 							</div>
 						</Show>
 						<Show when={mutation.isPending && !currentStreamedResponse()}>
@@ -267,7 +275,6 @@ function App() {
 						</Show>
 					</div>
 				</div>
-				{/* TODO set the height and add a full screen or resize panel */}
 				<div class="h-[15%] min-h-[110px] max-h-[55%] mr-3 overflow-scroll">
 					<div class="flex justify-end">
 						<SettingsPopover

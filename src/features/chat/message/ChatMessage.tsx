@@ -6,6 +6,7 @@ import Copy from "@icons/Copy";
 import Delete from "@icons/Trash";
 import Regenerate from "@icons/Reset";
 import { createEffect } from "solid-js";
+import Markdown from "@/components/common/Markdown";
 
 interface ChatMessageToolbarProps {
 	role: MessageRole;
@@ -92,8 +93,8 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
 						"bg-slate-50": message.role === "user",
 					}}
 				>
-					<div class="overflow-x-scroll break-words whitespace-pre">
-						<SolidMarkdown>{message.content}</SolidMarkdown>
+					<div class="w-full min-w-0 overflow-hidden">
+						<Markdown>{message.content}</Markdown>
 					</div>
 					<ChatMessageFooter
 						role={message.role}

@@ -65,3 +65,19 @@
 		--ring: 0 0% 83.1%;
 	}
 }
+
+._outer-wrapper_15j79_5 {
+	margin: .5em !important;
+	border-radius: 0.5rem !important;
+	height: auto !important;
+}
+
+pre[class*="language-"] {
+	border-radius: 0 !important;
+	border: none !important;
+	box-shadow: none !important;
+}
+
+._resize-both_15j79_81 {
+	resize: none !important;
+}
