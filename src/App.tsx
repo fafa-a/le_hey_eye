@@ -15,10 +15,6 @@ import type {
 	StreamResponse,
 	CloudflareModelResponse,
 } from "../types/cloudflare";
-import { SolidMarkdown } from "solid-markdown";
-import remarkGfm from "remark-gfm";
-import remarkMath from "remark-math";
-import remarkBreaks from "remark-breaks";
 import { listen } from "@tauri-apps/api/event";
 import { PromptInput } from "@features/chat/prompt/PromptInput";
 import { Sidebar } from "./components/common/Sidebar";
@@ -27,10 +23,6 @@ import ChatMessage from "@/features/chat/message/ChatMessage";
 import { unwrap } from "solid-js/store";
 import type { TopicMessage } from "@/context/topicsContext";
 import { useTopics } from "@/context/topicsContext";
-import { CodeInput } from "@srsholmes/solid-code-input";
-import Prism from "prismjs";
-import "prismjs/themes/prism-twilight.min.css";
-import { Highlight } from "solid-highlight";
 import Markdown from "./components/common/Markdown";
 
 async function generateAIResponse(
@@ -78,19 +70,11 @@ function App() {
 	>([]);
 	const [messagesContainer, setMessagesContainer] =
 		createSignal<HTMLDivElement>();
+	const [contentRef, setContentRef] = createSignal<HTMLDivElement>();
+	const [markdownContainerRef, setMarkdownContainerRef] =
+		createSignal<HTMLDivElement>();
 
-	createEffect(() => {
-		displayMessages();
-		currentStreamedResponse();
-
-		setTimeout(() => {
-			const container = messagesContainer();
-			if (container) {
-				container.scrollTop = container.scrollHeight - container.offsetHeight;
-				container.scrollTop = container.scrollHeight;
-			}
-		}, 0);
-	});
+	const [streamHeight, setStreamHeight] = createSignal(0);
 
 	createEffect(() => {
 		console.log("*".repeat(100));
@@ -238,6 +222,52 @@ function App() {
 		return messages;
 	});
 
+	createEffect(() => {
+		displayMessages();
+		// currentStreamedResponse();
+
+		setTimeout(() => {
+			const container = messagesContainer();
+			if (container) {
+				container.scrollTop = container.scrollHeight - container.offsetHeight;
+				container.scrollTop = container.scrollHeight;
+			}
+		}, 0);
+	});
+
+	createEffect(() => {
+		const response = currentStreamedResponse();
+		const container = messagesContainer();
+		const content = contentRef();
+
+		if (response && container && content) {
+			const containerRect = container.getBoundingClientRect();
+			const viewportHeight = window.innerHeight;
+			const spaceBelow = viewportHeight - containerRect.bottom;
+
+			const contentHeight = content.scrollHeight;
+
+			const minHeight = 150;
+			const idealHeight = Math.max(
+				minHeight,
+				Math.min(500, contentHeight + 50),
+			);
+
+			const finalHeight = Math.min(idealHeight, viewportHeight * 0.7);
+
+			setStreamHeight(finalHeight);
+
+			setTimeout(() => {
+				if (container) {
+					container.scrollTop = container.scrollHeight;
+				}
+			}, 0);
+		} else if (!response) {
+			setStreamHeight(0);
+		}
+	});
+	//
+
 	return (
 		<div class="h-screen flex overflow-hidden">
 			<div
@@ -257,15 +287,28 @@ function App() {
 				/>
 			</div>
 
-			<div class="flex flex-col flex-1 w-full min-w-0 h-full">
-				<div class="h-[85%] overflow-y-auto w-full" ref={setMessagesContainer}>
+			<div class="flex flex-col flex-1 w-full min-w-0 h-full xl:max-w-[1200px] 2xl:max-w-[1400px] mx-auto">
+				<div
+					class="min-h-[85%] flex-1 overflow-y-auto w-full"
+					ref={setMessagesContainer}
+				>
 					<div class="space-y-4 w-full p-3">
 						<For each={displayMessages()}>
 							{(message) => <ChatMessage message={message} />}
 						</For>
 						<Show when={currentStreamedResponse()}>
-							<div class="w-full min-w-0 overflow-hidden">
-								<Markdown>{currentStreamedResponse()}</Markdown>
+							<div
+								class="w-full min-w-full overflow-hidden"
+								style={{
+									height: currentStreamedResponse()
+										? `${streamHeight()}px`
+										: "auto",
+								}}
+								ref={setMarkdownContainerRef}
+							>
+								<div ref={setContentRef}>
+									<Markdown>{currentStreamedResponse()}</Markdown>
+								</div>
 							</div>
 						</Show>
 						<Show when={mutation.isPending && !currentStreamedResponse()}>
@@ -275,7 +318,7 @@ function App() {
 						</Show>
 					</div>
 				</div>
-				<div class="h-[15%] min-h-[110px] max-h-[55%] mr-3 overflow-scroll">
+				<div class="h-[15%] min-h-[110px] max-h-[55%] mr-3 overflow-scroll xl:border xl:border-gray-300 xl:border-opacity-50 xl:rounded-lg">
 					<div class="flex justify-end">
 						<SettingsPopover
 							model={model}

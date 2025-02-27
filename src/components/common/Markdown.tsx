@@ -7,7 +7,6 @@ import remarkMath from "remark-math";
 import remarkBreaks from "remark-breaks";
 import "highlight.js/styles/base16/onedark.min.css";
 import highlightjs from "highlight.js";
-//TODO fix the glitch on scrollTop
 // add interfaces for props
 // optimize some performance
 // add copy to clipboard
