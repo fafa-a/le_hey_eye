@@ -7,34 +7,34 @@ import type { CloudflareUsage } from "../src-tauri/bindings/CloudflareUsage.js";
 export type ChatInput = { messages: Array<Message>; stream: boolean };
 
 export type ChatRequest = {
-	messages: Array<Message>;
-	stream?: boolean;
-	max_tokens?: number;
-	temperature?: number;
-	top_p?: number;
-	top_k?: number;
-	seed?: number;
-	repetition_penalty?: number;
-	frequency_penalty?: number;
-	presence_penalty?: number;
-	lora?: string;
-	functions?: Array<FunctionTool>;
-	tools?: Array<FunctionToolWrapper>;
+  messages: Array<Message>;
+  stream?: boolean;
+  max_tokens?: number;
+  temperature?: number;
+  top_p?: number;
+  top_k?: number;
+  seed?: number;
+  repetition_penalty?: number;
+  frequency_penalty?: number;
+  presence_penalty?: number;
+  lora?: string;
+  functions?: Array<FunctionTool>;
+  tools?: Array<FunctionToolWrapper>;
 };
 
 export type CloudflareModelResponse = {
-	success: boolean;
-	result: Array<CloudflareModel>;
-	errors: Array<CloudflareError>;
-	messages: Array<string>;
-	result_info: CloudflareResultInfo;
+  success: boolean;
+  result: Array<CloudflareModel>;
+  errors: Array<CloudflareError>;
+  messages: Array<string>;
+  result_info: CloudflareResultInfo;
 };
 
 export type CloudflareResponse = {
-	errors: Array<CloudflareError>;
-	messages: Array<Message>;
-	result: CloudflareResult;
-	success: boolean;
+  errors: Array<CloudflareError>;
+  messages: Array<Message>;
+  result: CloudflareResult;
+  success: boolean;
 };
 
 export type CloudflareResult = { response: string; usage: CloudflareUsage };
@@ -44,70 +44,70 @@ export type FunctionTool = { name: string; code: string };
 export type FunctionToolWrapper = { type: string; function: Tool };
 
 export type Message = {
-	role: MessageRole;
-	content: string;
-	tokens_used?: number;
+  role: MessageRole;
+  content: string;
+  tokens_used?: number;
 };
 
 export type MessageRole = "system" | "user" | "assistant";
 
 export type MessagesRequest = {
-	messages: Array<Message>;
-	functions?: Array<FunctionTool>;
-	tools?: Array<FunctionToolWrapper>;
-	stream?: boolean;
-	max_tokens?: number;
-	temperature?: number;
-	top_p?: number;
-	top_k?: number;
-	seed?: number;
-	repetition_penalty?: number;
-	frequency_penalty?: number;
-	presence_penalty?: number;
+  messages: Array<Message>;
+  functions?: Array<FunctionTool>;
+  tools?: Array<FunctionToolWrapper>;
+  stream?: boolean;
+  max_tokens?: number;
+  temperature?: number;
+  top_p?: number;
+  top_k?: number;
+  seed?: number;
+  repetition_penalty?: number;
+  frequency_penalty?: number;
+  presence_penalty?: number;
 };
 
 export type PromptRequest = {
-	prompt: string;
-	raw: boolean | null;
-	stream: boolean | null;
-	max_tokens: number | null;
-	temperature: number | null;
-	top_p: number | null;
-	top_k: number | null;
-	seed: number | null;
-	repetition_penalty: number | null;
-	frequency_penalty: number | null;
-	presence_penalty: number | null;
-	lora: string | null;
+  prompt: string;
+  raw: boolean | null;
+  stream: boolean | null;
+  max_tokens: number | null;
+  temperature: number | null;
+  top_p: number | null;
+  top_k: number | null;
+  seed: number | null;
+  repetition_penalty: number | null;
+  frequency_penalty: number | null;
+  presence_penalty: number | null;
+  lora: string | null;
 };
 
 export type PromptSettings = {
-	stream: boolean | null;
-	max_tokens: number | null;
-	temperature: number | null;
-	top_p: number | null;
-	top_k: number | null;
-	seed: number | null;
-	repetition_penalty: number | null;
-	frequency_penalty: number | null;
-	presence_penalty: number | null;
+  stream: boolean | null;
+  max_tokens: number | null;
+  temperature: number | null;
+  top_p: number | null;
+  top_k: number | null;
+  seed: number | null;
+  repetition_penalty: number | null;
+  frequency_penalty: number | null;
+  presence_penalty: number | null;
 };
 
 export type StreamResponse = {
-	response: string;
-	usage: CloudflareUsage | null;
+  response: string;
+  usage: CloudflareUsage | null;
 };
 
 export type Tool = {
-	name: string;
-	description: string;
-	parameters: ToolParameters;
+  name: string;
+  description: string;
+  parameters: ToolParameters;
 };
 
 export type ToolParameter = { type_field: string; description: string };
 
 export type ToolParameters = {
-	type: string;
-	properties: { [key in string]?: ToolParameter };
-	required: Array<string>;
+  type: string;
+  properties: { [key in string]?: ToolParameter };
+  required: Array<string>;
 };
