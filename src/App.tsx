@@ -17,20 +17,23 @@ import type {
 } from "../types/cloudflare";
 import { listen } from "@tauri-apps/api/event";
 import { PromptInput } from "@features/chat/prompt/PromptInput";
-import { Sidebar } from "./components/common/Sidebar";
-import SettingsPopover from "@features/chat/settings/SettingsPopover";
+import { Sidebar } from "@/features/sidebar/Sidebar";
+import ModelSettingsPopover from "@features/chat/settings/SettingsPopover";
 import ChatMessage from "@/features/chat/message/ChatMessage";
 import { unwrap } from "solid-js/store";
 import type { TopicMessage } from "@/context/topicsContext";
 import { useTopics } from "@/context/topicsContext";
 import Markdown from "./components/common/Markdown";
+import type { Provider } from "../types/core";
 
 async function generateAIResponse(
+	provider: Provider,
 	model: string,
 	request: ChatRequest,
 ): Promise<StreamResponse> {
 	try {
-		const response = await invoke("call_cloudflare_api", {
+		const response = await invoke("send_message", {
+			provider,
 			model,
 			request,
 		});
@@ -41,18 +44,18 @@ async function generateAIResponse(
 	}
 }
 
-async function getCloudflareModelDetails(
-	model: string,
-): Promise<CloudflareModelResponse> {
-	try {
-		return (await invoke("get_cloudflare_ai_models_details", {
-			model,
-		})) as CloudflareModelResponse;
-	} catch (error) {
-		console.error("API Error:", error);
-		throw error;
-	}
-}
+// async function getCloudflareModelDetails(
+// 	model: string,
+// ): Promise<CloudflareModelResponse> {
+// 	try {
+// 		return (await invoke("get_model_details", {
+// 			model,
+// 		})) as CloudflareModelResponse;
+// 	} catch (error) {
+// 		console.error("API Error:", error);
+// 		throw error;
+// 	}
+// }
 
 const MAX_MESSAGES = 4;
 
@@ -61,6 +64,7 @@ function App() {
 	const [model, setModel] = createSignal<string>(
 		"@cf/mistral/mistral-7b-instruct-v0.1",
 	);
+	const [provider, setProvider] = createSignal<Provider>("Cloudflare");
 	const [topicId, setTopicId] = createSignal("");
 	const [topicActive, setTopicActive] = createSignal(topics.at(0)?.id || "");
 
@@ -144,15 +148,15 @@ function App() {
 		});
 	});
 
-	const details = createQuery(() => ({
-		queryKey: ["details"],
-		queryFn: async () => {
-			return await getCloudflareModelDetails(model());
-		},
-		// onSuccess: (data) => {
-		// 	console.log("details: ", data);
-		// },
-	}));
+	// const details = createQuery(() => ({
+	// 	queryKey: ["details"],
+	// 	queryFn: async () => {
+	// 		return await getCloudflareModelDetails(model());
+	// 	},
+	// onSuccess: (data) => {
+	// 	console.log("details: ", data);
+	// },
+	// }));
 
 	const mutation = createMutation(() => ({
 		mutationFn: async (messages: Message[]): Promise<StreamResponse> => {
@@ -171,7 +175,7 @@ function App() {
 				temperature: promptSettings().temperature,
 			};
 
-			return await generateAIResponse(model(), apiRequest);
+			return await generateAIResponse(provider(), model(), apiRequest);
 		},
 		onSuccess: (response) => {
 			console.log("response: ", response);
@@ -320,7 +324,7 @@ function App() {
 				</div>
 				<div class="h-[15%] min-h-[110px] max-h-[55%] mr-3 overflow-scroll xl:border xl:border-gray-300 xl:border-opacity-50 xl:rounded-lg">
 					<div class="flex justify-end">
-						<SettingsPopover
+						<ModelSettingsPopover
 							model={model}
 							setModel={setModel}
 							promptSettings={promptSettings}

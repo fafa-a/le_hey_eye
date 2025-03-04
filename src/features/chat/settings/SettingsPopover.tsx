@@ -30,7 +30,7 @@ interface SettingsPopoverProps {
 	>;
 }
 
-const SettingsPopover = ({
+const ModelSettingsPopover = ({
 	model,
 	setModel,
 	promptSettings,
@@ -233,4 +233,4 @@ const SettingsPopover = ({
 	);
 };
 
-export default SettingsPopover;
+export default ModelSettingsPopover;

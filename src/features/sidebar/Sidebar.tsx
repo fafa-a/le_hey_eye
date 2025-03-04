@@ -3,11 +3,11 @@ import SidePanelClose from "@icons/SidePanelClose";
 import SidePanelOpen from "@icons/SidePanelOpen";
 import { Button } from "@/components/ui/button";
 import { uid } from "uid";
-import TopicListEntry from "./TopicListEntry";
+import TopicListEntry from "@components/common/TopicListEntry";
 import { useTopics } from "@/context/topicsContext";
-import Add from "../icons/Add";
-import TopicListEntryThumbnail from "./TopicListEntryThumbnail";
-import Settings from "../icons/Settings";
+import Add from "@icons/Add";
+import TopicListEntryThumbnail from "@components/common/TopicListEntryThumbnail";
+import GeneralSettings from "./components/GeneralSettings";
 
 interface SidebarProps {
 	isCollapsed: boolean;
@@ -92,14 +92,7 @@ export function Sidebar(props: SidebarProps) {
 					"flex-col justify-end pr-2": isCollapsed(),
 				}}
 			>
-				<Button
-					variant="ghost"
-					size="sm"
-					onClick={handleNewTopic}
-					title="New Chat"
-				>
-					<Settings height={20} width={20} />
-				</Button>
+				<GeneralSettings />
 				<Button
 					variant="ghost"
 					size="sm"
