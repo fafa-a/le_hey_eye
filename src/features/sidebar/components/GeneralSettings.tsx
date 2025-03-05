@@ -8,8 +8,18 @@ import {
 	SheetTitle,
 	SheetTrigger,
 } from "@/components/ui/sheet";
+import ProviderSelector from "@features/credentials/components/ProviderSelector";
+import { createEffect, createSignal } from "solid-js";
+import type { Provider } from "types/core";
+import ProviderForm from "@/features/credentials/components/ProviderForm";
 
 const GeneralSettings = () => {
+	const [provider, setProvider] = createSignal<Provider>("Cloudflare");
+
+	createEffect(() => {
+		console.log("provider", provider());
+	});
+
 	return (
 		<Sheet>
 			<SheetTrigger>
@@ -23,6 +33,8 @@ const GeneralSettings = () => {
 						account and remove your data from our servers.
 					</SheetDescription>
 				</SheetHeader>
+				<ProviderSelector setProvider={setProvider} provider={provider()} />
+				<ProviderForm provider={provider()} />
 			</SheetContent>
 		</Sheet>
 	);

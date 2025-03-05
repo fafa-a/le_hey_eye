@@ -3,6 +3,7 @@ import { createSignal, createEffect } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
 import { createQuery } from "@tanstack/solid-query";
 import type { CloudflareModelResponse } from "../../../types/cloudflare";
+import "@thisbeyond/solid-select/style.css";
 
 async function getAllCloudflareAIModels(): Promise<CloudflareModelResponse> {
 	return await invoke("get_all_cloudflare_ai_models");
