@@ -2,26 +2,15 @@ use crate::core::models::{ChatRequest, Provider, StreamResponse};
 use std::sync::Arc;
 use tauri::{AppHandle, Runtime, Window};
 
-// We can't use generic methods in trait objects, so we need to redesign
-// our approach completely.
-
-// Define a trait that doesn't rely on generic methods
 pub trait LLMProvider: Send + Sync {
     fn provider_id(&self) -> &'static str;
 }
 
-// We'll implement provider-specific methods without using generics in the trait object
-// Instead, we'll use concrete implementations for specific Runtime types
-// and dispatch to those as needed.
-
-// Function to dispatch to the actual provider implementation based on provider ID
 #[allow(dead_code)]
 pub fn get_provider(provider_id: &str) -> Option<Box<dyn LLMProvider>> {
-    // Use our own Provider enum
     match Provider::from_str(provider_id) {
         Some(Provider::Cloudflare) => {
             let provider = crate::providers::cloudflare::CloudflareProvider {};
-            // We need to implement the LLMProvider trait for CloudflareProvider
             struct CloudflareProviderWrapper(crate::providers::cloudflare::CloudflareProvider);
             impl LLMProvider for CloudflareProviderWrapper {
                 fn provider_id(&self) -> &'static str {
@@ -36,7 +25,6 @@ pub fn get_provider(provider_id: &str) -> Option<Box<dyn LLMProvider>> {
     }
 }
 
-// Concrete dispatching functions for each runtime operation
 #[allow(dead_code)]
 pub async fn send_message<R: Runtime>(
     provider: &dyn LLMProvider,
@@ -47,8 +35,6 @@ pub async fn send_message<R: Runtime>(
 ) -> Result<StreamResponse, String> {
     let app_arc = Arc::new(app);
     
-    // Create a new provider instance rather than trying to access the internal one
-    // This is safe since CloudflareProvider doesn't have any state
     match provider.provider_id() {
         "cloudflare" => {
             let provider = crate::providers::cloudflare::CloudflareProvider {};
@@ -66,7 +52,6 @@ pub async fn list_models<R: Runtime>(
 ) -> Result<Vec<String>, String> {
     let app_arc = Arc::new(app);
     
-    // Create a new provider instance
     match provider.provider_id() {
         "cloudflare" => {
             let provider = crate::providers::cloudflare::CloudflareProvider {};

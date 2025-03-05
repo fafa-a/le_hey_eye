@@ -1,11 +1,9 @@
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 use tauri::{AppHandle, Runtime, Window};
 
 use crate::core::credentials::{self, AnthropicCredentials, CloudflareCredentials, MistralCredentials};
 use crate::core::llm_trait;
 use crate::core::models::{ChatRequest, Provider, StreamResponse};
-use crate::utils::crypto::encrypt_string;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]

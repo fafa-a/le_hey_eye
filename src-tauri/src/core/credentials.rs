@@ -1,7 +1,5 @@
 use crate::utils::crypto;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
-use tauri::{AppHandle, Runtime};
 use tauri_plugin_store::StoreExt;
 
 pub const CREDENTIALS_STORE: &str = "credentials.json";

@@ -98,6 +98,7 @@ impl CloudflareProvider {
                 .await
                 .map_err(|e| e.to_string())?;
 
+
             if response.status() == 400 {
                 let error_body = response.text().await.map_err(|e| e.to_string())?;
                 println!("Error response body: {}", error_body);
