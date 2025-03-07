@@ -1,4 +1,3 @@
-import { Button } from "@components/ui/button";
 import Settings from "@icons/Settings";
 import {
 	Sheet,
@@ -11,7 +10,7 @@ import {
 import ProviderSelector from "@features/credentials/components/ProviderSelector";
 import { createEffect, createSignal } from "solid-js";
 import type { Provider } from "types/core";
-import ProviderForm from "@/features/credentials/components/ProviderForm";
+import TestProviderForm from "@/features/credentials/components/TestProviderForm";
 
 const GeneralSettings = () => {
 	const [provider, setProvider] = createSignal<Provider>("Cloudflare");
@@ -27,14 +26,13 @@ const GeneralSettings = () => {
 			</SheetTrigger>
 			<SheetContent side="left">
 				<SheetHeader>
-					<SheetTitle>Are you sure absolutely sure?</SheetTitle>
-					<SheetDescription>
-						This action cannot be undone. This will permanently delete your
-						account and remove your data from our servers.
-					</SheetDescription>
+					<SheetTitle>General Settings</SheetTitle>
+					<SheetDescription>Configure your chat provider</SheetDescription>
 				</SheetHeader>
-				<ProviderSelector setProvider={setProvider} provider={provider()} />
-				<ProviderForm provider={provider()} />
+				<div class="flex flex-col gap-2">
+					<ProviderSelector setProvider={setProvider} provider={provider()} />
+					<TestProviderForm provider={provider()} />
+				</div>
 			</SheetContent>
 		</Sheet>
 	);

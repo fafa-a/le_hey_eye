@@ -17,6 +17,9 @@ importers:
       '@tailwindcss/vite':
         specifier: ^4.0.3
         version: 4.0.3(vite@6.0.11(@types/node@22.13.1)(jiti@2.4.2)(lightningcss@1.29.1)(yaml@2.7.0))
+      '@tanstack/solid-form':
+        specifier: ^1.0.0
+        version: 1.0.0(solid-js@1.9.4)
       '@tanstack/solid-query':
         specifier: ^5.66.0
         version: 5.66.0(solid-js@1.9.4)
@@ -709,13 +712,29 @@ packages:
     peerDependencies:
       vite: ^5.2.0 || ^6
 
+  '@tanstack/form-core@1.0.0':
+    resolution: {integrity: sha512-GHYjF9m+FjXbIMpbMP1Ru8XzTJnQDva9wkw3E/fXUIPAtx0NmTGrefxUGqs7/aCT2uSqdrmzRyVFUJObemx51Q==}
+
   '@tanstack/query-core@5.66.0':
     resolution: {integrity: sha512-J+JeBtthiKxrpzUu7rfIPDzhscXF2p5zE/hVdrqkACBP8Yu0M96mwJ5m/8cPPYQE9aRNvXztXHlNwIh4FEeMZw==}
+
+  '@tanstack/solid-form@1.0.0':
+    resolution: {integrity: sha512-bkuT51rxdfrpuNPpkHWsf8Jc1HByDoVxoaww3Je17x9Lb1CaX068NfIuEaiXGfMH34eIy14gsFz/6D4aEmpMCA==}
+    peerDependencies:
+      solid-js: ^1.6.0
 
   '@tanstack/solid-query@5.66.0':
     resolution: {integrity: sha512-P8CDiNyeDkH5hxzFsnPvGNRpetURRDWKE/Q+yeF/jdkhE4u2shjoLRdJGND0/NywwkNdtZaDsNzgAkcznC9kgg==}
     peerDependencies:
       solid-js: ^1.6.0
+
+  '@tanstack/solid-store@0.7.0':
+    resolution: {integrity: sha512-uDQYkUuH3MppitiduZLTEcItkTr8vEJ33jzp2rH2VvlNRMGbuU54GQcqf3dLIlTbZ1/Z2TtIBtBjjl+N/OhwRg==}
+    peerDependencies:
+      solid-js: ^1.6.0
+
+  '@tanstack/store@0.7.0':
+    resolution: {integrity: sha512-CNIhdoUsmD2NolYuaIs8VfWM467RK6oIBAW4nPEKZhg1smZ+/CwtCdpURgp7nxSqOaV9oKkzdWD80+bC66F/Jg==}
 
   '@tauri-apps/api@2.2.0':
     resolution: {integrity: sha512-R8epOeZl1eJEl603aUMIGb4RXlhPjpgxbGVEaqY+0G5JG9vzV/clNlzTeqc+NLYXVqXcn8mb4c5b9pJIUDEyAg==}
@@ -2405,12 +2424,29 @@ snapshots:
       tailwindcss: 4.0.3
       vite: 6.0.11(@types/node@22.13.1)(jiti@2.4.2)(lightningcss@1.29.1)(yaml@2.7.0)
 
+  '@tanstack/form-core@1.0.0':
+    dependencies:
+      '@tanstack/store': 0.7.0
+
   '@tanstack/query-core@5.66.0': {}
+
+  '@tanstack/solid-form@1.0.0(solid-js@1.9.4)':
+    dependencies:
+      '@tanstack/form-core': 1.0.0
+      '@tanstack/solid-store': 0.7.0(solid-js@1.9.4)
+      solid-js: 1.9.4
 
   '@tanstack/solid-query@5.66.0(solid-js@1.9.4)':
     dependencies:
       '@tanstack/query-core': 5.66.0
       solid-js: 1.9.4
+
+  '@tanstack/solid-store@0.7.0(solid-js@1.9.4)':
+    dependencies:
+      '@tanstack/store': 0.7.0
+      solid-js: 1.9.4
+
+  '@tanstack/store@0.7.0': {}
 
   '@tauri-apps/api@2.2.0': {}
 
