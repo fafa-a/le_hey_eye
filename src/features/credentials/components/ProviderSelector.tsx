@@ -11,12 +11,18 @@ import ProviderOptions from "./ProviderOptions";
 import type { Provider } from "types/core";
 
 interface SelectProps {
-	provider: Provider;
+	provider: Provider | (() => Provider);
 	setProvider: Setter<Provider>;
 }
 
 const ProviderSelector = (props: SelectProps) => {
 	const [options, setOptions] = createSignal<string[]>([]);
+
+	const getCurrentProvider = () => {
+		return typeof props.provider === "function"
+			? props.provider()
+			: props.provider;
+	};
 
 	createEffect(() => {
 		setOptions(PROVIDER_CONFIGURATION.map((provider) => provider.name));
@@ -25,7 +31,7 @@ const ProviderSelector = (props: SelectProps) => {
 	return (
 		<Select
 			options={options()}
-			defaultValue={props.provider}
+			defaultValue={getCurrentProvider()}
 			itemComponent={(props) => (
 				<SelectItem item={props.item}>
 					<ProviderOptions

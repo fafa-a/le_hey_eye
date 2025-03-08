@@ -8,6 +8,7 @@ import { useTopics } from "@/context/topicsContext";
 import Add from "@icons/Add";
 import TopicListEntryThumbnail from "@components/common/TopicListEntryThumbnail";
 import GeneralSettings from "./components/GeneralSettings";
+import type { Provider } from "types/core";
 
 interface SidebarProps {
 	isCollapsed: boolean;
@@ -16,10 +17,18 @@ interface SidebarProps {
 	setTopicId: Setter<string>;
 	topicActive: string;
 	setTopicActive: Setter<string>;
+	setCurrentProvider: Setter<Provider>;
+	currentProvider: Provider;
 }
 
 export function Sidebar(props: SidebarProps) {
-	const { setTopicId, setTopicActive, setIsCollapsed } = props;
+	const {
+		setTopicId,
+		setTopicActive,
+		setIsCollapsed,
+		setCurrentProvider,
+		currentProvider,
+	} = props;
 	const topicActive = () => props.topicActive;
 	const isCollapsed = () => props.isCollapsed;
 	const { topics, addTopic } = useTopics();
@@ -92,7 +101,10 @@ export function Sidebar(props: SidebarProps) {
 					"flex-col justify-end pr-2": isCollapsed(),
 				}}
 			>
-				<GeneralSettings />
+				<GeneralSettings
+					setCurrentProvider={setCurrentProvider}
+					currentProvider={currentProvider}
+				/>
 				<Button
 					variant="ghost"
 					size="sm"

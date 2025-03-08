@@ -8,28 +8,37 @@ import {
 	SheetTrigger,
 } from "@/components/ui/sheet";
 import ProviderSelector from "@features/credentials/components/ProviderSelector";
-import { createEffect, createSignal } from "solid-js";
+import { createEffect, createSignal, type Setter } from "solid-js";
 import type { Provider } from "types/core";
 import ProviderForm from "@/features/credentials/components/ProviderForm";
 import { load } from "@tauri-apps/plugin-store";
 import { invoke } from "@tauri-apps/api/core";
 
-const GeneralSettings = () => {
-	const [provider, setProvider] = createSignal<Provider>("Cloudflare");
+interface GeneralSettingsProps {
+	setCurrentProvider: Setter<Provider>;
+	currentProvider: Provider;
+}
+const GeneralSettings = (props: GeneralSettingsProps) => {
+	const [providerCredentials, setProviderCredentials] =
+		createSignal<Provider>("Cloudflare");
 
 	createEffect(() => {
-		console.log("provider", provider());
-		invoke("has_credentials", {
-			provider: provider(),
-		}).then(console.log);
+		console.log("Current Provider", props.currentProvider);
 	});
+	// createEffect(() => {
+	// 	console.log("provider", providerCredentials());
+	// 	invoke("has_credentials", {
+	// 		provider: providerCredentials(),
+	// 	}).then(console.log);
+	// });
 
-	createEffect(async () => {
-		const store = await load("credentials.json");
-		const cloudflare = await store.get("CLOUDFLARE_CREDENTIALS");
-		const anthropic = await store.get("ANTHROPIC_CREDENTIALS");
-		console.log({ cloudflare, anthropic });
-	});
+	// createEffect(async () => {
+	// 	const store = await load("credentials.json");
+	// 	const cloudflare = await store.get("CLOUDFLARE_CREDENTIALS");
+	// 	const anthropic = await store.get("ANTHROPIC_CREDENTIALS");
+	// 	console.log({ cloudflare, anthropic });
+	// });
+
 	return (
 		<Sheet>
 			<SheetTrigger>
@@ -38,11 +47,21 @@ const GeneralSettings = () => {
 			<SheetContent side="left">
 				<SheetHeader>
 					<SheetTitle>General Settings</SheetTitle>
-					<SheetDescription>Configure your chat provider</SheetDescription>
+					<SheetDescription>Configure settings</SheetDescription>
 				</SheetHeader>
+				<h3 class="text-xl font-semibold">Current Provider</h3>
+				<ProviderSelector
+					setProvider={props.setCurrentProvider}
+					provider={props.currentProvider}
+				/>
+
+				<h3 class="text-xl font-semibold">Credentials Provider</h3>
 				<div class="flex flex-col gap-2">
-					<ProviderSelector setProvider={setProvider} provider={provider()} />
-					<ProviderForm provider={provider()} />
+					<ProviderSelector
+						setProvider={setProviderCredentials}
+						provider={providerCredentials()}
+					/>
+					<ProviderForm provider={providerCredentials()} />
 				</div>
 			</SheetContent>
 		</Sheet>

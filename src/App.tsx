@@ -64,7 +64,8 @@ function App() {
 	const [model, setModel] = createSignal<string>(
 		"@cf/mistral/mistral-7b-instruct-v0.1",
 	);
-	const [provider, setProvider] = createSignal<Provider>("Cloudflare");
+	const [currentProvider, setCurrentProvider] =
+		createSignal<Provider>("Cloudflare");
 	const [topicId, setTopicId] = createSignal("");
 	const [topicActive, setTopicActive] = createSignal(topics.at(0)?.id || "");
 
@@ -89,6 +90,10 @@ function App() {
 		setMessageHistory(topicMessages || []);
 		console.log("*".repeat(100));
 	}, topics);
+
+	createEffect(() => {
+		console.log({ currentProvider: currentProvider() });
+	});
 
 	const [promptSettings, setPromptSettings] = createSignal<
 		Omit<ChatRequest, "messages" | "functions" | "tools">
@@ -175,7 +180,7 @@ function App() {
 				temperature: promptSettings().temperature,
 			};
 
-			return await generateAIResponse(provider(), model(), apiRequest);
+			return await generateAIResponse(currentProvider(), model(), apiRequest);
 		},
 		onSuccess: (response) => {
 			console.log("response: ", response);
@@ -288,6 +293,8 @@ function App() {
 					setTopicId={setTopicId}
 					topicActive={topicActive()}
 					setTopicActive={setTopicActive}
+					setCurrentProvider={setCurrentProvider}
+					currentProvider={currentProvider}
 				/>
 			</div>
 
