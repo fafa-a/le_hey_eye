@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use super::models::{ChatRequest, Provider};
+
 pub struct ProviderEndpoints {
     pub api_url: &'static str,
     pub models_url: Option<&'static str>,
@@ -29,12 +31,18 @@ pub fn get_provider_endpoints(provider_id: &str) -> Result<&'static ProviderEndp
     }
 }
 
-pub fn get_api_url(provider: &str, params: &HashMap<String, String>) -> Result<String, String> {
+pub fn get_api_url(
+    provider: &str,
+    params: Option<&HashMap<String, String>>,
+) -> Result<String, String> {
     let endpoints = get_provider_endpoints(provider)?;
     Ok(format_endpoint(endpoints.api_url, params))
 }
 
-pub fn get_models_url(provider: &str, params: &HashMap<String, String>) -> Result<String, String> {
+pub fn get_models_url(
+    provider: &str,
+    params: Option<&HashMap<String, String>>,
+) -> Result<String, String> {
     let endpoints = get_provider_endpoints(provider)?;
     match &endpoints.models_url {
         Some(url) => Ok(format_endpoint(url, params)),
@@ -47,17 +55,42 @@ pub fn get_models_url(provider: &str, params: &HashMap<String, String>) -> Resul
 
 pub fn get_model_schema_url(
     provider: &str,
-    params: &HashMap<String, String>,
+    params: Option<&HashMap<String, String>>,
     model: &str,
 ) -> Result<String, String> {
     let models_url = get_models_url(provider, params)?;
     Ok(format!("{}/schema?model={}", models_url, model))
 }
 
-pub fn format_endpoint(url: &str, params: &HashMap<String, String>) -> String {
+pub fn format_endpoint(url: &str, params: Option<&HashMap<String, String>>) -> String {
     let mut result = url.to_string();
-    for (key, value) in params {
-        result = result.replace(&format!("{{{}}}", key), value);
+    if let Some(params) = params {
+        for (key, value) in params {
+            result = result.replace(&format!("{{{}}}", key), value);
+        }
     }
     result
+}
+
+pub fn prepare_request_for_provider(
+    provider: &Provider,
+    model: &str,
+    mut request: ChatRequest,
+) -> (ChatRequest, Option<HashMap<String, String>>) {
+    match provider.as_str() {
+        "anthropic" => {
+            request.model = Some(model.to_string());
+            (request, None)
+        }
+        "cloudflare" => {
+            let mut params = HashMap::new();
+            params.insert("model".to_string(), model.to_string());
+            (request, Some(params))
+        }
+        "mistral" => {
+            request.model = Some(model.to_string());
+            (request, None)
+        }
+        _ => (request, None),
+    }
 }

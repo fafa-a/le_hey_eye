@@ -19,7 +19,17 @@ pub fn get_provider(provider_id: &str) -> Option<Box<dyn LLMProvider>> {
             }
             Some(Box::new(CloudflareProviderWrapper(provider)))
         },
-        Some(Provider::Anthropic) => None, 
+        Some(Provider::Anthropic) => {
+            // let provider = crate::providers::anthropic::AnthropicProvider {};
+            // struct AnthropicProviderWrapper(crate::providers::anthropic::AnthropicProvider);
+            // impl LLMProvider for AnthropicProviderWrapper {
+            //     fn provider_id(&self) -> &'static str {
+            //         "anthropic"
+            //     }
+            // }
+            // Some(Box::new(AnthropicProviderWrapper(provider)))
+            None
+        }, 
         Some(Provider::Mistral) => None,  
         None => None,
     }
