@@ -1,6 +1,6 @@
 import { createContext, useContext, type JSX } from "solid-js";
 import { createStore } from "solid-js/store";
-import type { MessageRole } from "types/cloudflare";
+import type { MessageContent, MessageRole } from "types/cloudflare";
 import { uid } from "uid";
 
 const generateRandomColor = () => {
@@ -15,7 +15,7 @@ const generateRandomColor = () => {
 export interface TopicMessage {
 	id: string;
 	role: MessageRole;
-	content: string;
+	content: MessageContent[];
 	timestamp: Date;
 	tokens_used?: number;
 }
@@ -39,18 +39,18 @@ interface TopicsContextValue {
 
 const TopicsContext = createContext<TopicsContextValue>();
 
-const systemMessage: TopicMessage = {
-	id: uid(16),
-	role: "system",
-	content: "You are a helpful assistant.",
-	timestamp: new Date(),
-};
+// const systemMessage: TopicMessage = {
+// 	id: uid(16),
+// 	role: "system",
+// 	content: "You are a helpful assistant.",
+// 	timestamp: new Date(),
+// };
 
 const initialTopic: Topic = {
 	id: uid(16),
 	name: "New Topic",
 	createdAt: new Date(),
-	messages: [systemMessage],
+	messages: [],
 	bgColor: generateRandomColor(),
 };
 
@@ -65,7 +65,7 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 			{
 				...topic,
 				createdAt: new Date(),
-				messages: [systemMessage],
+				messages: [],
 				bgColor: generateRandomColor(),
 			},
 		]);

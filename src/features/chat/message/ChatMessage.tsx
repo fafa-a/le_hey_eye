@@ -1,4 +1,3 @@
-import { SolidMarkdown } from "solid-markdown";
 import type { Message, MessageRole } from "../../../../types/cloudflare";
 import { Button } from "@components/ui/button";
 import Edit from "@icons/Edit";

@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
+use crate::providers::anthropic::AnthropicThinkingConfig;
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, TS)]
 #[ts(export, export_to = "../../types/core.ts")]
 pub enum Provider {
@@ -28,38 +30,82 @@ impl Provider {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/core.ts")]
+pub enum ChatRole {
+    #[serde(rename = "system")]
+    System,
+    #[serde(rename = "user")]
+    User,
+    #[serde(rename = "assistant")]
+    Assistant,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/core.ts")]
+pub enum AnthropicContentType {
+    #[serde(rename = "text")]
+    Text(String),
+    #[serde(rename = "image")]
+    Image(Image),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/core.ts")]
+pub struct Image {
+    pub media_type: String,
+    pub data: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/core.ts")]
 pub struct ChatRequest {
     pub messages: Vec<ChatMessage>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    pub max_tokens: Option<u32>,
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub model: Option<String>,
+    #[ts(optional)]
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub system: Option<String>,
+    #[ts(optional)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub stream: Option<bool>,
+    #[ts(optional)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub max_tokens: Option<i32>,
+    pub temperature: Option<f32>,
+    #[ts(optional)]
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub temperature: Option<f64>,
+    pub thinking: Option<AnthropicThinkingConfig>,
+    #[ts(optional)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub top_p: Option<f64>,
+    #[ts(optional)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub top_k: Option<i32>,
+    #[ts(optional)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub seed: Option<i32>,
+    #[ts(optional)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub repetition_penalty: Option<f64>,
+    #[ts(optional)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub frequency_penalty: Option<f64>,
+    #[ts(optional)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub presence_penalty: Option<f64>,
+    #[ts(optional)]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lora: Option<String>,
-    //TODO: add support for other params
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/core.ts")]
 pub struct ChatMessage {
-    pub role: String,
-    pub content: String,
+    pub role: ChatRole,
+    pub content: Vec<AnthropicContentType>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -75,4 +121,6 @@ pub struct StreamResponse {
     pub response: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub usage: Option<TokenUsage>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub thinking: Option<String>,
 }

@@ -1,7 +1,9 @@
 use serde::{Deserialize, Serialize};
 use tauri::{AppHandle, Runtime, Window};
 
-use crate::core::credentials::{self, AnthropicCredentials, CloudflareCredentials, MistralCredentials};
+use crate::core::credentials::{
+    self, AnthropicCredentials, CloudflareCredentials, MistralCredentials,
+};
 use crate::core::llm_trait;
 use crate::core::models::{ChatRequest, Provider, StreamResponse};
 
@@ -21,7 +23,6 @@ pub enum ProviderCredentials {
 }
 
 #[tauri::command]
-#[allow(dead_code)]
 pub async fn send_message<R: Runtime>(
     window: Window<R>,
     app: AppHandle<R>,
@@ -29,8 +30,13 @@ pub async fn send_message<R: Runtime>(
     model: String,
     request: ChatRequest,
 ) -> Result<StreamResponse, String> {
+    println!("send_message");
+    println!("provider: {:?}", provider);
+    println!("model: {:?}", model);
+    println!("request: {:?}", request);
     let provider_id = provider.as_str();
-    
+    println!("provider_id: {:?}", provider_id);
+
     let provider_impl = llm_trait::get_provider(provider_id)
         .ok_or(format!("Unsupported provider: {}", provider_id))?;
 
@@ -59,7 +65,7 @@ pub async fn get_model_details<R: Runtime>(
     model: String,
 ) -> Result<serde_json::Value, String> {
     let provider_id = provider.as_str();
-        
+
     let provider_impl = llm_trait::get_provider(provider_id)
         .ok_or(format!("Unsupported provider: {}", provider_id))?;
 
@@ -73,7 +79,7 @@ pub async fn has_credentials<R: Runtime>(
     provider: Provider,
 ) -> Result<bool, String> {
     let provider_id = provider.as_str();
-        
+
     let provider_impl = llm_trait::get_provider(provider_id)
         .ok_or(format!("Unsupported provider: {}", provider_id))?;
 

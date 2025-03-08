@@ -86,7 +86,7 @@ impl CloudflareProvider {
             params.insert("account_id".to_string(), account_id.clone());
             params.insert("model".to_string(), model.clone());
 
-            let api_url = endpoints::get_api_url("cloudflare",  Some(&params))?;
+            let api_url = endpoints::get_api_url("cloudflare", Some(&params))?;
 
             let client = reqwest::Client::new();
 
@@ -97,7 +97,6 @@ impl CloudflareProvider {
                 .send()
                 .await
                 .map_err(|e| e.to_string())?;
-
 
             if response.status() == 400 {
                 let error_body = response.text().await.map_err(|e| e.to_string())?;
@@ -127,6 +126,7 @@ impl CloudflareProvider {
                             return Ok(StreamResponse {
                                 response: accumulated_text,
                                 usage: tokens_usage,
+                                thinking: None,
                             });
                         }
 
@@ -151,6 +151,7 @@ impl CloudflareProvider {
             Ok(StreamResponse {
                 response: accumulated_text,
                 usage: tokens_usage,
+                thinking: None,
             })
         })
     }

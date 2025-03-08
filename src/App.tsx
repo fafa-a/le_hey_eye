@@ -11,10 +11,14 @@ import { invoke } from "@tauri-apps/api/core";
 import { createMutation, createQuery } from "@tanstack/solid-query";
 import type {
 	Message,
-	ChatRequest,
 	StreamResponse,
 	CloudflareModelResponse,
 } from "../types/cloudflare";
+import type {
+	ChatMessage as ChatMessageType,
+	ChatRequest,
+} from "../types/core";
+
 import { listen } from "@tauri-apps/api/event";
 import { PromptInput } from "@features/chat/prompt/PromptInput";
 import { Sidebar } from "@/features/sidebar/Sidebar";
@@ -32,6 +36,9 @@ async function generateAIResponse(
 	request: ChatRequest,
 ): Promise<StreamResponse> {
 	try {
+		console.log("provider: ", provider);
+		console.log("model: ", model);
+		console.log("request: ", request);
 		const response = await invoke("send_message", {
 			provider,
 			model,
@@ -61,11 +68,12 @@ const MAX_MESSAGES = 4;
 
 function App() {
 	const { topics, addMessage } = useTopics();
-	const [model, setModel] = createSignal<string>(
-		"@cf/mistral/mistral-7b-instruct-v0.1",
+	const [model, setModel] = createSignal<string>("claude-3-7-sonnet-20250219");
+	const [system, setSystem] = createSignal<string>(
+		"You are a helpful assistant.",
 	);
 	const [currentProvider, setCurrentProvider] =
-		createSignal<Provider>("Cloudflare");
+		createSignal<Provider>("Anthropic");
 	const [topicId, setTopicId] = createSignal("");
 	const [topicActive, setTopicActive] = createSignal(topics.at(0)?.id || "");
 
@@ -98,6 +106,8 @@ function App() {
 	const [promptSettings, setPromptSettings] = createSignal<
 		Omit<ChatRequest, "messages" | "functions" | "tools">
 	>({
+		model: model(),
+		system: system(),
 		stream: true,
 		max_tokens: 256,
 		temperature: 0.6,
@@ -109,38 +119,55 @@ function App() {
 		presence_penalty: 0.0,
 	});
 
-	const [request, setRequest] = createSignal<ChatRequest>({
-		messages: [
-			{
-				role: "system",
-				content: "You are a helpful assistant.",
-			},
-		],
-		stream: promptSettings().stream,
+	// const systemMessage = createMemo(() => {
+	// 	if (currentProvider() === "Cloudflare") {
+	// 		return {
+	// 			messages: [
+	// 				{
+	// 					role: "system",
+	// 					content: "You are a helpful assistant.",
+	// 				},
+	// 			],
+	// 		};
+	// 	}
+	// 	if (currentProvider() === "Anthropic") {
+	// 		return {
+	// 			system: system(),
+	// 		};
+	// 	}
+	// });
+
+	const [request, setRequest] = createSignal<Omit<ChatRequest, "messages">>({
+		system: system(),
+		model: model(),
 		max_tokens: promptSettings().max_tokens,
-		temperature: promptSettings().temperature,
-		top_p: promptSettings().top_p,
-		top_k: promptSettings().top_k,
-		seed: promptSettings().seed,
-		repetition_penalty: promptSettings().repetition_penalty,
-		frequency_penalty: promptSettings().frequency_penalty,
-		presence_penalty: promptSettings().presence_penalty,
+		stream: promptSettings().stream,
+		// temperature: promptSettings().temperature,
+		// top_p: promptSettings().top_p,
+		// top_k: promptSettings().top_k,
+		// seed: promptSettings().seed,
+		// repetition_penalty: promptSettings().repetition_penalty,
+		// frequency_penalty: promptSettings().frequency_penalty,
+		// presence_penalty: promptSettings().presence_penalty,
 	});
+
 	const [currentStreamedResponse, setCurrentStreamedResponse] =
 		createSignal("");
 
 	const getMessagesForAPI = (
-		messages: Message[],
+		messages: ChatMessageType[],
 		userMessageCount: number,
-	): Message[] => {
-		const systemMessage = messages.find((m) => m.role === "system");
-		if (!systemMessage) return messages;
-
-		const nonSystemMessages = messages.filter((m) => m.role !== "system");
+	): ChatMessageType[] => {
+		// const systemMessage = messages.find((m) => m.role === "system");
+		// if (!systemMessage) return messages;
+		//
+		// const nonSystemMessages = messages.filter((m) => m.role !== "system");
 		const totalMessagesNeeded = userMessageCount * 2;
-		const recentMessages = nonSystemMessages.slice(-totalMessagesNeeded);
-
-		return [systemMessage, ...recentMessages];
+		const recentMessages = messages.slice(-totalMessagesNeeded);
+		// if (currentProvider() === "Cloudflare") {
+		// 	return [systemMessage, ...recentMessages];
+		// }
+		return [...recentMessages];
 	};
 
 	onMount(() => {
@@ -164,20 +191,24 @@ function App() {
 	// }));
 
 	const mutation = createMutation(() => ({
-		mutationFn: async (messages: Message[]): Promise<StreamResponse> => {
+		mutationFn: async (
+			messages: ChatMessageType[],
+		): Promise<StreamResponse> => {
 			setCurrentStreamedResponse("");
 			const apiMessages = getMessagesForAPI(messages, MAX_MESSAGES);
 			const apiRequest: ChatRequest = {
 				messages: apiMessages,
-				stream: promptSettings().stream,
+				system: system(),
+				model: model(),
 				max_tokens: promptSettings().max_tokens,
-				top_p: promptSettings().top_p,
-				top_k: promptSettings().top_k,
-				seed: promptSettings().seed,
-				repetition_penalty: promptSettings().repetition_penalty,
-				frequency_penalty: promptSettings().frequency_penalty,
-				presence_penalty: promptSettings().presence_penalty,
-				temperature: promptSettings().temperature,
+				stream: promptSettings().stream,
+				// top_p: promptSettings().top_p,
+				// top_k: promptSettings().top_k,
+				// seed: promptSettings().seed,
+				// repetition_penalty: promptSettings().repetition_penalty,
+				// frequency_penalty: promptSettings().frequency_penalty,
+				// presence_penalty: promptSettings().presence_penalty,
+				// temperature: promptSettings().temperature,
 			};
 
 			return await generateAIResponse(currentProvider(), model(), apiRequest);
@@ -187,7 +218,7 @@ function App() {
 			const newAssistantMessage: Omit<TopicMessage, "id"> = {
 				role: "assistant",
 				content: currentStreamedResponse(),
-				timestamp: new Date(),
+				// timestamp: new Date(),
 				tokens_used: response.usage?.total_tokens,
 			};
 			addMessage(topicActive(), newAssistantMessage);
@@ -195,8 +226,9 @@ function App() {
 			setRequest(() => {
 				return {
 					messages: getMessagesForAPI(messageHistory(), MAX_MESSAGES),
-					stream: promptSettings().stream,
+					model: model(),
 					max_tokens: promptSettings().max_tokens,
+					stream: promptSettings().stream,
 					top_p: promptSettings().top_p,
 					top_k: promptSettings().top_k,
 					seed: promptSettings().seed,
@@ -211,10 +243,10 @@ function App() {
 	}));
 
 	const handleSubmit = (prompt: string) => {
-		const userMessage: Omit<TopicMessage, "id"> = {
+		const userMessage: Omit<TopicMessage, "id" | "timestamp"> = {
 			role: "user",
-			content: prompt,
-			timestamp: new Date(),
+			content: [{ type: "text", text: prompt }],
+			// timestamp: new Date(),
 		};
 		const updatedHistory = [...messageHistory(), userMessage];
 
