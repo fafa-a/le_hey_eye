@@ -58,12 +58,12 @@ export function PromptInput(props: PromptInputProps) {
 
 	return (
 		<form class="w-full flex h-full p-3" onSubmit={handleSubmit}>
-			<div class="flex gap-1 w-full p-0.5 rounded-lg border border-slate-100 hover:border-slate-300 shadow-md transition-colors duration-2000 ease-in-out">
-				<TextFieldRoot class="w-full border-none ">
+			<div class="flex gap-1 w-full h-full p-0.5 rounded-lg border border-slate-100 hover:border-slate-300 shadow-md transition-colors duration-2000 ease-in-out">
+				<TextFieldRoot class="w-full h-full border-none">
 					<TextArea
 						placeholder="Write here..."
 						value={prompt()}
-						class="w-full border-none shadow-none resize-none focus:border-none focus-visible:ring-0 py-0"
+						class="w-full min-h-full flex-1 border-none shadow-none resize-none focus:border-none focus-visible:ring-0 py-0"
 						onInput={(e) => setPrompt(e.currentTarget.value)}
 						onKeyDown={(
 							e: KeyboardEvent & { currentTarget: HTMLTextAreaElement },

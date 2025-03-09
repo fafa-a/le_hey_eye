@@ -38,7 +38,7 @@ export function Sidebar(props: SidebarProps) {
 		setTopicId(newTopicId);
 		addTopic({
 			id: newTopicId,
-			name: "New Conversation long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long long",
+			name: "New Conversation",
 		});
 		setTopicActive(newTopicId);
 	};

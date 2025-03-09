@@ -59,7 +59,7 @@ async function generateAIResponse(
 const MAX_MESSAGES = 4;
 
 function App() {
-	const { topics, addMessage } = useTopics();
+	const { topics, addMessage, loading } = useTopics();
 	const [model, setModel] = createSignal<string>("claude-3-7-sonnet-20250219");
 	const [system, setSystem] = createSignal<string>(
 		"You are a helpful assistant.",
@@ -92,6 +92,7 @@ function App() {
 
 	createEffect(() => {
 		console.log("*".repeat(100));
+		console.log("loading: ", loading());
 		console.log("topics: ", unwrap(topics));
 		const topicMessages = topics.find(
 			(topic) => topic.id === topicActive(),

@@ -13,7 +13,7 @@ import highlightjs from "highlight.js";
 function Markdown(props: any) {
 	return (
 		<SolidMarkdown
-			class="break-words w-full overflow-auto whitespace-pre"
+			class="break-words w-full overflow-auto whitespace-pre-wrap"
 			remarkPlugins={[remarkGfm, remarkMath, remarkBreaks]}
 			rehypePlugins={[rehypeKatex]}
 			components={{
