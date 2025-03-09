@@ -6,6 +6,7 @@ import Delete from "@icons/Trash";
 import Regenerate from "@icons/Reset";
 import { createEffect } from "solid-js";
 import Markdown from "@/components/common/Markdown";
+import type { TopicMessage } from "@/context/topicsContext";
 
 interface ChatMessageToolbarProps {
 	role: MessageRole;
@@ -70,7 +71,7 @@ const ChatMessageFooter = ({ role, tokens_used }: ChatMessageFooterProps) => {
 };
 
 interface ChatMessageProps {
-	message: Message;
+	message: TopicMessage;
 }
 
 const ChatMessage = ({ message }: ChatMessageProps) => {

@@ -10,17 +10,19 @@ import {
 	Switch,
 	createSignal,
 } from "solid-js";
-import type {
-	ChatRequest,
-	Message,
-	StreamResponse,
-} from "../../../../types/cloudflare";
+import type { StreamResponse } from "../../../../types/cloudflare";
+import type { ChatRequest } from "../../../../types/core";
 import type { TopicMessage } from "@/context/topicsContext";
 import { useTopics } from "@/context/topicsContext";
 
 interface PromptInputProps {
 	onSubmit: (prompt: string) => void;
-	mutation: CreateMutationResult<StreamResponse, Error, Message[], unknown>;
+	mutation: CreateMutationResult<
+		StreamResponse,
+		Error,
+		TopicMessage[],
+		unknown
+	>;
 	model: Accessor<string>;
 	setModel: Setter<string>;
 	setPromptSettings: Setter<

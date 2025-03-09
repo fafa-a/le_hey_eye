@@ -8,12 +8,8 @@ import {
 	Show,
 } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
-import { createMutation, createQuery } from "@tanstack/solid-query";
-import type {
-	Message,
-	StreamResponse,
-	CloudflareModelResponse,
-} from "../types/cloudflare";
+import { createMutation } from "@tanstack/solid-query";
+import type { StreamResponse } from "../types/cloudflare";
 import type {
 	ChatMessage as ChatMessageType,
 	ChatRequest,
@@ -36,9 +32,6 @@ async function generateAIResponse(
 	request: ChatRequest,
 ): Promise<StreamResponse> {
 	try {
-		console.log("provider: ", provider);
-		console.log("model: ", model);
-		console.log("request: ", request);
 		const response = await invoke("send_message", {
 			provider,
 			model,
@@ -99,17 +92,13 @@ function App() {
 		console.log("*".repeat(100));
 	}, topics);
 
-	createEffect(() => {
-		console.log({ currentProvider: currentProvider() });
-	});
-
 	const [promptSettings, setPromptSettings] = createSignal<
 		Omit<ChatRequest, "messages" | "functions" | "tools">
 	>({
 		model: model(),
 		system: system(),
 		stream: true,
-		max_tokens: 256,
+		max_tokens: 2048,
 		temperature: 0.6,
 		top_p: 0.1,
 		top_k: 1,
@@ -142,22 +131,22 @@ function App() {
 		model: model(),
 		max_tokens: promptSettings().max_tokens,
 		stream: promptSettings().stream,
-		// temperature: promptSettings().temperature,
-		// top_p: promptSettings().top_p,
-		// top_k: promptSettings().top_k,
-		// seed: promptSettings().seed,
-		// repetition_penalty: promptSettings().repetition_penalty,
-		// frequency_penalty: promptSettings().frequency_penalty,
-		// presence_penalty: promptSettings().presence_penalty,
+		temperature: promptSettings().temperature,
+		top_p: promptSettings().top_p,
+		top_k: promptSettings().top_k,
+		seed: promptSettings().seed,
+		repetition_penalty: promptSettings().repetition_penalty,
+		frequency_penalty: promptSettings().frequency_penalty,
+		presence_penalty: promptSettings().presence_penalty,
 	});
 
 	const [currentStreamedResponse, setCurrentStreamedResponse] =
 		createSignal("");
 
 	const getMessagesForAPI = (
-		messages: ChatMessageType[],
+		messages: Omit<TopicMessage, "id">[],
 		userMessageCount: number,
-	): ChatMessageType[] => {
+	): Omit<TopicMessage, "id">[] => {
 		// const systemMessage = messages.find((m) => m.role === "system");
 		// if (!systemMessage) return messages;
 		//
@@ -171,12 +160,21 @@ function App() {
 	};
 
 	onMount(() => {
-		const unlisten = listen("stream-response", (event) => {
-			setCurrentStreamedResponse((prev) => (prev + event.payload) as string);
+		let rawResponseText = "";
+
+		const unlistenPromise = listen("stream-response", (event) => {
+			rawResponseText = event.payload as string;
+
+			queueMicrotask(() => {
+				if (rawResponseText !== currentStreamedResponse()) {
+					setCurrentStreamedResponse(rawResponseText);
+				}
+			});
 		});
 
-		onCleanup(() => {
-			unlisten.then((fn) => fn());
+		onCleanup(async () => {
+			const unlisten = await unlistenPromise;
+			unlisten();
 		});
 	});
 
@@ -189,15 +187,29 @@ function App() {
 	// 	console.log("details: ", data);
 	// },
 	// }));
+	const mapMessageToMessageContent = (
+		messages: Omit<TopicMessage, "id">[],
+	): ChatMessageType[] => {
+		return messages.map((message) => {
+			return {
+				role: message.role,
+				content: message.content,
+			};
+		});
+	};
 
 	const mutation = createMutation(() => ({
 		mutationFn: async (
-			messages: ChatMessageType[],
+			topicMessages: TopicMessage[],
 		): Promise<StreamResponse> => {
 			setCurrentStreamedResponse("");
-			const apiMessages = getMessagesForAPI(messages, MAX_MESSAGES);
+			const apiMessages = getMessagesForAPI(topicMessages, MAX_MESSAGES);
+			console.log("apiMessages", apiMessages);
+			const messages = mapMessageToMessageContent(apiMessages);
+			console.log("messages", messages);
+
 			const apiRequest: ChatRequest = {
-				messages: apiMessages,
+				messages,
 				system: system(),
 				model: model(),
 				max_tokens: promptSettings().max_tokens,
@@ -215,10 +227,12 @@ function App() {
 		},
 		onSuccess: (response) => {
 			console.log("response: ", response);
+			console.log("usage: ", response.usage);
+
 			const newAssistantMessage: Omit<TopicMessage, "id"> = {
 				role: "assistant",
-				content: currentStreamedResponse(),
-				// timestamp: new Date(),
+				content: response.response,
+				timestamp: new Date(),
 				tokens_used: response.usage?.total_tokens,
 			};
 			addMessage(topicActive(), newAssistantMessage);
@@ -243,12 +257,13 @@ function App() {
 	}));
 
 	const handleSubmit = (prompt: string) => {
-		const userMessage: Omit<TopicMessage, "id" | "timestamp"> = {
+		const userMessage: Omit<TopicMessage, "id"> = {
 			role: "user",
-			content: [{ type: "text", text: prompt }],
-			// timestamp: new Date(),
+			content: prompt,
+			timestamp: new Date(),
 		};
-		const updatedHistory = [...messageHistory(), userMessage];
+
+		const updatedHistory = [...messageHistory(), userMessage] as TopicMessage[];
 
 		mutation.mutate(updatedHistory);
 	};
@@ -258,13 +273,8 @@ function App() {
 		return currentTopic?.messages || [];
 	});
 
-	const displayMessages = createMemo(() => {
-		const messages = currentTopicMessages().slice(1);
-		return messages;
-	});
-
 	createEffect(() => {
-		displayMessages();
+		currentTopicMessages();
 		// currentStreamedResponse();
 
 		setTimeout(() => {
@@ -336,7 +346,7 @@ function App() {
 					ref={setMessagesContainer}
 				>
 					<div class="space-y-4 w-full p-3">
-						<For each={displayMessages()}>
+						<For each={currentTopicMessages()}>
 							{(message) => <ChatMessage message={message} />}
 						</For>
 						<Show when={currentStreamedResponse()}>

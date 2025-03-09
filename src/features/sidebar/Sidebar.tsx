@@ -1,14 +1,14 @@
-import { For, type Setter, Show } from "solid-js";
+import { Button } from "@/components/ui/button";
+import { useTopics } from "@/context/topicsContext";
+import TopicListEntry from "@components/common/TopicListEntry";
+import TopicListEntryThumbnail from "@components/common/TopicListEntryThumbnail";
+import Add from "@icons/Add";
 import SidePanelClose from "@icons/SidePanelClose";
 import SidePanelOpen from "@icons/SidePanelOpen";
-import { Button } from "@/components/ui/button";
-import { uid } from "uid";
-import TopicListEntry from "@components/common/TopicListEntry";
-import { useTopics } from "@/context/topicsContext";
-import Add from "@icons/Add";
-import TopicListEntryThumbnail from "@components/common/TopicListEntryThumbnail";
-import GeneralSettings from "./components/GeneralSettings";
+import { type Accessor, For, type Setter, Show } from "solid-js";
 import type { Provider } from "types/core";
+import { uid } from "uid";
+import GeneralSettings from "./components/GeneralSettings";
 
 interface SidebarProps {
 	isCollapsed: boolean;
@@ -18,7 +18,7 @@ interface SidebarProps {
 	topicActive: string;
 	setTopicActive: Setter<string>;
 	setCurrentProvider: Setter<Provider>;
-	currentProvider: Provider;
+	currentProvider: Accessor<Provider>;
 }
 
 export function Sidebar(props: SidebarProps) {

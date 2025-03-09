@@ -8,7 +8,7 @@ import {
 } from "@components/ui/popover";
 import { Button } from "@components/ui/button";
 import SettingsAdjust from "@icons/SettingsAdjust";
-import type { ChatRequest } from "types/cloudflare";
+import type { ChatRequest } from "types/core";
 import type { Accessor, Setter } from "solid-js";
 import { ComboboxModels } from "./components/ComboboxModels";
 import {

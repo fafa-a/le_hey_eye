@@ -1,6 +1,6 @@
 import { createContext, useContext, type JSX } from "solid-js";
 import { createStore } from "solid-js/store";
-import type { MessageContent, MessageRole } from "types/cloudflare";
+import type { ChatRole, ContentType } from "types/core";
 import { uid } from "uid";
 
 const generateRandomColor = () => {
@@ -14,8 +14,8 @@ const generateRandomColor = () => {
 
 export interface TopicMessage {
 	id: string;
-	role: MessageRole;
-	content: MessageContent[];
+	role: ChatRole;
+	content: ContentType;
 	timestamp: Date;
 	tokens_used?: number;
 }
@@ -80,10 +80,13 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 	};
 
 	const addMessage = (topicId: string, message: Omit<TopicMessage, "id">) => {
+		console.log("message", message);
+		console.log("topicId", topicId);
 		const newMessage: TopicMessage = {
 			id: uid(16),
 			...message,
 		};
+		console.log("newMessage", newMessage);
 
 		setTopics(
 			(topic) => topic.id === topicId,

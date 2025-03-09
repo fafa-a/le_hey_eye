@@ -8,15 +8,18 @@ import {
 	SheetTrigger,
 } from "@/components/ui/sheet";
 import ProviderSelector from "@features/credentials/components/ProviderSelector";
-import { createEffect, createSignal, type Setter } from "solid-js";
+import {
+	type Accessor,
+	createEffect,
+	createSignal,
+	type Setter,
+} from "solid-js";
 import type { Provider } from "types/core";
 import ProviderForm from "@/features/credentials/components/ProviderForm";
-import { load } from "@tauri-apps/plugin-store";
-import { invoke } from "@tauri-apps/api/core";
 
 interface GeneralSettingsProps {
 	setCurrentProvider: Setter<Provider>;
-	currentProvider: Provider;
+	currentProvider: Accessor<Provider>;
 }
 const GeneralSettings = (props: GeneralSettingsProps) => {
 	const [providerCredentials, setProviderCredentials] =
