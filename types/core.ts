@@ -2,15 +2,18 @@
 
 export type AnthropicContentType = { "text": string } | { "image": Image };
 
+export type AnthropicImageSource = {
+  type: ImageSourceType;
+  media_type: ImageMediaType;
+  data: string;
+};
+
 export type AnthropicThinkingConfig = {
   type: ThinkingType;
   budget_tokens: number;
 };
 
-export type ChatMessage = {
-  role: ChatRole;
-  content: Array<AnthropicContentType>;
-};
+export type ChatMessage = { role: ChatRole; content: ContentType };
 
 export type ChatRequest = {
   messages: Array<ChatMessage>;
@@ -31,7 +34,33 @@ export type ChatRequest = {
 
 export type ChatRole = "system" | "user" | "assistant";
 
+export type ContentBlock = { "type": "text"; text: string } | {
+  "type": "image";
+  source: AnthropicImageSource;
+};
+
+export type ContentItem = { "type": "text"; text: string } | {
+  "type": "image";
+  source: ImageSource;
+};
+
+export type ContentType = string | Array<ContentItem>;
+
 export type Image = { media_type: string; data: string };
+
+export type ImageMediaType =
+  | "image/jpeg"
+  | "image/png"
+  | "image/gif"
+  | "image/webp";
+
+export type ImageSource = { type: string; media_type: string; data: string };
+
+export type ImageSourceType = "base64";
+
+export type MessageContent = { "String": string } | {
+  "Blocks": Array<ContentBlock>;
+};
 
 export type Provider = "Cloudflare" | "Anthropic" | "Mistral";
 

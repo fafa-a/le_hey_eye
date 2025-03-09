@@ -2,7 +2,7 @@ use crate::core::credentials::{self, AnthropicCredentials};
 use crate::core::endpoints;
 use crate::core::llm_trait::{AnthropicAdapter, LLMProvider};
 use crate::core::models::{
-    AnthropicContentType, ChatRequest, ChatRole, ContentItem, ContentType, StreamResponse,
+     ChatRequest, ChatRole, ContentItem, ContentType, StreamResponse,
     TokenUsage,
 };
 use futures_util::StreamExt;
@@ -23,7 +23,8 @@ pub enum AnthropicMessageRole {
     Assistant,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/core.ts")]
 #[serde(tag = "type")]
 pub enum ContentBlock {
     #[serde(rename = "text")]
@@ -33,7 +34,8 @@ pub enum ContentBlock {
     Image { source: AnthropicImageSource },
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/core.ts")]
 pub struct AnthropicImageSource {
     #[serde(rename = "type")]
     pub source_type: ImageSourceType,
@@ -41,14 +43,16 @@ pub struct AnthropicImageSource {
     pub data: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/core.ts")]
 #[serde(rename_all = "lowercase")]
 pub enum ImageSourceType {
     #[serde(rename = "base64")]
     Base64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/core.ts")]
 pub enum ImageMediaType {
     #[serde(rename = "image/jpeg")]
     Jpeg,
@@ -124,7 +128,8 @@ pub struct AnthropicMessage {
     pub content: MessageContent,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone,TS)]
+#[ts(export, export_to = "../../types/core.ts")]
 pub enum MessageContent {
     String(String),
     Blocks(Vec<ContentBlock>),
@@ -276,11 +281,11 @@ pub struct MessageDelta {
     pub stop_sequence: Option<String>,
 }
 
-#[derive(Debug, Clone)]
-pub struct ServerSentEvent {
-    pub event: String,
-    pub data: String,
-}
+// #[derive(Debug, Clone)]
+// pub struct ServerSentEvent {
+//     pub event: String,
+//     pub data: String,
+// }
 
 #[derive(Debug, Clone, Default)]
 struct AnthropicStreamProcessor {
@@ -323,7 +328,7 @@ impl AnthropicStreamProcessor {
         }
 
         if line.starts_with("data: ") {
-            let data = &line[6..]; // Skip 'data: '
+            let data = line.strip_prefix("data: ").unwrap();
 
             if data.contains("\"type\": \"ping\"") || data.contains("\"type\":\"ping\"") {
                 return Ok(false);
@@ -552,7 +557,7 @@ impl AnthropicProvider {
         &self,
         window: Window<R>,
         app: Arc<tauri::AppHandle<R>>,
-        model: String,
+        _model: String,
         request: ChatRequest,
     ) -> tauri::async_runtime::JoinHandle<Result<StreamResponse, String>> {
         let wrapper = AnthropicProviderWrapper(self.clone());
@@ -669,7 +674,7 @@ impl AnthropicProvider {
     #[allow(dead_code)]
     pub fn list_models_impl<R: tauri::Runtime>(
         &self,
-        app: Arc<tauri::AppHandle<R>>,
+        _app: Arc<tauri::AppHandle<R>>,
     ) -> tauri::async_runtime::JoinHandle<Result<Vec<String>, String>> {
         tauri::async_runtime::spawn(
             async move { Ok(vec!["claude-3-7-sonnet-20250219".to_string()]) },

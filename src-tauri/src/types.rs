@@ -1,8 +1,5 @@
-use magic_crypt::MagicCrypt256;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use tauri::Runtime;
-use tauri_plugin_store::Store;
 use ts_rs::TS;
 
 #[derive(Debug, Serialize, Deserialize, TS)]
@@ -274,10 +271,10 @@ pub struct Credentials {
     pub api_token: String,
 }
 
-pub struct EncryptedStore<R: Runtime> {
-    pub store: Store<R>,
-    pub crypto: MagicCrypt256,
-}
+// pub struct EncryptedStore<R: Runtime> {
+//     pub store: Store<R>,
+//     pub crypto: MagicCrypt256,
+// }
 
 #[derive(Debug, Serialize, Deserialize, TS)]
 #[ts(export, export_to = "../../types/cloudflare.ts")]
