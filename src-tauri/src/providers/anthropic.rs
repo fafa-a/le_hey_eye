@@ -1,11 +1,12 @@
 use crate::core::credentials::{self, AnthropicCredentials};
 use crate::core::endpoints;
 use crate::core::llm_trait::{AnthropicAdapter, LLMProvider};
-use crate::core::models::{ChatRequest, ChatRole, AnthropicContentType, StreamResponse, TokenUsage};
+use crate::core::models::{
+    AnthropicContentType, ChatRequest, ChatRole, ContentItem, ContentType, StreamResponse,
+    TokenUsage,
+};
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
-use std::collections::HashMap;
 use std::sync::Arc;
 use tauri::Emitter;
 use tauri::Window;
@@ -29,11 +30,11 @@ pub enum ContentBlock {
     Text { text: String },
 
     #[serde(rename = "image")]
-    Image { source: ImageSource },
+    Image { source: AnthropicImageSource },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ImageSource {
+pub struct AnthropicImageSource {
     #[serde(rename = "type")]
     pub source_type: ImageSourceType,
     pub media_type: ImageMediaType,
@@ -43,6 +44,7 @@ pub struct ImageSource {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum ImageSourceType {
+    #[serde(rename = "base64")]
     Base64,
 }
 
@@ -57,13 +59,90 @@ pub enum ImageMediaType {
     #[serde(rename = "image/webp")]
     Webp,
 }
+mod content_deserialization {
+    use super::*;
+    use serde::{de, Deserializer};
+    use std::fmt;
+
+    impl<'de> Deserialize<'de> for MessageContent {
+        fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+        where
+            D: Deserializer<'de>,
+        {
+            struct MessageContentVisitor;
+
+            impl<'de> de::Visitor<'de> for MessageContentVisitor {
+                type Value = MessageContent;
+
+                fn expecting(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+                    formatter.write_str("string or array of content blocks")
+                }
+
+                fn visit_str<E>(self, value: &str) -> Result<Self::Value, E>
+                where
+                    E: de::Error,
+                {
+                    Ok(MessageContent::String(value.to_owned()))
+                }
+
+                fn visit_string<E>(self, value: String) -> Result<Self::Value, E>
+                where
+                    E: de::Error,
+                {
+                    Ok(MessageContent::String(value))
+                }
+
+                fn visit_seq<S>(self, visitor: S) -> Result<Self::Value, S::Error>
+                where
+                    S: de::SeqAccess<'de>,
+                {
+                    // Déléguer à la désérialisation standard pour Vec<ContentBlock>
+                    let blocks: Vec<ContentBlock> = de::Deserialize::deserialize(
+                        de::value::SeqAccessDeserializer::new(visitor),
+                    )?;
+                    Ok(MessageContent::Blocks(blocks))
+                }
+            }
+
+            deserializer.deserialize_any(MessageContentVisitor)
+        }
+    }
+
+    pub fn deserialize_flexible_content<'de, D>(deserializer: D) -> Result<MessageContent, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        MessageContent::deserialize(deserializer)
+    }
+}
+use content_deserialization::deserialize_flexible_content;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnthropicMessage {
     pub role: AnthropicMessageRole,
-    pub content: Vec<ContentBlock>,
+    #[serde(deserialize_with = "deserialize_flexible_content")]
+    pub content: MessageContent,
 }
 
+#[derive(Debug, Clone)]
+pub enum MessageContent {
+    String(String),
+    Blocks(Vec<ContentBlock>),
+}
+impl Serialize for MessageContent {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            MessageContent::String(s) => {
+                let blocks = vec![ContentBlock::Text { text: s.clone() }];
+                blocks.serialize(serializer)
+            }
+            MessageContent::Blocks(blocks) => blocks.serialize(serializer),
+        }
+    }
+}
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[ts(export, export_to = "../../types/core.ts")]
 pub struct AnthropicThinkingConfig {
@@ -191,182 +270,157 @@ pub enum StreamEvent {
     Ping,
 }
 
-/// Delta updates for message properties
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MessageDelta {
     pub stop_reason: Option<StopReason>,
     pub stop_sequence: Option<String>,
 }
 
-/// Structure for parsing SSE lines
 #[derive(Debug, Clone)]
 pub struct ServerSentEvent {
     pub event: String,
     pub data: String,
 }
 
-pub struct AnthropicStreamProcessor {
-    message: Option<AnthropicResponse>,
-    content_blocks: Vec<ResponseContentBlock>,
-    current_block_index: Option<usize>,
+#[derive(Debug, Clone, Default)]
+struct AnthropicStreamProcessor {
+    current_content: String,
+    thinking_content: Option<String>,
+    is_complete: bool,
+    usage: Option<AnthropicUsage>,
+    last_output_tokens: Option<u32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct AnthropicUsage {
+    pub input_tokens: u32,
+    #[serde(default)]
+    pub output_tokens: u32,
+    #[serde(default)]
+    pub cache_creation_input_tokens: u32,
+    #[serde(default)]
+    pub cache_read_input_tokens: u32,
 }
 
 impl AnthropicStreamProcessor {
     pub fn new() -> Self {
         Self {
-            message: None,
-            content_blocks: Vec::new(),
-            current_block_index: None,
+            current_content: String::new(),
+            thinking_content: None,
+            is_complete: false,
+            usage: None,
+            last_output_tokens: None,
         }
     }
 
-    pub fn process_sse_line(&mut self, line: &str) -> Result<bool, Box<dyn std::error::Error>> {
-        if line.trim().is_empty() {
+    pub fn process_sse_line(&mut self, line: &str) -> Result<bool, String> {
+        if line.is_empty() || line.starts_with(":") {
             return Ok(false);
         }
 
-        let sse = self.parse_sse_line(line)?;
-
-        if sse.event.is_empty() || sse.data.is_empty() {
+        if line.starts_with("event: ") {
             return Ok(false);
         }
 
-        let event: StreamEvent = serde_json::from_str(&sse.data)?;
-       let is_message_stop = matches!(event, StreamEvent::MessageStop);
-        self.process_event(event)?;
-        Ok(is_message_stop) 
-    }
+        if line.starts_with("data: ") {
+            let data = &line[6..]; // Skip 'data: '
 
-    fn parse_sse_line(&self, line: &str) -> Result<ServerSentEvent, Box<dyn std::error::Error>> {
-        if let Some(line) = line.strip_prefix("event: ") {
-            return Ok(ServerSentEvent {
-                event: line.trim().to_string(),
-                data: String::new(),
-            });
-        } else if let Some(line) = line.strip_prefix("data: ") {
-            return Ok(ServerSentEvent {
-                event: String::new(),
-                data: line.trim().to_string(),
-            });
-        }
-
-        Ok(ServerSentEvent {
-            event: String::new(),
-            data: String::new(),
-        })
-    }
-
-    fn process_event(&mut self, event: StreamEvent) -> Result<(), Box<dyn std::error::Error>> {
-        match event {
-            StreamEvent::MessageStart { message } => {
-                self.message = Some(message);
-                self.content_blocks = Vec::new();
+            if data.contains("\"type\": \"ping\"") || data.contains("\"type\":\"ping\"") {
+                return Ok(false);
             }
 
-            StreamEvent::ContentBlockStart {
-                index,
-                content_block,
-            } => {
-                if self.content_blocks.len() <= index {
-                    self.content_blocks.resize_with(index + 1, || {
-                        match &content_block {
-                            ResponseContentBlock::Text { .. } => ResponseContentBlock::Text {
-                                text: String::new(),
-                            },
-                            ResponseContentBlock::Thinking { .. } => {
-                                ResponseContentBlock::Thinking {
-                                    thinking: String::new(),
+            match serde_json::from_str::<serde_json::Value>(data) {
+                Ok(json) => {
+                    if let Some(event_type) = json.get("type").and_then(|t| t.as_str()) {
+                        match event_type {
+                            "message_start" => {
+                                if let Some(message_json) = json.get("message") {
+                                    if let Some(usage_json) = message_json.get("usage") {
+                                        if let Ok(usage) =
+                                            serde_json::from_value(usage_json.clone())
+                                        {
+                                            self.usage = Some(usage);
+                                        }
+                                    }
                                 }
                             }
+                            "content_block_delta" => {
+                                if let Some(delta) = json
+                                    .get("delta")
+                                    .and_then(|d| d.get("text"))
+                                    .and_then(|t| t.as_str())
+                                {
+                                    self.current_content.push_str(delta);
+                                }
+                            }
+                            "message_delta" => {
+                                if let Some(usage_json) = json.get("usage") {
+                                    if let Some(output_tokens) =
+                                        usage_json.get("output_tokens").and_then(|t| t.as_u64())
+                                    {
+                                        self.last_output_tokens = Some(output_tokens as u32);
+                                    }
+                                }
+                            }
+                            "message_stop" => {
+                                self.is_complete = true;
+                                if let Some(tokens) = self.last_output_tokens {
+                                    if let Some(usage) = &mut self.usage {
+                                        usage.output_tokens = tokens;
+                                    } else if tokens > 0 {
+                                        self.usage = Some(AnthropicUsage {
+                                            input_tokens: 0,
+                                            output_tokens: tokens,
+                                            cache_creation_input_tokens: 0,
+                                            cache_read_input_tokens: 0,
+                                        });
+                                    }
+                                }
+                                return Ok(true);
+                            }
+                            _ => {}
                         }
-                    });
-                }
-
-                self.content_blocks[index] = content_block;
-                self.current_block_index = Some(index);
-            }
-
-            StreamEvent::ContentBlockDelta { index, delta } => {
-                if index >= self.content_blocks.len() {
-                    return Err("Content block delta for non-existent block".into());
-                }
-
-                match (&mut self.content_blocks[index], delta) {
-                    (
-                        ResponseContentBlock::Text { text },
-                        DeltaType::TextDelta { text: delta_text },
-                    ) => {
-                        text.push_str(&delta_text);
-                    }
-                    (
-                        ResponseContentBlock::Thinking { thinking },
-                        DeltaType::ThinkingDelta {
-                            thinking: delta_thinking,
-                        },
-                    ) => {
-                        thinking.push_str(&delta_thinking);
-                    }
-                    (_, DeltaType::SignatureDelta { .. }) => {}
-                    _ => return Err("Mismatched content block and delta types".into()),
-                }
-            }
-
-            StreamEvent::ContentBlockStop { .. } => {
-                self.current_block_index = None;
-            }
-
-            StreamEvent::MessageDelta { delta, usage } => {
-                if let Some(ref mut message) = self.message {
-                    if let Some(stop_reason) = delta.stop_reason {
-                        message.stop_reason = Some(stop_reason);
-                    }
-                    message.stop_sequence = delta.stop_sequence;
-
-                    if let Some(usage) = usage {
-                        message.usage = Some(usage);
                     }
                 }
-            }
-
-            StreamEvent::MessageStop => {
-                if let Some(ref mut message) = self.message {
-                    message.content = self.content_blocks.clone();
+                Err(e) => {
+                    println!("Error parsing SSE data: {}. Raw data: {}", e, data);
                 }
             }
-
-            StreamEvent::Ping => {}
         }
 
-        Ok(())
+        Ok(self.is_complete)
     }
 
-    pub fn get_message(&self) -> Option<AnthropicResponse> {
-        if let Some(ref message) = self.message {
-            let mut result = message.clone();
-            result.content = self.content_blocks.clone();
-            Some(result)
+    pub fn get_text_content(&self) -> String {
+        self.current_content.clone()
+    }
+
+    pub fn get_thinking_content(&self) -> Option<String> {
+        self.thinking_content.clone()
+    }
+
+    pub fn get_message(&self) -> Option<AnthropicMessage> {
+        if self.is_complete || !self.current_content.is_empty() {
+            let content = vec![ContentBlock::Text {
+                text: self.current_content.clone(),
+            }];
+
+            Some(AnthropicMessage {
+                role: AnthropicMessageRole::Assistant,
+                content: MessageContent::Blocks(content),
+            })
         } else {
             None
         }
     }
 
-    pub fn get_text_content(&self) -> String {
-        let mut result = String::new();
-        for block in &self.content_blocks {
-            if let ResponseContentBlock::Text { text } = block {
-                result.push_str(text);
-            }
+    pub fn get_usage(&self) -> Option<AnthropicUsage> {
+        if let (Some(mut usage), Some(tokens)) = (self.usage.clone(), self.last_output_tokens) {
+            usage.output_tokens = tokens;
+            Some(usage)
+        } else {
+            self.usage.clone()
         }
-        result
-    }
-
-    pub fn get_thinking_content(&self) -> Option<String> {
-        for block in &self.content_blocks {
-            if let ResponseContentBlock::Thinking { thinking } = block {
-                return Some(thinking.clone());
-            }
-        }
-        None
     }
 }
 
@@ -379,42 +433,27 @@ impl LLMProvider for AnthropicProviderWrapper {
 }
 
 impl AnthropicAdapter for AnthropicProviderWrapper {
-   fn adapt_request(&self, request: ChatRequest) -> AnthropicChatRequest {
-    let system_message = request.messages.iter()
-        .find(|msg| matches!(msg.role, ChatRole::System))
-        .and_then(|msg| extract_system_content(&msg.content));
+    fn adapt_request(&self, request: ChatRequest) -> AnthropicChatRequest {
+        let anthropic_messages: Vec<AnthropicMessage> = request
+            .messages
+            .iter()
+            .filter(|msg| !matches!(msg.role, ChatRole::System))
+            .map(|msg| create_anthropic_message(msg.role.clone(), &msg.content))
+            .collect();
 
-    let anthropic_messages = request.messages.into_iter()
-        .filter_map(|msg| {
-            match msg.role {
-                ChatRole::User => Some(AnthropicMessage {
-                    role: AnthropicMessageRole::User,
-                    content: convert_content_items_to_anthropic(msg.content),
-                }),
-                ChatRole::Assistant => Some(AnthropicMessage {
-                    role: AnthropicMessageRole::Assistant,
-                    content: convert_content_items_to_anthropic(msg.content),
-                }),
-                ChatRole::System => unreachable!(),
-            }
-        })
-        .collect();
-
-    AnthropicChatRequest {
-        model: request.model,
-        messages: anthropic_messages,
-        system: system_message,
-        temperature: request.temperature,
-        max_tokens: request.max_tokens,
-        stream: Some(true),
-        thinking: request.thinking.map(|config| {
-            AnthropicThinkingConfig{
+        AnthropicChatRequest {
+            model: request.model,
+            messages: anthropic_messages,
+            system: request.system,
+            temperature: request.temperature,
+            max_tokens: request.max_tokens,
+            stream: Some(true),
+            thinking: request.thinking.map(|config| AnthropicThinkingConfig {
                 thinking_type: ThinkingType::Enabled,
                 budget_tokens: config.budget_tokens,
-            }
-        }),
+            }),
+        }
     }
-} 
 
     fn adapt_response(&self, response: AnthropicResponse) -> StreamResponse {
         let text_content = response
@@ -452,40 +491,49 @@ impl AnthropicAdapter for AnthropicProviderWrapper {
     }
 }
 
-fn convert_content_items_to_anthropic(content_items: Vec<AnthropicContentType>) -> Vec<ContentBlock> {
-    content_items.into_iter()
-        .map(|item| convert_single_content_to_anthropic(item))
-        .collect()
-}
-
-fn convert_single_content_to_anthropic(content: AnthropicContentType) -> ContentBlock {
+fn convert_content_to_anthropic_content_blocks(content: &ContentType) -> Vec<ContentBlock> {
     match content {
-        AnthropicContentType::Text(text) => ContentBlock::Text { text },
-        AnthropicContentType::Image(image) => ContentBlock::Image { 
-            source: ImageSource { 
-                source_type: ImageSourceType::Base64,
-                media_type: convert_media_type(&image.media_type),
-                data: image.data,
-            } 
-        },
+        ContentType::PlainText(text) => {
+            vec![ContentBlock::Text { text: text.clone() }]
+        }
+        ContentType::StructuredContent(items) => items
+            .iter()
+            .map(|item| match item {
+                ContentItem::Text { text } => ContentBlock::Text { text: text.clone() },
+                ContentItem::Image { source } => ContentBlock::Image {
+                    source: AnthropicImageSource {
+                        source_type: convert_source_type(&source.source_type),
+                        media_type: convert_media_type(&source.media_type),
+                        data: source.data.clone(),
+                    },
+                },
+            })
+            .collect(),
     }
 }
 
-fn extract_system_content(content: &Vec<AnthropicContentType>) -> Option<String> {
-    // Extract text from system message content
-    let text_contents: Vec<String> = content.iter()
-        .filter_map(|item| {
-            match item {
-                AnthropicContentType::Text(text) => Some(text.clone()),
-                _ => None
-            }
-        })
-        .collect();
-    
-    if text_contents.is_empty() {
-        None
-    } else {
-        Some(text_contents.join("\n"))
+fn create_anthropic_message(role: ChatRole, content: &ContentType) -> AnthropicMessage {
+    AnthropicMessage {
+        role: match role {
+            ChatRole::User => AnthropicMessageRole::User,
+            ChatRole::Assistant => AnthropicMessageRole::Assistant,
+            _ => unreachable!(),
+        },
+        content: MessageContent::Blocks(convert_content_to_anthropic_content_blocks(content)),
+    }
+}
+
+fn convert_source_type(source_type: &str) -> ImageSourceType {
+    match source_type {
+        "base64" => ImageSourceType::Base64,
+        _ => {
+            // Log ou gestion d'erreur pour les types non reconnus
+            eprintln!(
+                "Type de source non reconnu: {}, utilisation de base64 par défaut",
+                source_type
+            );
+            ImageSourceType::Base64
+        }
     }
 }
 
@@ -507,7 +555,6 @@ impl AnthropicProvider {
         model: String,
         request: ChatRequest,
     ) -> tauri::async_runtime::JoinHandle<Result<StreamResponse, String>> {
-
         let wrapper = AnthropicProviderWrapper(self.clone());
         let anthropic_request = wrapper.adapt_request(request);
 
@@ -529,7 +576,6 @@ impl AnthropicProvider {
                 .await
                 .map_err(|e| e.to_string())?;
 
-            println!("response: {:?}", response);
             if response.status().is_client_error() || response.status().is_server_error() {
                 let error_body = response.text().await.map_err(|e| e.to_string())?;
                 return Err(format!("Anthropic API Error: {}", error_body));
@@ -538,6 +584,7 @@ impl AnthropicProvider {
             let mut stream_processor = AnthropicStreamProcessor::new();
             let mut buffer = String::new();
             let mut stream = response.bytes_stream();
+            let mut stream_completed = false;
 
             while let Some(chunk) = stream.next().await {
                 let chunk = chunk.map_err(|e| e.to_string())?;
@@ -545,46 +592,73 @@ impl AnthropicProvider {
 
                 buffer.push_str(&chunk_str);
 
-                while let Some(pos) = buffer.find('\n') {
-                    let line = buffer[..pos].to_string();
-                    buffer = buffer[pos + 1..].to_string();
+                let mut processed_up_to = 0;
+                let mut lines_start = 0;
 
-                    let is_complete = stream_processor
-                        .process_sse_line(&line)
-                        .map_err(|e| e.to_string())?;
+                while let Some(pos) = buffer[lines_start..].find('\n') {
+                    let line_end = lines_start + pos;
+                    let line = buffer[lines_start..line_end].trim().to_string();
 
-                    let current_text = stream_processor.get_text_content();
-                    if !current_text.is_empty() {
-                        window
-                            .emit("stream-response", &current_text)
-                            .map_err(|e| e.to_string())?;
+                    if !line.is_empty() {
+                        match stream_processor.process_sse_line(&line) {
+                            Ok(is_complete) => {
+                                let current_text = stream_processor.get_text_content();
+                                if !current_text.is_empty() {
+                                    let _ = window.emit("stream-response", &current_text);
+                                }
+
+                                if is_complete {
+                                    stream_completed = true;
+                                }
+                            }
+                            Err(e) => {
+                                println!("Error processing line: {}", e);
+                            }
+                        }
                     }
 
-                    if let Some(thinking) = stream_processor.get_thinking_content() {
-                        window
-                            .emit("thinking-response", &thinking)
-                            .map_err(|e| e.to_string())?;
-                    }
+                    lines_start = line_end + 1;
+                    processed_up_to = lines_start;
+                }
 
-                    if is_complete {
-                        break;
-                    }
+                if processed_up_to > 0 {
+                    buffer = buffer[processed_up_to..].to_string();
+                }
+
+                if stream_completed {
+                    break;
                 }
             }
 
-            if let Some(message) = stream_processor.get_message() {
-                let final_text = stream_processor.get_text_content();
+            if !buffer.trim().is_empty() {
+                let _ = stream_processor.process_sse_line(&buffer);
 
-                let usage = message.usage.map(|u| TokenUsage {
-                    prompt_tokens: u.input_tokens,
-                    completion_tokens: u.output_tokens,
-                    total_tokens: u.input_tokens + u.output_tokens,
-                });
+                let current_text = stream_processor.get_text_content();
+                if !current_text.is_empty() {
+                    let _ = window.emit("stream-response", &current_text);
+                }
+            }
+
+            let usage = stream_processor.get_usage().map(|u| TokenUsage {
+                prompt_tokens: u.input_tokens,
+                completion_tokens: u.output_tokens,
+                total_tokens: u.input_tokens + u.output_tokens,
+            });
+
+            if let Some(_message) = stream_processor.get_message() {
+                let final_text = stream_processor.get_text_content();
 
                 Ok(StreamResponse {
                     response: final_text,
                     usage,
-                    thinking: None,
+                    thinking: stream_processor.get_thinking_content(),
+                })
+            } else if !stream_processor.get_text_content().is_empty() {
+                let text = stream_processor.get_text_content();
+                Ok(StreamResponse {
+                    response: text,
+                    usage,
+                    thinking: stream_processor.get_thinking_content(),
                 })
             } else {
                 Err("Failed to get complete response from Anthropic API".to_string())
@@ -597,11 +671,9 @@ impl AnthropicProvider {
         &self,
         app: Arc<tauri::AppHandle<R>>,
     ) -> tauri::async_runtime::JoinHandle<Result<Vec<String>, String>> {
-        tauri::async_runtime::spawn(async move {
-            // Implémentation pour CloudFlare
-            // ...
-            Ok(vec!["claude-3-7-sonnet-20250219".to_string()])
-        })
+        tauri::async_runtime::spawn(
+            async move { Ok(vec!["claude-3-7-sonnet-20250219".to_string()]) },
+        )
     }
 
     // #[allow(dead_code)]

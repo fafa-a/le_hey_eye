@@ -28,14 +28,20 @@ pub async fn send_message<R: Runtime>(
     app: AppHandle<R>,
     provider: Provider,
     model: String,
-    request: ChatRequest,
+    request: serde_json::Value,
 ) -> Result<StreamResponse, String> {
-    println!("send_message");
-    println!("provider: {:?}", provider);
-    println!("model: {:?}", model);
-    println!("request: {:?}", request);
     let provider_id = provider.as_str();
-    println!("provider_id: {:?}", provider_id);
+    let request: ChatRequest = match serde_json::from_value(request.clone()) {
+        Ok(req) => req,
+        Err(e) => {
+            println!("Désérialisation error: {}", e);
+            println!(
+                "JSON structure: {}",
+                serde_json::to_string_pretty(&request).unwrap()
+            );
+            return Err(format!("Invalid request format: {}", e));
+        }
+    };
 
     let provider_impl = llm_trait::get_provider(provider_id)
         .ok_or(format!("Unsupported provider: {}", provider_id))?;

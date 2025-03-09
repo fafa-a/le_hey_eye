@@ -55,9 +55,7 @@ pub async fn send_message<R: Runtime>(
     model: String,
     request: ChatRequest,
 ) -> Result<StreamResponse, String> {
-    println!("provider: {:?}", provider.provider_id());
     let app_arc = Arc::new(app);
-    println!("provider: {:?}", provider.provider_id());
 
     match provider.provider_id() {
         "cloudflare" => {

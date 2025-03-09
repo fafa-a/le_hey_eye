@@ -105,7 +105,36 @@ pub struct ChatRequest {
 #[ts(export, export_to = "../../types/core.ts")]
 pub struct ChatMessage {
     pub role: ChatRole,
-    pub content: Vec<AnthropicContentType>,
+    pub content: ContentType,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/core.ts")]
+#[serde(untagged)]
+pub enum ContentType {
+    PlainText(String),
+
+    StructuredContent(Vec<ContentItem>),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/core.ts")]
+#[serde(tag = "type")]
+pub enum ContentItem {
+    #[serde(rename = "text")]
+    Text { text: String },
+
+    #[serde(rename = "image")]
+    Image { source: ImageSource },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/core.ts")]
+pub struct ImageSource {
+    #[serde(rename = "type")]
+    pub source_type: String,
+    pub media_type: String,
+    pub data: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
