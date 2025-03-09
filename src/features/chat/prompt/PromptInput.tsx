@@ -14,6 +14,7 @@ import type { StreamResponse } from "../../../../types/cloudflare";
 import type { ChatRequest } from "../../../../types/core";
 import type { TopicMessage } from "@/context/topicsContext";
 import { useTopics } from "@/context/topicsContext";
+import ModelSettingsPopover from "@features/chat/settings/SettingsPopover";
 
 interface PromptInputProps {
 	onSubmit: (prompt: string) => void;
@@ -56,8 +57,8 @@ export function PromptInput(props: PromptInputProps) {
 	};
 
 	return (
-		<form class="w-full flex  h-[calc(100%-40px)]" onSubmit={handleSubmit}>
-			<div class="flex gap-1 w-full p-0.5 border-t border-slate-50 hover:border-slate-200 transition-colors duration-2000 ease-in-out">
+		<form class="w-full flex h-full p-3" onSubmit={handleSubmit}>
+			<div class="flex gap-1 w-full p-0.5 rounded-lg border border-slate-100 hover:border-slate-300 shadow-md transition-colors duration-2000 ease-in-out">
 				<TextFieldRoot class="w-full border-none ">
 					<TextArea
 						placeholder="Write here..."
@@ -74,21 +75,29 @@ export function PromptInput(props: PromptInputProps) {
 						}}
 					/>
 				</TextFieldRoot>
-				<Button
-					type="submit"
-					disabled={mutation.isPending || !prompt().trim()}
-					class="w-[30px] text-white hover:bg-gray-100 hover:cursor-pointer grid place-items-center"
-					variant="outline"
-				>
-					<Switch>
-						<Match when={mutation.isPending}>
-							<div class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-						</Match>
-						<Match when={!mutation.isPending}>
-							<Send width={20} height={20} class="text-slate-500" />
-						</Match>
-					</Switch>
-				</Button>
+				<div class="flex flex-col">
+					<Button
+						type="submit"
+						disabled={mutation.isPending || !prompt().trim()}
+						class="w-[30px] text-white hover:bg-gray-100 hover:cursor-pointer grid place-items-center"
+						variant="outline"
+					>
+						<Switch>
+							<Match when={mutation.isPending}>
+								<div class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+							</Match>
+							<Match when={!mutation.isPending}>
+								<Send width={20} height={20} class="text-slate-500" />
+							</Match>
+						</Switch>
+					</Button>
+					<ModelSettingsPopover
+						model={props.model}
+						setModel={props.setModel}
+						promptSettings={props.promptSettings}
+						setPromptSettings={props.setPromptSettings}
+					/>
+				</div>
 			</div>
 		</form>
 	);

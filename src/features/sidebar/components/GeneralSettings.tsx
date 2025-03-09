@@ -25,9 +25,6 @@ const GeneralSettings = (props: GeneralSettingsProps) => {
 	const [providerCredentials, setProviderCredentials] =
 		createSignal<Provider>("Cloudflare");
 
-	createEffect(() => {
-		console.log("Current Provider", props.currentProvider);
-	});
 	// createEffect(() => {
 	// 	console.log("provider", providerCredentials());
 	// 	invoke("has_credentials", {

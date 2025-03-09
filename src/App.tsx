@@ -18,7 +18,6 @@ import type {
 import { listen } from "@tauri-apps/api/event";
 import { PromptInput } from "@features/chat/prompt/PromptInput";
 import { Sidebar } from "@/features/sidebar/Sidebar";
-import ModelSettingsPopover from "@features/chat/settings/SettingsPopover";
 import ChatMessage from "@/features/chat/message/ChatMessage";
 import { unwrap } from "solid-js/store";
 import type { TopicMessage } from "@/context/topicsContext";
@@ -81,6 +80,15 @@ function App() {
 		createSignal<HTMLDivElement>();
 
 	const [streamHeight, setStreamHeight] = createSignal(0);
+
+	const currentTopicMessages = createMemo(() => {
+		const currentTopic = topics.find((topic) => topic.id === topicActive());
+		return currentTopic?.messages || [];
+	});
+
+	const isTopicMessagesEmpty = createMemo(
+		() => currentTopicMessages().length === 0,
+	);
 
 	createEffect(() => {
 		console.log("*".repeat(100));
@@ -255,7 +263,8 @@ function App() {
 			setCurrentStreamedResponse("");
 		},
 	}));
-
+	let transitionTimeout: NodeJS.Timeout | undefined;
+	//
 	const handleSubmit = (prompt: string) => {
 		const userMessage: Omit<TopicMessage, "id"> = {
 			role: "user",
@@ -268,11 +277,12 @@ function App() {
 		mutation.mutate(updatedHistory);
 	};
 
-	const currentTopicMessages = createMemo(() => {
-		const currentTopic = topics.find((topic) => topic.id === topicActive());
-		return currentTopic?.messages || [];
+	// Nettoyage important
+	onCleanup(() => {
+		if (transitionTimeout) {
+			clearTimeout(transitionTimeout);
+		}
 	});
-
 	createEffect(() => {
 		currentTopicMessages();
 		// currentStreamedResponse();
@@ -320,7 +330,7 @@ function App() {
 	//
 
 	return (
-		<div class="h-screen flex overflow-hidden">
+		<div class="h-screen max-h-screen flex overflow-hidden">
 			<div
 				class="h-full transition-all flex-shrink-0"
 				classList={{
@@ -340,46 +350,45 @@ function App() {
 				/>
 			</div>
 
-			<div class="flex flex-col flex-1 w-full min-w-0 h-full xl:max-w-[1200px] 2xl:max-w-[1400px] mx-auto">
-				<div
-					class="min-h-[85%] flex-1 overflow-y-auto w-full"
-					ref={setMessagesContainer}
-				>
-					<div class="space-y-4 w-full p-3">
-						<For each={currentTopicMessages()}>
-							{(message) => <ChatMessage message={message} />}
-						</For>
-						<Show when={currentStreamedResponse()}>
-							<div
-								class="w-full min-w-full overflow-hidden"
-								style={{
-									height: currentStreamedResponse()
-										? `${streamHeight()}px`
-										: "auto",
-								}}
-								ref={setMarkdownContainerRef}
-							>
-								<div ref={setContentRef}>
-									<Markdown>{currentStreamedResponse()}</Markdown>
+			<div
+				class="flex flex-col flex-1 w-full min-w-0 h-full xl:max-w-[1200px] 2xl:max-w-[1400px] mx-auto"
+				classList={{
+					"justify-center": isTopicMessagesEmpty(),
+				}}
+			>
+				<Show when={!isTopicMessagesEmpty()}>
+					<div
+						class="flex-1 overflow-y-auto w-full min-h-0"
+						ref={setMessagesContainer}
+					>
+						<div class="space-y-4 w-full p-3">
+							<For each={currentTopicMessages()}>
+								{(message) => <ChatMessage message={message} />}
+							</For>
+							<Show when={currentStreamedResponse()}>
+								<div
+									class="w-full min-w-full overflow-hidden"
+									style={{
+										height: currentStreamedResponse()
+											? `${streamHeight()}px`
+											: "auto",
+									}}
+									ref={setMarkdownContainerRef}
+								>
+									<div ref={setContentRef}>
+										<Markdown>{currentStreamedResponse()}</Markdown>
+									</div>
 								</div>
-							</div>
-						</Show>
-						<Show when={mutation.isPending && !currentStreamedResponse()}>
-							<div class="p-4 rounded w-full">
-								<div class="animate-pulse text-slate-500">Thinking...</div>
-							</div>
-						</Show>
+							</Show>
+							<Show when={mutation.isPending && !currentStreamedResponse()}>
+								<div class="p-4 rounded w-full">
+									<div class="animate-pulse text-slate-500">Thinking...</div>
+								</div>
+							</Show>
+						</div>
 					</div>
-				</div>
-				<div class="h-[15%] min-h-[110px] max-h-[55%] mr-3 overflow-scroll xl:border xl:border-gray-300 xl:border-opacity-50 xl:rounded-lg">
-					<div class="flex justify-end">
-						<ModelSettingsPopover
-							model={model}
-							setModel={setModel}
-							promptSettings={promptSettings}
-							setPromptSettings={setPromptSettings}
-						/>
-					</div>
+				</Show>
+				<div class="overflow-y-auto min-h-[120px] max-h-[55%] transition-all duration-500 ease-in-out">
 					<PromptInput
 						onSubmit={handleSubmit}
 						mutation={mutation}
