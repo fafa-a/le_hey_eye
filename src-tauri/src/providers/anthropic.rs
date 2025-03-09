@@ -2,8 +2,7 @@ use crate::core::credentials::{self, AnthropicCredentials};
 use crate::core::endpoints;
 use crate::core::llm_trait::{AnthropicAdapter, LLMProvider};
 use crate::core::models::{
-     ChatRequest, ChatRole, ContentItem, ContentType, StreamResponse,
-    TokenUsage,
+    ChatRequest, ChatRole, ContentItem, ContentType, StreamResponse, TokenUsage,
 };
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
@@ -128,7 +127,7 @@ pub struct AnthropicMessage {
     pub content: MessageContent,
 }
 
-#[derive(Debug, Clone,TS)]
+#[derive(Debug, Clone, TS)]
 #[ts(export, export_to = "../../types/core.ts")]
 pub enum MessageContent {
     String(String),
