@@ -212,9 +212,7 @@ function App() {
 		): Promise<StreamResponse> => {
 			setCurrentStreamedResponse("");
 			const apiMessages = getMessagesForAPI(topicMessages, MAX_MESSAGES);
-			console.log("apiMessages", apiMessages);
 			const messages = mapMessageToMessageContent(apiMessages);
-			console.log("messages", messages);
 
 			const apiRequest: ChatRequest = {
 				messages,
@@ -235,7 +233,6 @@ function App() {
 		},
 		onSuccess: (response) => {
 			console.log("response: ", response);
-			console.log("usage: ", response.usage);
 
 			const newAssistantMessage: Omit<TopicMessage, "id"> = {
 				role: "assistant",
