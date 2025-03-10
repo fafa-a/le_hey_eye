@@ -66,23 +66,19 @@ const initialTopic: Topic = {
 export function TopicsProvider(props: { children: JSX.Element }) {
 	const [topics, setTopics] = createStore<Topic[]>([initialTopic]);
 	const [loading, setLoading] = createSignal(false);
-	// Fonction pour charger les sujets depuis la base de données
+
 	const loadTopics = async () => {
 		setLoading(true);
 		try {
-			// Appel à la fonction Rust pour obtenir tous les sujets
 			const topicsData = await invoke<any[]>("get_all_topics");
 
-			// Traitement des données pour les adapter à votre format
 			const loadedTopics: Topic[] = [];
 
 			for (const topic of topicsData) {
-				// Appel à la fonction Rust pour obtenir les messages d'un sujet
 				const messagesData = await invoke<any[]>("get_messages_for_topic", {
 					topicId: topic.id,
 				});
 
-				// Conversion des messages
 				const messages: TopicMessage[] = messagesData.map((msg) => ({
 					id: msg.id,
 					role: msg.role as ChatRole,
@@ -93,7 +89,6 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 					tokens_used: msg.tokens_used,
 				}));
 
-				// Ajout du sujet avec ses messages
 				loadedTopics.push({
 					id: topic.id,
 					name: topic.name,
@@ -103,12 +98,34 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 				});
 			}
 
-			// Mise à jour du store avec les données chargées
 			setTopics(loadedTopics);
+
+			if (loadedTopics.length === 0) {
+				const initialTopicId = uid(16);
+				try {
+					await invoke("add_topic", {
+						id: initialTopicId,
+						name: "New Conversation",
+						bgColor: generateRandomColor(),
+						createdAt: new Date().toISOString(),
+					});
+
+					setTopics([
+						{
+							id: initialTopicId,
+							name: "New Conversation",
+							createdAt: new Date(),
+							messages: [],
+							bgColor: generateRandomColor(),
+						},
+					]);
+				} catch (error) {
+					console.error("Failed to create initial topic:", error);
+				}
+			}
 		} catch (error) {
 			console.error("Failed to load topics:", error);
 
-			// Si aucun sujet n'est chargé, créer un sujet initial
 			if (topics.length === 0) {
 				const initialTopicId = uid(16);
 				try {
@@ -136,7 +153,6 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 		}
 	};
 
-	// Chargement des données au montage du composant
 	onMount(() => {
 		loadTopics();
 	});
@@ -147,14 +163,12 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 		const bgColor = generateRandomColor();
 
 		try {
-			// Appel à la fonction Rust pour ajouter un sujet
 			await invoke("add_topic", {
 				id: topic.id,
 				name: topic.name,
 				bgColor,
 			});
 			console.log("addtopic", topic);
-			// Mise à jour du store après l'ajout dans la BD
 			setTopics((prev) => [
 				...prev,
 				{
@@ -172,10 +186,8 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 
 	const removeTopic = async (id: string) => {
 		try {
-			// Appel à la fonction Rust pour supprimer un sujet
 			await invoke("remove_topic", { topicId: id });
 
-			// Mise à jour du store après la suppression dans la BD
 			setTopics((prev) => prev.filter((topic) => topic.id !== id));
 		} catch (error) {
 			console.error("Failed to remove topic:", error);
@@ -185,10 +197,8 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 
 	const editTopicName = async (id: string, name: string) => {
 		try {
-			// Appel à la fonction Rust pour modifier le nom d'un sujet
 			await invoke("edit_topic_name", { topicId: id, name });
 
-			// Mise à jour du store après la modification dans la BD
 			setTopics((topic) => topic.id === id, "name", name);
 		} catch (error) {
 			console.error("Failed to edit topic name:", error);
@@ -212,7 +222,6 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 				: JSON.stringify(newMessage.content);
 
 		try {
-			// Appel à la fonction Rust pour ajouter un message
 			await invoke("add_message", {
 				id: newMessageId,
 				topicId,
@@ -221,7 +230,6 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 				tokensUsed: newMessage.tokens_used,
 			});
 
-			// Mise à jour du store après l'ajout dans la BD
 			setTopics(
 				(topic) => topic.id === topicId,
 				"messages",
@@ -235,10 +243,8 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 
 	const removeMessage = async (topicId: string, messageId: string) => {
 		try {
-			// Appel à la fonction Rust pour supprimer un message
 			await invoke("remove_message", { messageId });
 
-			// Mise à jour du store après la suppression dans la BD
 			setTopics(
 				(topic) => topic.id === topicId,
 				"messages",
