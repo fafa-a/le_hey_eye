@@ -349,17 +349,17 @@ function App() {
 			</div>
 
 			<div
-				class="flex flex-col flex-1 w-full min-w-0 h-full xl:max-w-[1200px] 2xl:max-w-[1400px] mx-auto"
+				class="flex flex-col flex-1 w-full min-w-0 h-full p-5 xl:max-w-[900px] 2xl:max-w-[1200px] mx-auto"
 				classList={{
 					"justify-center": isTopicMessagesEmpty(),
 				}}
 			>
 				<Show when={!isTopicMessagesEmpty()}>
 					<div
-						class="flex-1 overflow-y-auto w-full min-h-0"
+						class="flex-1 overflow-y-auto w-full min-h-0 min-w-full"
 						ref={setMessagesContainer}
 					>
-						<div class="space-y-4 w-full p-3">
+						<div class="space-y-4 w-full p-3 min-w-full">
 							<For each={currentTopicMessages()}>
 								{(message) => <ChatMessage message={message} />}
 							</For>

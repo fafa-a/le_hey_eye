@@ -79,7 +79,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
 		console.log("message: ", message);
 	});
 	return (
-		<div class="flex flex-col gap-1 w-full overflow-scroll">
+		<div class="flex flex-col gap-1 w-full">
 			<div
 				class="flex w-full"
 				classList={{
@@ -90,10 +90,12 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
 				<div
 					class="p-1 rounded flex flex-col"
 					classList={{
-						"bg-slate-50": message.role === "user",
+						"bg-neutral-100": message.role === "user",
+						"min-w-[80%] flex-grow-0 flex-shrink-1":
+							message.role === "assistant",
 					}}
 				>
-					<div class="w-full min-w-0 overflow-hidden">
+					<div class="min-w-0">
 						<Markdown>{message.content}</Markdown>
 					</div>
 					<ChatMessageFooter
