@@ -386,7 +386,7 @@ function App() {
 						</div>
 					</div>
 				</Show>
-				<div class="overflow-y-auto min-h-[120px] max-h-[55%] transition-all duration-500 ease-in-out">
+				<div class="overflow-y-auto min-h-[120px] max-h-[55%]">
 					<PromptInput
 						onSubmit={handleSubmit}
 						mutation={mutation}
