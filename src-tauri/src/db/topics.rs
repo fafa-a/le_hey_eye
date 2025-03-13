@@ -39,13 +39,13 @@ pub fn initialize_database(app_handle: &AppHandle) -> DatabaseConnection {
     let db_path = get_db_path(app_handle);
     let conn = Connection::open(db_path).expect("Failed to open database");
 
-    // Création des tables
     conn.execute(
         "CREATE TABLE IF NOT EXISTS topics (
             id TEXT PRIMARY KEY,
             name TEXT NOT NULL,
             created_at TEXT NOT NULL,
-            bg_color TEXT NOT NULL
+            bg_color TEXT NOT NULL,
+            last_accessed_at TEXT
         )",
         [],
     )
@@ -64,6 +64,12 @@ pub fn initialize_database(app_handle: &AppHandle) -> DatabaseConnection {
         [],
     )
     .expect("Failed to create messages table");
+
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_topics_last_accessed_at ON topics(last_accessed_at DESC)",
+        [],
+    )
+    .expect("Failed to create index on topics table");
 
     DatabaseConnection(Arc::new(Mutex::new(conn)))
 }
@@ -134,9 +140,10 @@ pub fn add_topic(
             .map_err(|_| "Failed to lock database".to_string())?;
     let created_at = chrono::Utc::now().to_rfc3339();
 
+    let now = chrono::Utc::now().to_rfc3339();
     conn.execute(
-        "INSERT INTO topics (id, name, created_at, bg_color) VALUES (?, ?, ?, ?)",
-        params![id, name, created_at, bg_color],
+        "INSERT INTO topics (id, name, created_at, bg_color, last_accessed_at) VALUES (?, ?, ?, ?, ?)",
+        params![id, name, created_at, bg_color, now],
     )
     .map_err(|e| e.to_string())?;
 
@@ -213,4 +220,46 @@ pub fn remove_message(db: State<'_, DatabaseConnection>, message_id: String) -> 
         .map_err(|e| e.to_string())?;
 
     Ok(())
+}
+
+#[tauri::command]
+pub fn update_topic_access(
+    topic_id: String,
+    db: State<'_, DatabaseConnection>,
+) -> Result<(), String> {
+    let conn =
+        db.0.lock()
+            .map_err(|_| "Failed to lock database".to_string())?;
+
+    let now = chrono::Utc::now().to_rfc3339();
+
+    conn.execute(
+        "UPDATE topics SET last_accessed_at = ? WHERE id = ?",
+        params![now, topic_id],
+    )
+    .map_err(|e| format!("Failed to update topic access: {:?}", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_last_accessed_topic(
+    db: State<'_, DatabaseConnection>,
+) -> Result<Option<String>, String> {
+    let conn =
+        db.0.lock()
+            .map_err(|_| "Failed to lock database".to_string())?;
+
+    let topic_id: Result<String, rusqlite::Error> = conn.query_row(
+        "SELECT id FROM topics WHERE last_accessed_at IS NOT NULL 
+         ORDER BY last_accessed_at DESC LIMIT 1",
+        [],
+        |row| row.get(0),
+    );
+
+    match topic_id {
+        Ok(id) => Ok(Some(id)),
+        Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+        Err(e) => Err(format!("Database error: {:?}", e)),
+    }
 }

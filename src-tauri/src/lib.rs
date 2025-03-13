@@ -35,6 +35,8 @@ pub fn run() {
             db::topics::remove_topic,
             db::topics::edit_topic_name,
             db::topics::remove_message,
+            db::topics::get_last_accessed_topic,
+            db::topics::update_topic_access,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
