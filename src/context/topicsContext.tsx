@@ -5,6 +5,7 @@ import {
 	onMount,
 	useContext,
 	type JSX,
+	createEffect,
 } from "solid-js";
 import { createStore } from "solid-js/store";
 import type { ChatRole, ContentType } from "types/core";
@@ -34,38 +35,31 @@ interface Topic {
 	createdAt: Date;
 	messages: TopicMessage[];
 	bgColor: string;
+	lastAccessedAt: Date;
 }
 
 interface TopicsContextValue {
 	loading: Accessor<boolean>;
 	topics: Topic[];
-	addTopic: (topic: Omit<Topic, "createdAt" | "messages" | "bgColor">) => void;
+	addTopic: (
+		topic: Omit<Topic, "createdAt" | "messages" | "bgColor" | "lastAccessedAt">,
+	) => void;
 	removeTopic: (id: string) => void;
 	editTopicName: (id: string, name: string) => void;
 	addMessage: (topicId: string, message: Omit<TopicMessage, "id">) => void;
 	removeMessage: (topicId: string, messageId: string) => void;
+	currentTopicId: Accessor<string | undefined>;
+	setCurrentTopic: (id: string) => Promise<void>;
 }
 
 const TopicsContext = createContext<TopicsContextValue>();
 
-// const systemMessage: TopicMessage = {
-// 	id: uid(16),
-// 	role: "system",
-// 	content: "You are a helpful assistant.",
-// 	timestamp: new Date(),
-// };
-
-const initialTopic: Topic = {
-	id: uid(16),
-	name: "New Topic",
-	createdAt: new Date(),
-	messages: [],
-	bgColor: generateRandomColor(),
-};
-
 export function TopicsProvider(props: { children: JSX.Element }) {
-	const [topics, setTopics] = createStore<Topic[]>([initialTopic]);
+	const [topics, setTopics] = createStore<Topic[]>([]);
 	const [loading, setLoading] = createSignal(false);
+	const [currentTopicId, setCurrentTopicId] = createSignal<string | undefined>(
+		undefined,
+	);
 
 	const loadTopics = async () => {
 		setLoading(true);
@@ -95,28 +89,43 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 					createdAt: new Date(topic.created_at),
 					messages,
 					bgColor: topic.bg_color,
+					lastAccessedAt: new Date(topic.last_accessed_at),
 				});
 			}
 
 			setTopics(loadedTopics);
 
+			try {
+				const lastAccessedId = await invoke<string | null>(
+					"get_last_accessed_topic",
+				);
+				setCurrentTopicId(lastAccessedId as string);
+			} catch (error) {
+				console.error("Failed to get last topic active at:", error);
+			}
+
 			if (loadedTopics.length === 0) {
 				const initialTopicId = uid(16);
+				const dateToISOString = new Date().toISOString();
+
+				const defaultTopic: Omit<Topic, "createdAt" | "lastAccessedAt"> = {
+					id: initialTopicId,
+					name: "New Conversation",
+					bgColor: generateRandomColor(),
+					messages: [],
+				};
 				try {
 					await invoke("add_topic", {
-						id: initialTopicId,
-						name: "New Conversation",
-						bgColor: generateRandomColor(),
-						createdAt: new Date().toISOString(),
+						...defaultTopic,
+						createdAt: dateToISOString,
+						lastAccessedAt: dateToISOString,
 					});
 
 					setTopics([
 						{
-							id: initialTopicId,
-							name: "New Conversation",
+							...defaultTopic,
 							createdAt: new Date(),
-							messages: [],
-							bgColor: generateRandomColor(),
+							lastAccessedAt: new Date(),
 						},
 					]);
 				} catch (error) {
@@ -125,29 +134,6 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 			}
 		} catch (error) {
 			console.error("Failed to load topics:", error);
-
-			if (topics.length === 0) {
-				const initialTopicId = uid(16);
-				try {
-					await invoke("add_topic", {
-						id: initialTopicId,
-						name: "New Topic",
-						bgColor: generateRandomColor(),
-					});
-
-					setTopics([
-						{
-							id: initialTopicId,
-							name: "New Topic",
-							createdAt: new Date(),
-							messages: [],
-							bgColor: generateRandomColor(),
-						},
-					]);
-				} catch (addError) {
-					console.error("Failed to create initial topic:", addError);
-				}
-			}
 		} finally {
 			setLoading(false);
 		}
@@ -157,10 +143,25 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 		loadTopics();
 	});
 
+	const setCurrentTopic = async (id: string) => {
+		if (!id || id === currentTopicId()) return;
+
+		try {
+			updateTopicAccess(id);
+			const now = new Date();
+			setTopics((topic) => topic.id === id, "lastAccessedAt", now);
+
+			setCurrentTopicId(id);
+		} catch (error) {
+			console.error("Failed to set current topic:", error);
+		}
+	};
+
 	const addTopic = async (
-		topic: Omit<Topic, "createdAt" | "messages" | "bgColor">,
+		topic: Omit<Topic, "createdAt" | "messages" | "bgColor" | "lastAccessedAt">,
 	) => {
 		const bgColor = generateRandomColor();
+		const now = new Date();
 
 		try {
 			await invoke("add_topic", {
@@ -168,19 +169,20 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 				name: topic.name,
 				bgColor,
 			});
-			console.log("addtopic", topic);
+
 			setTopics((prev) => [
-				...prev,
 				{
 					...topic,
 					createdAt: new Date(),
 					messages: [],
 					bgColor,
+					lastAccessedAt: now,
 				},
+				...prev,
 			]);
+			setCurrentTopicId(topic.id);
 		} catch (error) {
 			console.error("Failed to add topic:", error);
-			throw error; // Propager l'erreur pour la gestion en amont
 		}
 	};
 
@@ -191,6 +193,15 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 			setTopics((prev) => prev.filter((topic) => topic.id !== id));
 		} catch (error) {
 			console.error("Failed to remove topic:", error);
+			throw error;
+		}
+	};
+
+	const updateTopicAccess = async (topicId: string) => {
+		try {
+			await invoke("update_topic_access", { topicId });
+		} catch (error) {
+			console.error("Failed to update topic access:", error);
 			throw error;
 		}
 	};
@@ -260,6 +271,8 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 		topics,
 		loading,
 		addTopic,
+		currentTopicId,
+		setCurrentTopic,
 		removeTopic,
 		editTopicName,
 		addMessage,

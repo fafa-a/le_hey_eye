@@ -64,7 +64,7 @@ function TopicListEntry(props: TopicListEntryProps) {
 							<TextField
 								ref={setInputRef}
 								type="text"
-								placeholder="New Topic"
+								placeholder="New Topic list entry"
 								id="topicName"
 								value={topicName()}
 								class="w-full max-h-8 rounded-l-full overflow-hidden text-ellipsis focus-visible:ring-0 focus-visible:outline-none"

@@ -5,10 +5,18 @@ import TopicListEntryThumbnail from "@components/common/TopicListEntryThumbnail"
 import Add from "@icons/Add";
 import SidePanelClose from "@icons/SidePanelClose";
 import SidePanelOpen from "@icons/SidePanelOpen";
-import { type Accessor, For, type Setter, Show } from "solid-js";
+import {
+	type Accessor,
+	createEffect,
+	createSignal,
+	For,
+	type Setter,
+	Show,
+} from "solid-js";
 import type { Provider } from "types/core";
 import { uid } from "uid";
 import GeneralSettings from "./components/GeneralSettings";
+import { unwrap } from "solid-js/store";
 
 interface SidebarProps {
 	isCollapsed: boolean;
@@ -16,7 +24,7 @@ interface SidebarProps {
 	topicId: string;
 	setTopicId: Setter<string>;
 	topicActive: string;
-	setTopicActive: Setter<string>;
+	setTopicActive: (topicId: string) => void;
 	setCurrentProvider: Setter<Provider>;
 	currentProvider: Accessor<Provider>;
 }
@@ -34,6 +42,7 @@ export function Sidebar(props: SidebarProps) {
 	const { topics, addTopic } = useTopics();
 
 	const handleNewTopic = () => {
+		console.warn("handleNewTopic");
 		const newTopicId = uid(16);
 		setTopicId(newTopicId);
 		addTopic({
@@ -42,6 +51,13 @@ export function Sidebar(props: SidebarProps) {
 		});
 		setTopicActive(newTopicId);
 	};
+
+	createEffect(() => {
+		console.log("Sidebar");
+		console.log({
+			topics: unwrap(topics),
+		});
+	});
 
 	return (
 		<aside

@@ -67,7 +67,22 @@ function App() {
 	const [currentProvider, setCurrentProvider] =
 		createSignal<Provider>("Anthropic");
 	const [topicId, setTopicId] = createSignal("");
-	const [topicActive, setTopicActive] = createSignal(topics.at(0)?.id || "");
+
+	const { currentTopicId, setCurrentTopic } = useTopics();
+
+	const [topicActive, setTopicActive] = createSignal("");
+
+	createEffect(() => {
+		if (!topicActive()) {
+			console.log("currentTopicId", currentTopicId());
+			setTopicActive(currentTopicId() as string);
+		}
+	});
+
+	createEffect(() => {
+		console.log("App");
+		console.log("topicActive", topicActive());
+	});
 
 	const [isCollapsed, setIsCollapsed] = createSignal(false);
 	const [messageHistory, setMessageHistory] = createSignal<
@@ -342,7 +357,7 @@ function App() {
 					topicId={topicId()}
 					setTopicId={setTopicId}
 					topicActive={topicActive()}
-					setTopicActive={setTopicActive}
+					setTopicActive={setCurrentTopic}
 					setCurrentProvider={setCurrentProvider}
 					currentProvider={currentProvider}
 				/>
