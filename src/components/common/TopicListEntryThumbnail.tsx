@@ -1,5 +1,5 @@
-import { createEffect, type Setter } from "solid-js";
-import CustomTooltip from "./CustomTooltip";
+import type { Setter } from "solid-js";
+import ComponentTooltip from "./ComponentTooltip";
 
 interface TopicListEntryThumbnailProps {
 	topicId: string;
@@ -17,7 +17,7 @@ function TopicListEntryThumbnail(props: TopicListEntryThumbnailProps) {
 	const topicName = () => props.topicName;
 
 	return (
-		<CustomTooltip content={topicName()} placement="right-start">
+		<ComponentTooltip content={topicName()} placement="right-start">
 			<div
 				class={`w-8 h-8 ${props.bgColor} rounded-full hover:opacity-100`}
 				classList={{
@@ -37,7 +37,7 @@ function TopicListEntryThumbnail(props: TopicListEntryThumbnailProps) {
 					setIsCollapsed(!props.isCollapsed);
 				}}
 			/>
-		</CustomTooltip>
+		</ComponentTooltip>
 	);
 }
 

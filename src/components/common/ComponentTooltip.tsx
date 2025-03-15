@@ -6,13 +6,13 @@ import {
 import type { Placement } from "@kobalte/core/src/popper/utils.js";
 import type { JSX } from "solid-js";
 
-interface CustomTooltipProps {
-	content: string;
+interface ComponentTooltipProps {
+	content: string | JSX.Element;
 	children: JSX.Element;
 	placement?: Placement;
 }
 
-function CustomTooltip(props: CustomTooltipProps) {
+function ComponentTooltip(props: ComponentTooltipProps) {
 	return (
 		<Tooltip placement={props.placement}>
 			<TooltipTrigger>{props.children}</TooltipTrigger>
@@ -23,4 +23,4 @@ function CustomTooltip(props: CustomTooltipProps) {
 	);
 }
 
-export default CustomTooltip;
+export default ComponentTooltip;

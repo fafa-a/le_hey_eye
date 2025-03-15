@@ -2,7 +2,7 @@ import { useTopics } from "@/context/topicsContext";
 import { TextField, TextFieldRoot } from "@components/ui/textfield";
 import { type Setter, Show, createEffect, createSignal } from "solid-js";
 import TopicListEntryTools from "./TopicListEntryTools";
-import CustomTooltip from "./CustomTooltip";
+import ComponentTooltip from "./ComponentTooltip";
 
 interface TopicListEntryProps {
 	topicId: string;
@@ -97,13 +97,13 @@ function TopicListEntry(props: TopicListEntryProps) {
 							setIsCollapsed(!props.isCollapsed);
 						}}
 					/>
-					<CustomTooltip content={topicName()} placement="right-end">
+					<ComponentTooltip content={topicName()} placement="right-end">
 						<div class="flex-1 min-w-0">
 							<p class="text-sm overflow-hidden text-ellipsis whitespace-nowrap">
 								{topicName()}
 							</p>
 						</div>
-					</CustomTooltip>
+					</ComponentTooltip>
 				</div>
 			</Show>
 			<TopicListEntryTools

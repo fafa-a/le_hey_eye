@@ -49,8 +49,7 @@ export function PromptInput(props: PromptInputProps) {
 		}
 	};
 
-	// Fonction pour ajuster la hauteur dynamiquement
-	const adjustTextareaHeight = (textarea) => {
+	const adjustTextareaHeight = (textarea: HTMLTextAreaElement) => {
 		textarea.style.height = "auto";
 		textarea.style.height = `${textarea.scrollHeight}px`;
 	};
