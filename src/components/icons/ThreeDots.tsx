@@ -7,6 +7,9 @@ export function PhDotsThreeVerticalBold(props: JSX.IntrinsicElements["svg"]) {
 			width="1em"
 			height="1em"
 			viewBox="0 0 256 256"
+			classList={{
+				"pointer-events-none": true,
+			}}
 			{...props}
 		>
 			<title>Three Dots Vertical</title>

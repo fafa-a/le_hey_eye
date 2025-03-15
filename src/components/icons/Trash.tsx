@@ -7,6 +7,10 @@ export function CarbonTrashCan(props: JSX.IntrinsicElements["svg"]) {
 			width="1em"
 			height="1em"
 			viewBox="0 0 32 32"
+			aria-labelledby="title"
+			classList={{
+				"pointer-events-none": true,
+			}}
 			{...props}
 		>
 			<title>Delete</title>

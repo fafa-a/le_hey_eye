@@ -6,6 +6,10 @@ export default function Cloudflare(props: JSX.IntrinsicElements["svg"]) {
 			width="40"
 			height="19"
 			fill="none"
+			viewBox="0 0 40 19"
+			classList={{
+				"pointer-events-none": true,
+			}}
 			{...props}
 		>
 			<title>Cloudflare</title>

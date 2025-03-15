@@ -6,6 +6,9 @@ export default function CarbonSettings(props: JSX.IntrinsicElements["svg"]) {
 			width="1em"
 			height="1em"
 			viewBox="0 0 32 32"
+			classList={{
+				"pointer-events-none": true,
+			}}
 			{...props}
 		>
 			<title>Settings</title>
