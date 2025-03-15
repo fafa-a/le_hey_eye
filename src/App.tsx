@@ -377,7 +377,9 @@ function App() {
 					>
 						<div class="space-y-4 w-full p-3 min-w-full">
 							<For each={currentTopicMessages()}>
-								{(message) => <ChatMessage message={message} />}
+								{(message) => (
+									<ChatMessage message={message} pairId={message.pairId} />
+								)}
 							</For>
 							<Show when={currentStreamedResponse()}>
 								<div

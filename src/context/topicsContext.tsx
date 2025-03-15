@@ -5,12 +5,13 @@ import {
 	onMount,
 	useContext,
 	type JSX,
+	Setter,
 } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import type {
 	ChatRole,
 	Topic as TopicType,
-	TopicMessage,
+	TopicMessage as TopicMessageType,
 	DbTopic,
 	DbTopicMessage,
 } from "types/core";
@@ -26,14 +27,7 @@ const generateRandomColor = () => {
 	return `bg-${randomColor}-${randomShade}`;
 };
 
-// interface Topic {
-// 	id: string;
-// 	name: string;
-// 	createdAt: Date;
-// 	messages: TopicMessage[];
-// 	bgColor: string;
-// 	lastAccessedAt: Date;
-// }
+type TopicMessage = TopicMessageType & { pairId: string };
 type Topic = TopicType & { messages: TopicMessage[] };
 
 interface TopicsContextValue {
@@ -48,6 +42,8 @@ interface TopicsContextValue {
 	removeMessage: (messageId: string) => void;
 	currentTopicId: Accessor<string | undefined>;
 	setCurrentTopic: (id: string) => Promise<void>;
+	highlightedMessagePair: Accessor<string | null>;
+	setHighlightedMessagePair: Setter<string | null>;
 }
 
 const TopicsContext = createContext<TopicsContextValue>();
@@ -58,6 +54,9 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 	const [currentTopicId, setCurrentTopicId] = createSignal<string | undefined>(
 		undefined,
 	);
+	const [highlightedMessagePair, setHighlightedMessagePair] = createSignal<
+		number | null
+	>(null);
 
 	const loadTopics = async () => {
 		setLoading(true);
@@ -74,17 +73,41 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 					},
 				);
 
-				const messages: TopicMessage[] = messagesData.map((msg) => ({
-					id: msg.id,
-					topicId: topic.id,
-					role: msg.role as ChatRole,
-					content: String(msg.content).startsWith("{")
-						? JSON.parse(String(msg.content))
-						: msg.content,
-					timestamp: new Date(msg.timestamp),
-					tokensUsed: msg.tokens_used,
-				}));
+				const messages: TopicMessage[] = (() => {
+					let currentPairId: string = "";
+					let lastUserMessageId: string | null = null;
 
+					return messagesData.map((msg, index) => {
+						if (msg.role === "user") {
+							lastUserMessageId = msg.id;
+							currentPairId = `pair-${msg.id}`;
+						} else if (msg.role === "assistant") {
+							if (
+								lastUserMessageId &&
+								index > 0 &&
+								messagesData[index - 1].role === "user"
+							) {
+							} else {
+								currentPairId = `single-${msg.id}`;
+							}
+							lastUserMessageId = null;
+						} else {
+							currentPairId = `other-${msg.id}`;
+						}
+
+						return {
+							id: msg.id,
+							topicId: topic.id,
+							role: msg.role as ChatRole,
+							content: String(msg.content).startsWith("{")
+								? JSON.parse(String(msg.content))
+								: msg.content,
+							timestamp: new Date(msg.timestamp),
+							tokensUsed: msg.tokens_used,
+							pairId: currentPairId,
+						};
+					});
+				})();
 				loadedTopics.push({
 					id: topic.id,
 					name: topic.name,
@@ -282,6 +305,8 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 		editTopicName,
 		addMessage,
 		removeMessage,
+		highlightedMessagePair,
+		setHighlightedMessagePair,
 	};
 
 	return (

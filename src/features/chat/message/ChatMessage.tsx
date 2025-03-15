@@ -8,13 +8,36 @@ import { createEffect } from "solid-js";
 import Markdown from "@/components/common/Markdown";
 import { useTopics } from "@/context/topicsContext";
 import type { TopicMessage } from "../../../../types/core";
+const DeleteButton = ({
+	onDelete,
+	pairId,
+}: { onDelete: () => void; pairId: string }) => {
+	const { setHighlightedMessagePair } = useTopics();
+	return (
+		<Button
+			size="xs"
+			variant="ghost"
+			onClick={onDelete}
+			class="hover:bg-red-100"
+			onMouseEnter={() => setHighlightedMessagePair(pairId)}
+			onMouseLeave={() => setHighlightedMessagePair(null)}
+		>
+			<Delete />
+		</Button>
+	);
+};
 
 interface ChatMessageToolbarProps {
 	role: MessageRole;
 	onDelete: () => void;
+	pairId: string;
 }
 
-const ChatMessageToolbar = ({ role, onDelete }: ChatMessageToolbarProps) => {
+const ChatMessageToolbar = ({
+	role,
+	onDelete,
+	pairId,
+}: ChatMessageToolbarProps) => {
 	switch (role) {
 		case "user":
 			return (
@@ -25,9 +48,7 @@ const ChatMessageToolbar = ({ role, onDelete }: ChatMessageToolbarProps) => {
 					<Button size="xs" variant="ghost">
 						<Copy />
 					</Button>
-					<Button size="xs" variant="ghost" onClick={onDelete}>
-						<Delete />
-					</Button>
+					<DeleteButton onDelete={onDelete} pairId={pairId} />
 				</div>
 			);
 		case "assistant":
@@ -39,9 +60,7 @@ const ChatMessageToolbar = ({ role, onDelete }: ChatMessageToolbarProps) => {
 					<Button size="xs" variant="ghost">
 						<Copy />
 					</Button>
-					<Button size="xs" variant="ghost" onClick={onDelete}>
-						<Delete />
-					</Button>
+					<DeleteButton onDelete={onDelete} pairId={pairId} />
 				</div>
 			);
 	}
@@ -51,12 +70,14 @@ interface ChatMessageFooterProps {
 	role: MessageRole;
 	tokensUsed: number | undefined;
 	messageId: string;
+	pairId: string;
 }
 
 const ChatMessageFooter = ({
 	role,
 	tokensUsed,
 	messageId,
+	pairId,
 }: ChatMessageFooterProps) => {
 	const time = new Date();
 	const options: Intl.DateTimeFormatOptions = {
@@ -75,6 +96,7 @@ const ChatMessageFooter = ({
 			<ChatMessageToolbar
 				role={role}
 				onDelete={() => removeMessage(messageId)}
+				pairId={pairId}
 			/>
 			<span class="text-xs text-gray-300">{formattedTime}</span>
 			{role === "assistant" && tokensUsed && (
@@ -89,9 +111,8 @@ interface ChatMessageProps {
 }
 
 const ChatMessage = ({ message }: ChatMessageProps) => {
-	createEffect(() => {
-		console.log("message: ", message);
-	});
+	const { highlightedMessagePair } = useTopics();
+
 	return (
 		<div class="flex flex-col gap-1 w-full">
 			<div
@@ -102,11 +123,13 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
 				}}
 			>
 				<div
-					class="p-1 rounded flex flex-col"
+					class="p-1 rounded flex flex-col transition-all duration-300 ease-in-out"
 					classList={{
 						"bg-neutral-100": message.role === "user",
 						"min-w-[80%] flex-grow-0 flex-shrink-1":
 							message.role === "assistant",
+						"bg-red-50 shadow-md shadow-red-300 ":
+							message.pairId === highlightedMessagePair(),
 					}}
 				>
 					<div class="min-w-0">
@@ -116,6 +139,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
 						role={message.role}
 						tokensUsed={message.tokensUsed || 0}
 						messageId={message.id}
+						pairId={message.pairId}
 					/>
 				</div>
 			</div>
