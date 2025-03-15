@@ -1,28 +1,11 @@
 use rusqlite::{params, Connection, Result};
-use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use tauri::command;
 use tauri::Manager;
 use tauri::{AppHandle, State};
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Topic {
-    pub id: String,
-    pub name: String,
-    pub created_at: String,
-    pub bg_color: String,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-pub struct Message {
-    pub id: String,
-    pub topic_id: String,
-    pub role: String,
-    pub content: String,
-    pub timestamp: String,
-    pub tokens_used: Option<i32>,
-}
+use crate::core::models::{ChatRole, ContentType, Topic, TopicMessage};
 
 pub struct DatabaseConnection(pub Arc<Mutex<Connection>>);
 
@@ -80,7 +63,7 @@ pub fn get_all_topics(db: State<'_, DatabaseConnection>) -> Result<Vec<Topic>, S
         db.0.lock()
             .map_err(|_| "Failed to lock database".to_string())?;
     let mut stmt = conn
-        .prepare("SELECT id, name, created_at, bg_color FROM topics ORDER BY created_at DESC")
+        .prepare("SELECT id, name, created_at, bg_color, last_accessed_at FROM topics ORDER BY created_at DESC")
         .map_err(|e| e.to_string())?;
 
     let topics = stmt
@@ -90,6 +73,7 @@ pub fn get_all_topics(db: State<'_, DatabaseConnection>) -> Result<Vec<Topic>, S
                 name: row.get(1)?,
                 created_at: row.get(2)?,
                 bg_color: row.get(3)?,
+                last_accessed_at: row.get(4)?,
             })
         })
         .map_err(|e| e.to_string())?
@@ -103,7 +87,7 @@ pub fn get_all_topics(db: State<'_, DatabaseConnection>) -> Result<Vec<Topic>, S
 pub fn get_messages_for_topic(
     db: State<'_, DatabaseConnection>,
     topic_id: String,
-) -> Result<Vec<Message>, String> {
+) -> Result<Vec<TopicMessage>, String> {
     let conn =
         db.0.lock()
             .map_err(|_| "Failed to lock database".to_string())?;
@@ -112,13 +96,38 @@ pub fn get_messages_for_topic(
 
     let messages = stmt
         .query_map(params![topic_id], |row| {
-            Ok(Message {
-                id: row.get(0)?,
-                topic_id: row.get(1)?,
-                role: row.get(2)?,
-                content: row.get(3)?,
-                timestamp: row.get(4)?,
-                tokens_used: row.get(5)?,
+            let id: String = row.get(0)?;
+            let topic_id: String = row.get(1)?;
+            let role_str: String = row.get(2)?;
+            let content_str: String = row.get(3)?;
+            let timestamp: String = row.get(4)?;
+            let tokens_used: Option<i32> = row.get(5)?;
+
+            let role = match role_str.as_str() {
+                "user" => ChatRole::User,
+                "assistant" => ChatRole::Assistant,
+                "system" => ChatRole::System,
+                _ => {
+                    return Err(rusqlite::Error::InvalidColumnType(
+                        2,
+                        "role".to_string(),
+                        rusqlite::types::Type::Text,
+                    ))
+                }
+            };
+
+            let content: ContentType = match serde_json::from_str(&content_str) {
+                Ok(content) => content,
+                Err(_) => ContentType::PlainText(content_str),
+            };
+
+            Ok(TopicMessage {
+                id,
+                topic_id,
+                role,
+                content,
+                timestamp,
+                tokens_used,
             })
         })
         .map_err(|e| e.to_string())?
@@ -210,14 +219,87 @@ pub fn edit_topic_name(
     Ok(())
 }
 
+// #[command]
+// pub fn remove_message(db: State<'_, DatabaseConnection>, message_id: String) -> Result<(), String> {
+//     let conn =
+//         db.0.lock()
+//             .map_err(|_| "Failed to lock database".to_string())?;
+//
+//     conn.execute("DELETE FROM messages WHERE id = ?", params![message_id])
+//         .map_err(|e| e.to_string())?;
+//
+//     Ok(())
+// }
+
 #[command]
 pub fn remove_message(db: State<'_, DatabaseConnection>, message_id: String) -> Result<(), String> {
-    let conn =
+    let mut conn =
         db.0.lock()
             .map_err(|_| "Failed to lock database".to_string())?;
 
-    conn.execute("DELETE FROM messages WHERE id = ?", params![message_id])
-        .map_err(|e| e.to_string())?;
+    let tx = conn
+        .transaction()
+        .map_err(|e| format!("Failed to start transaction: {}", e))?;
+
+    let message = tx
+        .query_row(
+            "SELECT role, topic_id, timestamp FROM messages WHERE id = ?",
+            params![message_id],
+            |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, String>(2)?,
+                ))
+            },
+        )
+        .map_err(|e| {
+            if e.to_string().contains("no rows") {
+                "Message not found".to_string()
+            } else {
+                format!("Failed to fetch message info: {}", e)
+            }
+        })?;
+
+    let (role, topic_id, timestamp) = message;
+
+    if role == "assistant" {
+        tx.execute(
+            "DELETE FROM messages
+             WHERE topic_id = ?
+             AND role = 'user'
+             AND timestamp < ?
+             AND timestamp = (
+                SELECT MAX(timestamp) FROM messages
+                WHERE topic_id = ?
+                AND role = 'user'
+                AND timestamp < ?
+             )",
+            params![topic_id, timestamp, topic_id, timestamp],
+        )
+        .map_err(|e| format!("Failed to delete previous user message: {}", e))?;
+    } else if role == "user" {
+        tx.execute(
+            "DELETE FROM messages
+             WHERE topic_id = ?
+             AND role = 'assistant'
+             AND timestamp > ?
+             AND timestamp = (
+                SELECT MIN(timestamp) FROM messages
+                WHERE topic_id = ?
+                AND role = 'assistant'
+                AND timestamp > ?
+             )",
+            params![topic_id, timestamp, topic_id, timestamp],
+        )
+        .map_err(|e| format!("Failed to delete next assistant message: {}", e))?;
+    }
+
+    tx.execute("DELETE FROM messages WHERE id = ?", params![message_id])
+        .map_err(|e| format!("Failed to delete original message: {}", e))?;
+
+    tx.commit()
+        .map_err(|e| format!("Failed to commit transaction: {}", e))?;
 
     Ok(())
 }

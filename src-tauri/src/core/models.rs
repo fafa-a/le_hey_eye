@@ -153,3 +153,48 @@ pub struct StreamResponse {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub thinking: Option<String>,
 }
+
+#[derive(Debug, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/core.ts")]
+pub struct DbTopic {
+    pub id: String,
+    pub name: String,
+    pub created_at: String,
+    pub bg_color: String,
+    pub last_accessed_at: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/core.ts")]
+pub struct DbTopicMessage {
+    pub id: String,
+    pub topic_id: String,
+    pub role: ChatRole,
+    pub content: ContentType,
+    pub timestamp: String,
+    pub tokens_used: Option<i32>,
+}
+
+#[derive(Debug, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/core.ts", rename_all = "camelCase")]
+pub struct Topic {
+    pub id: String,
+    pub name: String,
+    #[ts(type = "Date")]
+    pub created_at: String,
+    pub bg_color: String,
+    #[ts(type = "Date")]
+    pub last_accessed_at: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/core.ts", rename_all = "camelCase")]
+pub struct TopicMessage {
+    pub id: String,
+    pub topic_id: String,
+    pub role: ChatRole,
+    pub content: ContentType,
+    #[ts(type = "Date")]
+    pub timestamp: String,
+    pub tokens_used: Option<i32>,
+}
