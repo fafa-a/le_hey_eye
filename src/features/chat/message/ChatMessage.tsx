@@ -4,10 +4,14 @@ import Edit from "@icons/Edit";
 import Copy from "@icons/Copy";
 import Delete from "@icons/Trash";
 import Regenerate from "@icons/Reset";
-import { createEffect } from "solid-js";
 import Markdown from "@/components/common/Markdown";
 import { useTopics } from "@/context/topicsContext";
 import type { TopicMessage } from "../../../../types/core";
+import ComponentTooltip from "@/components/common/ComponentTooltip";
+import { Accessor, createSignal } from "solid-js";
+import { writeClipboard } from "@solid-primitives/clipboard";
+import Checkmark from "@/components/icons/Checkmark";
+
 const DeleteButton = ({
 	onDelete,
 	pairId,
@@ -27,40 +31,95 @@ const DeleteButton = ({
 	);
 };
 
+const CopyButton = ({ onCopy }: { onCopy: () => void }) => {
+	return (
+		<Button size="xs" variant="ghost" onClick={onCopy}>
+			<Copy />
+		</Button>
+	);
+};
+
+const EditButton = ({ onEdit }: { onEdit: () => void }) => {
+	return (
+		<Button size="xs" variant="ghost" onClick={onEdit}>
+			<Edit />
+		</Button>
+	);
+};
+
+const RegenerateButton = ({ onRegenerate }: { onRegenerate: () => void }) => {
+	return (
+		<Button
+			size="xs"
+			variant="ghost"
+			onClick={onRegenerate}
+			class="hover:bg-red-100"
+		>
+			<Regenerate />
+		</Button>
+	);
+};
+
+const CheckmarkButton = () => {
+	return (
+		<Button size="xs" variant="ghost">
+			<Checkmark />
+		</Button>
+	);
+};
+
 interface ChatMessageToolbarProps {
 	role: MessageRole;
 	onDelete: () => void;
+	onEdit: () => void;
+	onCopy: () => void;
+	onRegenerate: () => void;
 	pairId: string;
+	isCopied: Accessor<boolean>;
 }
 
 const ChatMessageToolbar = ({
 	role,
 	onDelete,
 	pairId,
+	onEdit,
+	onCopy,
+	onRegenerate,
+	isCopied,
 }: ChatMessageToolbarProps) => {
 	switch (role) {
 		case "user":
 			return (
 				<div class="flex">
-					<Button size="xs" variant="ghost">
-						<Edit />
-					</Button>
-					<Button size="xs" variant="ghost">
-						<Copy />
-					</Button>
-					<DeleteButton onDelete={onDelete} pairId={pairId} />
+					<ComponentTooltip content="Edit message" placement="bottom">
+						<EditButton onEdit={onEdit} />
+					</ComponentTooltip>
+					<ComponentTooltip
+						content={isCopied() ? "Copied!" : "Copy message"}
+						placement="bottom"
+					>
+						{isCopied() ? <CheckmarkButton /> : <CopyButton onCopy={onCopy} />}
+					</ComponentTooltip>
+					<ComponentTooltip content="Delete message" placement="bottom">
+						<DeleteButton onDelete={onDelete} pairId={pairId} />
+					</ComponentTooltip>
 				</div>
 			);
 		case "assistant":
 			return (
 				<div class="flex">
-					<Button size="xs" variant="ghost">
-						<Regenerate />
-					</Button>
-					<Button size="xs" variant="ghost">
-						<Copy />
-					</Button>
-					<DeleteButton onDelete={onDelete} pairId={pairId} />
+					<ComponentTooltip content="Regenerate message" placement="bottom">
+						<RegenerateButton onRegenerate={onRegenerate} />
+					</ComponentTooltip>
+					<ComponentTooltip
+						content={isCopied() ? "Copied!" : "Copy message"}
+						placement="bottom"
+					>
+						{isCopied() ? <CheckmarkButton /> : <CopyButton onCopy={onCopy} />}
+					</ComponentTooltip>
+					<ComponentTooltip content="Delete message" placement="bottom">
+						<DeleteButton onDelete={onDelete} pairId={pairId} />
+					</ComponentTooltip>
 				</div>
 			);
 	}
@@ -71,6 +130,7 @@ interface ChatMessageFooterProps {
 	tokensUsed: number | undefined;
 	messageId: string;
 	pairId: string;
+	content: string;
 }
 
 const ChatMessageFooter = ({
@@ -78,6 +138,7 @@ const ChatMessageFooter = ({
 	tokensUsed,
 	messageId,
 	pairId,
+	content,
 }: ChatMessageFooterProps) => {
 	const time = new Date();
 	const options: Intl.DateTimeFormatOptions = {
@@ -85,11 +146,21 @@ const ChatMessageFooter = ({
 		minute: "2-digit",
 		hour12: false,
 	};
-
+	const [copied, setCopied] = createSignal(false);
 	const formattedTime = new Intl.DateTimeFormat(undefined, options).format(
 		time,
 	);
 	const { removeMessage } = useTopics();
+
+	const copyMessageContent = async () => {
+		try {
+			await writeClipboard(content.replace(/\n$/, ""));
+			setCopied(true);
+			setTimeout(() => setCopied(false), 1500);
+		} catch (err) {
+			console.error("Error while copying message content:", err);
+		}
+	};
 
 	return (
 		<div class="flex items-center gap-2 mb-2">
@@ -97,6 +168,10 @@ const ChatMessageFooter = ({
 				role={role}
 				onDelete={() => removeMessage(messageId)}
 				pairId={pairId}
+				onEdit={() => console.log("Edit")}
+				onCopy={copyMessageContent}
+				isCopied={copied}
+				onRegenerate={() => console.log("Regenerate")}
 			/>
 			<span class="text-xs text-gray-300">{formattedTime}</span>
 			{role === "assistant" && tokensUsed && (
@@ -140,6 +215,7 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
 						tokensUsed={message.tokensUsed || 0}
 						messageId={message.id}
 						pairId={message.pairId}
+						content={message.content}
 					/>
 				</div>
 			</div>

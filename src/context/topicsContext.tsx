@@ -5,7 +5,7 @@ import {
 	onMount,
 	useContext,
 	type JSX,
-	Setter,
+	type Setter,
 } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import type {
@@ -27,8 +27,8 @@ const generateRandomColor = () => {
 	return `bg-${randomColor}-${randomShade}`;
 };
 
-type TopicMessage = TopicMessageType & { pairId: string };
-type Topic = TopicType & { messages: TopicMessage[] };
+export type TopicMessage = TopicMessageType & { pairId: string };
+export type Topic = TopicType & { messages: TopicMessage[] };
 
 interface TopicsContextValue {
 	loading: Accessor<boolean>;
@@ -44,6 +44,7 @@ interface TopicsContextValue {
 	setCurrentTopic: (id: string) => Promise<void>;
 	highlightedMessagePair: Accessor<string | null>;
 	setHighlightedMessagePair: Setter<string | null>;
+	regenerateMessage: (messageId: string) => Promise<void>;
 }
 
 const TopicsContext = createContext<TopicsContextValue>();
@@ -74,7 +75,7 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 				);
 
 				const messages: TopicMessage[] = (() => {
-					let currentPairId: string = "";
+					let currentPairId = "";
 					let lastUserMessageId: string | null = null;
 
 					return messagesData.map((msg, index) => {
@@ -291,6 +292,20 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 			);
 		} catch (error) {
 			console.error("Failed to remove message:", error);
+			throw error;
+		}
+	};
+
+	const regenerateMessage = async (messageId: string) => {
+		try {
+			removeMessage(messageId);
+			const response = await invoke("send_message", {
+				provider,
+				model,
+				request,
+			});
+		} catch (error) {
+			console.error("Failed to regenerate message:", error);
 			throw error;
 		}
 	};
