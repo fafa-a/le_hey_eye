@@ -20,10 +20,9 @@ import { PromptInput } from "@features/chat/prompt/PromptInput";
 import { Sidebar } from "@/features/sidebar/Sidebar";
 import ChatMessage from "@/features/chat/message/ChatMessage";
 import { unwrap } from "solid-js/store";
-import type { TopicMessage } from "@/context/topicsContext";
 import { useTopics } from "@/context/topicsContext";
 import Markdown from "./components/common/Markdown";
-import type { Provider } from "../types/core";
+import type { Provider, TopicMessage } from "../types/core";
 
 async function generateAIResponse(
 	provider: Provider,
@@ -252,11 +251,12 @@ function App() {
 
 			const newAssistantMessage: Omit<TopicMessage, "id"> = {
 				role: "assistant",
+				topicId: topicActive(),
 				content: response.response,
 				timestamp: new Date(),
-				tokens_used: response.usage?.total_tokens,
+				tokensUsed: response.usage?.total_tokens || 0,
 			};
-			addMessage(topicActive(), newAssistantMessage);
+			addMessage(newAssistantMessage);
 
 			setRequest(() => {
 				return {
@@ -279,8 +279,9 @@ function App() {
 	let transitionTimeout: NodeJS.Timeout | undefined;
 	//
 	const handleSubmit = (prompt: string) => {
-		const userMessage: Omit<TopicMessage, "id"> = {
+		const userMessage: Omit<TopicMessage, "id" | "tokensUsed"> = {
 			role: "user",
+			topicId: topicActive(),
 			content: prompt,
 			timestamp: new Date(),
 		};

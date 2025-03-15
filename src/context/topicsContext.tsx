@@ -5,10 +5,15 @@ import {
 	onMount,
 	useContext,
 	type JSX,
-	createEffect,
 } from "solid-js";
-import { createStore } from "solid-js/store";
-import type { ChatRole, ContentType } from "types/core";
+import { createStore, produce } from "solid-js/store";
+import type {
+	ChatRole,
+	Topic as TopicType,
+	TopicMessage,
+	DbTopic,
+	DbTopicMessage,
+} from "types/core";
 import { uid } from "uid";
 import { invoke } from "@tauri-apps/api/core";
 
@@ -21,22 +26,15 @@ const generateRandomColor = () => {
 	return `bg-${randomColor}-${randomShade}`;
 };
 
-export interface TopicMessage {
-	id: string;
-	role: ChatRole;
-	content: ContentType;
-	timestamp: Date;
-	tokens_used?: number;
-}
-
-interface Topic {
-	id: string;
-	name: string;
-	createdAt: Date;
-	messages: TopicMessage[];
-	bgColor: string;
-	lastAccessedAt: Date;
-}
+// interface Topic {
+// 	id: string;
+// 	name: string;
+// 	createdAt: Date;
+// 	messages: TopicMessage[];
+// 	bgColor: string;
+// 	lastAccessedAt: Date;
+// }
+type Topic = TopicType & { messages: TopicMessage[] };
 
 interface TopicsContextValue {
 	loading: Accessor<boolean>;
@@ -46,8 +44,8 @@ interface TopicsContextValue {
 	) => void;
 	removeTopic: (id: string) => void;
 	editTopicName: (id: string, name: string) => void;
-	addMessage: (topicId: string, message: Omit<TopicMessage, "id">) => void;
-	removeMessage: (topicId: string, messageId: string) => void;
+	addMessage: (message: Omit<TopicMessage, "id">) => void;
+	removeMessage: (messageId: string) => void;
 	currentTopicId: Accessor<string | undefined>;
 	setCurrentTopic: (id: string) => Promise<void>;
 }
@@ -64,23 +62,27 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 	const loadTopics = async () => {
 		setLoading(true);
 		try {
-			const topicsData = await invoke<any[]>("get_all_topics");
-
+			const topicsData = await invoke<DbTopic[]>("get_all_topics");
+			console.log("topicsData: ", topicsData);
 			const loadedTopics: Topic[] = [];
 
 			for (const topic of topicsData) {
-				const messagesData = await invoke<any[]>("get_messages_for_topic", {
-					topicId: topic.id,
-				});
+				const messagesData = await invoke<DbTopicMessage[]>(
+					"get_messages_for_topic",
+					{
+						topicId: topic.id,
+					},
+				);
 
 				const messages: TopicMessage[] = messagesData.map((msg) => ({
 					id: msg.id,
+					topicId: topic.id,
 					role: msg.role as ChatRole,
-					content: msg.content.startsWith("{")
-						? JSON.parse(msg.content)
+					content: String(msg.content).startsWith("{")
+						? JSON.parse(String(msg.content))
 						: msg.content,
 					timestamp: new Date(msg.timestamp),
-					tokens_used: msg.tokens_used,
+					tokensUsed: msg.tokens_used,
 				}));
 
 				loadedTopics.push({
@@ -217,10 +219,7 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 		}
 	};
 
-	const addMessage = async (
-		topicId: string,
-		message: Omit<TopicMessage, "id">,
-	) => {
+	const addMessage = async (message: Omit<TopicMessage, "id">) => {
 		const newMessageId = uid(16);
 		const newMessage: TopicMessage = {
 			id: newMessageId,
@@ -235,16 +234,17 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 		try {
 			await invoke("add_message", {
 				id: newMessageId,
-				topicId,
+				topicId: newMessage.topicId,
 				role: newMessage.role,
 				content: contentStr,
-				tokensUsed: newMessage.tokens_used,
+				tokensUsed: newMessage.tokensUsed,
 			});
 
 			setTopics(
-				(topic) => topic.id === topicId,
-				"messages",
-				(messages) => [...messages, newMessage],
+				(topic) => topic.id === newMessage.topicId,
+				produce((topic: Topic) => {
+					topic.messages.push(newMessage);
+				}),
 			);
 		} catch (error) {
 			console.error("Failed to add message:", error);
@@ -252,14 +252,19 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 		}
 	};
 
-	const removeMessage = async (topicId: string, messageId: string) => {
+	const removeMessage = async (messageId: string) => {
 		try {
 			await invoke("remove_message", { messageId });
-
+			const topicMessages = await invoke<TopicMessage[]>(
+				"get_messages_for_topic",
+				{
+					topicId: currentTopicId(),
+				},
+			);
 			setTopics(
-				(topic) => topic.id === topicId,
+				(topic) => topic.id === currentTopicId(),
 				"messages",
-				(messages) => messages.filter((message) => message.id !== messageId),
+				() => topicMessages,
 			);
 		} catch (error) {
 			console.error("Failed to remove message:", error);

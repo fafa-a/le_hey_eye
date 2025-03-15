@@ -1,4 +1,4 @@
-import type { Message, MessageRole } from "../../../../types/cloudflare";
+import type { MessageRole } from "../../../../types/cloudflare";
 import { Button } from "@components/ui/button";
 import Edit from "@icons/Edit";
 import Copy from "@icons/Copy";
@@ -6,13 +6,15 @@ import Delete from "@icons/Trash";
 import Regenerate from "@icons/Reset";
 import { createEffect } from "solid-js";
 import Markdown from "@/components/common/Markdown";
-import type { TopicMessage } from "@/context/topicsContext";
+import { useTopics } from "@/context/topicsContext";
+import type { TopicMessage } from "../../../../types/core";
 
 interface ChatMessageToolbarProps {
 	role: MessageRole;
+	onDelete: () => void;
 }
 
-const ChatMessageToolbar = ({ role }: ChatMessageToolbarProps) => {
+const ChatMessageToolbar = ({ role, onDelete }: ChatMessageToolbarProps) => {
 	switch (role) {
 		case "user":
 			return (
@@ -23,7 +25,7 @@ const ChatMessageToolbar = ({ role }: ChatMessageToolbarProps) => {
 					<Button size="xs" variant="ghost">
 						<Copy />
 					</Button>
-					<Button size="xs" variant="ghost">
+					<Button size="xs" variant="ghost" onClick={onDelete}>
 						<Delete />
 					</Button>
 				</div>
@@ -37,6 +39,9 @@ const ChatMessageToolbar = ({ role }: ChatMessageToolbarProps) => {
 					<Button size="xs" variant="ghost">
 						<Copy />
 					</Button>
+					<Button size="xs" variant="ghost" onClick={onDelete}>
+						<Delete />
+					</Button>
 				</div>
 			);
 	}
@@ -44,10 +49,15 @@ const ChatMessageToolbar = ({ role }: ChatMessageToolbarProps) => {
 
 interface ChatMessageFooterProps {
 	role: MessageRole;
-	tokens_used: number | undefined;
+	tokensUsed: number | undefined;
+	messageId: string;
 }
 
-const ChatMessageFooter = ({ role, tokens_used }: ChatMessageFooterProps) => {
+const ChatMessageFooter = ({
+	role,
+	tokensUsed,
+	messageId,
+}: ChatMessageFooterProps) => {
 	const time = new Date();
 	const options: Intl.DateTimeFormatOptions = {
 		hour: "2-digit",
@@ -58,13 +68,17 @@ const ChatMessageFooter = ({ role, tokens_used }: ChatMessageFooterProps) => {
 	const formattedTime = new Intl.DateTimeFormat(undefined, options).format(
 		time,
 	);
+	const { removeMessage } = useTopics();
 
 	return (
 		<div class="flex items-center gap-2 mb-2">
-			<ChatMessageToolbar role={role} />
+			<ChatMessageToolbar
+				role={role}
+				onDelete={() => removeMessage(messageId)}
+			/>
 			<span class="text-xs text-gray-300">{formattedTime}</span>
-			{role === "assistant" && tokens_used && (
-				<span class="text-xs text-gray-300">{tokens_used} tokens used</span>
+			{role === "assistant" && tokensUsed && (
+				<span class="text-xs text-gray-300">{tokensUsed} tokens used</span>
 			)}
 		</div>
 	);
@@ -100,7 +114,8 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
 					</div>
 					<ChatMessageFooter
 						role={message.role}
-						tokens_used={message.tokens_used}
+						tokensUsed={message.tokensUsed || 0}
+						messageId={message.id}
 					/>
 				</div>
 			</div>

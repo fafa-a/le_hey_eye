@@ -61,10 +61,11 @@ export function PromptInput(props: PromptInputProps) {
 			onSubmit(prompt());
 			const message: Omit<TopicMessage, "id"> = {
 				role: "user",
+				topicId: topicId(),
 				content: prompt(),
 				timestamp: new Date(),
 			};
-			addMessage(topicId(), message);
+			addMessage(message);
 
 			setPrompt("");
 			resetTextareaHeight();

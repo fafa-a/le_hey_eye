@@ -5,14 +5,7 @@ import TopicListEntryThumbnail from "@components/common/TopicListEntryThumbnail"
 import Add from "@icons/Add";
 import SidePanelClose from "@icons/SidePanelClose";
 import SidePanelOpen from "@icons/SidePanelOpen";
-import {
-	type Accessor,
-	createEffect,
-	createSignal,
-	For,
-	type Setter,
-	Show,
-} from "solid-js";
+import { type Accessor, createEffect, For, type Setter, Show } from "solid-js";
 import type { Provider } from "types/core";
 import { uid } from "uid";
 import GeneralSettings from "./components/GeneralSettings";
