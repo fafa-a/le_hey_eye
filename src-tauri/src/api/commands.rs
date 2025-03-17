@@ -5,7 +5,7 @@ use crate::core::credentials::{
     self, AnthropicCredentials, CloudflareCredentials, MistralCredentials,
 };
 use crate::core::llm_trait;
-use crate::core::models::{ChatRequest, Provider, StreamResponse};
+use crate::core::models::{ChatRequest, ProviderType, StreamResponse};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
@@ -26,7 +26,7 @@ pub enum ProviderCredentials {
 pub async fn send_message<R: Runtime>(
     window: Window<R>,
     app: AppHandle<R>,
-    provider: Provider,
+    provider: ProviderType,
     model: String,
     request: serde_json::Value,
 ) -> Result<StreamResponse, String> {
@@ -53,7 +53,7 @@ pub async fn send_message<R: Runtime>(
 #[allow(dead_code)]
 pub async fn list_models<R: Runtime>(
     app: AppHandle<R>,
-    provider: Provider,
+    provider: ProviderType,
 ) -> Result<Vec<String>, String> {
     let provider_id = provider.as_str();
 
@@ -67,7 +67,7 @@ pub async fn list_models<R: Runtime>(
 #[allow(dead_code)]
 pub async fn get_model_details<R: Runtime>(
     app: AppHandle<R>,
-    provider: Provider,
+    provider: ProviderType,
     model: String,
 ) -> Result<serde_json::Value, String> {
     let provider_id = provider.as_str();
@@ -82,7 +82,7 @@ pub async fn get_model_details<R: Runtime>(
 #[allow(dead_code)]
 pub async fn has_credentials<R: Runtime>(
     app: AppHandle<R>,
-    provider: Provider,
+    provider: ProviderType,
 ) -> Result<bool, String> {
     let provider_id = provider.as_str();
 
@@ -122,6 +122,6 @@ pub async fn save_credentials<R: Runtime>(
 
 #[tauri::command]
 #[allow(dead_code)]
-pub fn get_supported_providers() -> Vec<Provider> {
-    vec![Provider::Cloudflare, Provider::Anthropic, Provider::Mistral]
+pub fn get_supported_providers() -> Vec<ProviderType> {
+    vec![ProviderType::Cloudflare, ProviderType::Anthropic, ProviderType::Mistral,ProviderType::OpenAI]
 }

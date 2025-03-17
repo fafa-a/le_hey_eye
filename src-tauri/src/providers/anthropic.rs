@@ -2,10 +2,11 @@ use crate::core::credentials::{self, AnthropicCredentials};
 use crate::core::endpoints;
 use crate::core::llm_trait::{AnthropicAdapter, LLMProvider};
 use crate::core::models::{
-    ChatRequest, ChatRole, ContentItem, ContentType, StreamResponse, TokenUsage,
+    BaseModelSettings, ChatRequest, ChatRole, ContentItem, ContentType, ProviderCapabilities, ProviderType, StreamResponse, TokenUsage
 };
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::sync::Arc;
 use tauri::Emitter;
 use tauri::Window;
@@ -147,26 +148,156 @@ impl Serialize for MessageContent {
         }
     }
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/anthropic.ts")]
+pub struct AnthropicToolChoice {
+    #[serde(rename = "type")]
+    pub choice_type: AnthropicToolChoiceType,
+
+    #[serde(
+        rename = "disable_parallel_tool_use",
+        skip_serializing_if = "Option::is_none"
+    )]
+    pub disable_parallel_tool_use: Option<bool>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/anthropic.ts")]
+pub enum AnthropicToolChoiceType {
+    #[serde(rename = "auto")]
+    Auto,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/anthropic.ts")]
+pub struct AnthropicTool {
+    pub name: String,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+
+    pub input_schema: InputSchema,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/anthropic.ts")]
+pub struct InputSchema {
+    #[serde(rename = "type")]
+    pub schema_type: String,
+
+    pub properties: HashMap<String, PropertySchema>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub required: Option<Vec<String>>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/anthropic.ts")]
+pub struct PropertySchema {
+    #[serde(rename = "type")]
+    pub property_type: String,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub description: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub enum_values: Option<Vec<String>>,
+}
+
+impl AnthropicTool {
+    pub fn new(
+        name: impl Into<String>,
+        description: impl Into<String>,
+        properties: HashMap<String, PropertySchema>,
+        required: Option<Vec<String>>,
+    ) -> Self {
+        Self {
+            name: name.into(),
+            description: Some(description.into()),
+            input_schema: InputSchema {
+                schema_type: "object".to_string(),
+                properties,
+                required,
+            },
+        }
+    }
+}
+
+impl PropertySchema {
+    pub fn string(description: impl Into<String>) -> Self {
+        Self {
+            property_type: "string".to_string(),
+            description: Some(description.into()),
+            enum_values: None,
+        }
+    }
+
+    pub fn string_enum(description: impl Into<String>, values: Vec<impl Into<String>>) -> Self {
+        Self {
+            property_type: "string".to_string(),
+            description: Some(description.into()),
+            enum_values: Some(values.into_iter().map(|v| v.into()).collect()),
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[ts(export, export_to = "../../types/core.ts")]
 pub struct AnthropicThinkingConfig {
     #[serde(rename = "type")]
-    pub thinking_type: ThinkingType,
+    pub thinking_type: AnthropicThinkingType,
     pub budget_tokens: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[ts(export, export_to = "../../types/core.ts")]
 #[serde(rename_all = "lowercase")]
-pub enum ThinkingType {
+pub enum AnthropicThinkingType {
     Enabled,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+pub struct CacheControl {
+    #[serde(rename = "type")]
+    pub cache_type: CacheType,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+pub enum CacheType {
+    #[serde(rename = "ephemeral")]
+    Ephemeral,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+pub struct SystemPromptData {
+    pub text: String,
+    #[serde(rename = "type")]
+    pub prompt_type: SystemPromptType,
+    #[serde(rename = "cache_control")]
+    pub cache_control: Option<CacheControl>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/core.ts")]
+pub enum SystemPromptType {
+    #[serde(rename = "text")]
+    Text,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/core.ts")]
+#[serde(untagged)]
+pub enum AnthropicSystemPrompt {
+    Simple(String),
+    Structured(SystemPromptData),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnthropicChatRequest {
     pub model: Option<String>,
     pub messages: Vec<AnthropicMessage>,
-    pub system: Option<String>,
+    pub system: AnthropicSystemPrompt,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub temperature: Option<f32>,
@@ -179,6 +310,18 @@ pub struct AnthropicChatRequest {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub thinking: Option<AnthropicThinkingConfig>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tools: Option<Vec<AnthropicTool>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_choice: Option<AnthropicToolChoice>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub top_k: Option<i32>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub top_p: Option<f32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -224,6 +367,140 @@ pub struct Usage {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub cache_read_input_tokens: Option<u32>,
 }
+
+
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../types/anthropic.ts")]
+pub struct AnthropicModelSettings {
+    pub base: BaseModelSettings,
+    
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub thinking: Option<AnthropicThinkingConfig>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tools: Option<Vec<AnthropicTool>>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tool_choice: Option<AnthropicToolChoice>,
+}
+
+impl AnthropicModelSettings {
+    pub fn new(model: impl Into<String>) -> Self {
+        Self {
+            base: BaseModelSettings::new(ProviderType::Anthropic, model),
+            thinking: None,
+            tools: None,
+            tool_choice: None,
+        }
+    }
+    
+    // Gardez les méthodes utilitaires spécifiques
+    pub fn with_thinking(mut self, budget_tokens: u32) -> Result<Self, String> {
+        // Votre implémentation existante
+        if budget_tokens < 1024 {
+            return Err("thinking_budget must be at least 1024 tokens".to_string());
+        }
+
+        if let Some(max_tokens) = self.base.max_tokens {
+            if budget_tokens >= max_tokens {
+                return Err(format!(
+                    "thinking_budget ({}) must be less than max_tokens ({})",
+                    budget_tokens, max_tokens
+                ));
+            }
+        }
+
+        self.thinking = Some(AnthropicThinkingConfig {
+            thinking_type: AnthropicThinkingType::Enabled,
+            budget_tokens,
+        });
+
+        Ok(self)
+    }
+
+    pub fn with_tools(mut self, tools: Vec<AnthropicTool>) -> Self {
+        self.tools = Some(tools);
+        self
+    }
+
+    pub fn with_auto_tool_choice(mut self) -> Self {
+        self.tool_choice = Some(AnthropicToolChoice {
+            choice_type: AnthropicToolChoiceType::Auto,
+            disable_parallel_tool_use: None,
+        });
+        self
+    }
+
+    pub fn with_sequential_tool_choice(mut self) -> Self {
+        self.tool_choice = Some(AnthropicToolChoice {
+            choice_type: AnthropicToolChoiceType::Auto,
+            disable_parallel_tool_use: Some(true),
+        });
+        self
+    }
+}
+
+impl ProviderCapabilities for AnthropicModelSettings {
+    fn supports_streaming(&self) -> bool {
+        true
+    }
+
+    fn supports_thinking(&self) -> bool {
+        true
+    }
+
+    fn supports_tools(&self) -> bool {
+        true
+    }
+
+    fn get_default_model(&self) -> String {
+        "claude-3-haiku-20240307".to_string()
+    }
+
+    fn get_available_models(&self) -> Vec<String> {
+        vec![
+            "claude-3-opus-20240229".to_string(),
+            "claude-3-sonnet-20240229".to_string(),
+            "claude-3-haiku-20240307".to_string(),
+        ]
+    }
+
+    fn get_max_tokens_limit(&self) -> u32 {
+        match self.base.model.as_str() {
+            "claude-3-opus-20240229" => 4096 * 4,
+            "claude-3-sonnet-20240229" => 4096 * 2,
+            "claude-3-haiku-20240307" => 4096,
+            _ => 4096,
+        }
+    }
+}
+
+impl From<BaseModelSettings> for AnthropicModelSettings {
+    fn from(base: BaseModelSettings) -> Self {
+        Self {
+            base,
+            thinking: None,
+            tools: None,
+            tool_choice: None,
+        }
+    }
+}
+
+impl std::ops::Deref for AnthropicModelSettings {
+    type Target = BaseModelSettings;
+
+    fn deref(&self) -> &Self::Target {
+        &self.base
+    }
+}
+
+impl std::ops::DerefMut for AnthropicModelSettings {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.base
+    }
+}
+
+
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnthropicResponse {
@@ -453,9 +730,13 @@ impl AnthropicAdapter for AnthropicProviderWrapper {
             max_tokens: request.max_tokens,
             stream: Some(true),
             thinking: request.thinking.map(|config| AnthropicThinkingConfig {
-                thinking_type: ThinkingType::Enabled,
+                thinking_type: AnthropicThinkingType::Enabled,
                 budget_tokens: config.budget_tokens,
             }),
+            top_p: request.top_p,
+            top_k: request.top_k,
+            tools: request.tools,
+            tool_choice: request.tool_choice
         }
     }
 

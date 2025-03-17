@@ -159,7 +159,7 @@ impl CloudflareProvider {
     #[allow(dead_code)]
     pub fn list_models_impl<R: tauri::Runtime>(
         &self,
-        app: Arc<tauri::AppHandle<R>>,
+        _app: Arc<tauri::AppHandle<R>>,
     ) -> tauri::async_runtime::JoinHandle<Result<Vec<String>, String>> {
         tauri::async_runtime::spawn(async move {
             // Implémentation pour CloudFlare

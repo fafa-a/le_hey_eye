@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use super::models::{ChatRequest, Provider};
+use super::models::{ChatRequest, ProviderType};
 
 pub struct ProviderEndpoints {
     pub api_url: &'static str,
@@ -73,7 +73,7 @@ pub fn format_endpoint(url: &str, params: Option<&HashMap<String, String>>) -> S
 }
 
 pub fn prepare_request_for_provider(
-    provider: &Provider,
+    provider: &ProviderType,
     model: &str,
     mut request: ChatRequest,
 ) -> (ChatRequest, Option<HashMap<String, String>>) {

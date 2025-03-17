@@ -1,5 +1,5 @@
 use crate::{
-    core::models::{ChatRequest, Provider, StreamResponse},
+    core::models::{ChatRequest, ProviderType, StreamResponse},
     providers::anthropic::{AnthropicChatRequest, AnthropicResponse},
 };
 use std::sync::Arc;
@@ -21,8 +21,8 @@ pub trait AnthropicAdapter {
 
 #[allow(dead_code)]
 pub fn get_provider(provider_id: &str) -> Option<Box<dyn LLMProvider>> {
-    match Provider::from_str(provider_id) {
-        Some(Provider::Cloudflare) => {
+    match ProviderType::from_str(provider_id) {
+        Some(ProviderType::Cloudflare) => {
             let provider = crate::providers::cloudflare::CloudflareProvider {};
             struct CloudflareProviderWrapper(crate::providers::cloudflare::CloudflareProvider);
             impl LLMProvider for CloudflareProviderWrapper {
@@ -32,7 +32,7 @@ pub fn get_provider(provider_id: &str) -> Option<Box<dyn LLMProvider>> {
             }
             Some(Box::new(CloudflareProviderWrapper(provider)))
         }
-        Some(Provider::Anthropic) => {
+        Some(ProviderType::Anthropic) => {
             let provider = crate::providers::anthropic::AnthropicProvider {};
             struct AnthropicProviderWrapper(crate::providers::anthropic::AnthropicProvider);
             impl LLMProvider for AnthropicProviderWrapper {
@@ -42,7 +42,8 @@ pub fn get_provider(provider_id: &str) -> Option<Box<dyn LLMProvider>> {
             }
             Some(Box::new(AnthropicProviderWrapper(provider)))
         }
-        Some(Provider::Mistral) => None,
+        Some(ProviderType::Mistral) => None,
+        Some(ProviderType::OpenAI) => None,
         None => None,
     }
 }
