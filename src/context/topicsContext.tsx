@@ -17,6 +17,7 @@ import type {
 } from "types/core";
 import { uid } from "uid";
 import { invoke } from "@tauri-apps/api/core";
+import { modelSettingsStore } from "./model-settings-store";
 
 const generateRandomColor = () => {
 	const colors = ["red", "blue", "green", "yellow", "purple", "pink", "indigo"];

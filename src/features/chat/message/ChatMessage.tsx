@@ -8,7 +8,7 @@ import Markdown from "@/components/common/Markdown";
 import { useTopics } from "@/context/topicsContext";
 import type { TopicMessage } from "../../../../types/core";
 import ComponentTooltip from "@/components/common/ComponentTooltip";
-import { Accessor, createSignal } from "solid-js";
+import { type Accessor, createSignal } from "solid-js";
 import { writeClipboard } from "@solid-primitives/clipboard";
 import Checkmark from "@/components/icons/Checkmark";
 
@@ -49,12 +49,7 @@ const EditButton = ({ onEdit }: { onEdit: () => void }) => {
 
 const RegenerateButton = ({ onRegenerate }: { onRegenerate: () => void }) => {
 	return (
-		<Button
-			size="xs"
-			variant="ghost"
-			onClick={onRegenerate}
-			class="hover:bg-red-100"
-		>
+		<Button size="xs" variant="ghost" onClick={onRegenerate}>
 			<Regenerate />
 		</Button>
 	);

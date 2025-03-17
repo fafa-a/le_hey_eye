@@ -67,20 +67,11 @@ function App() {
 		createSignal<Provider>("Anthropic");
 	const [topicId, setTopicId] = createSignal("");
 
-	const { currentTopicId, setCurrentTopic } = useTopics();
-
-	const [topicActive, setTopicActive] = createSignal("");
-
-	createEffect(() => {
-		if (!topicActive()) {
-			console.log("currentTopicId", currentTopicId());
-			setTopicActive(currentTopicId() as string);
-		}
-	});
+	const { currentTopicId } = useTopics();
 
 	createEffect(() => {
 		console.log("App");
-		console.log("topicActive", topicActive());
+		console.log("currentTopicId", currentTopicId());
 	});
 
 	const [isCollapsed, setIsCollapsed] = createSignal(false);
@@ -96,20 +87,23 @@ function App() {
 	const [streamHeight, setStreamHeight] = createSignal(0);
 
 	const currentTopicMessages = createMemo(() => {
-		const currentTopic = topics.find((topic) => topic.id === topicActive());
+		const currentTopic = topics.find((topic) => topic.id === currentTopicId());
 		return currentTopic?.messages || [];
 	});
 
 	const isTopicMessagesEmpty = createMemo(
 		() => currentTopicMessages().length === 0,
 	);
+	createEffect(() => {
+		console.log("currentTopicMessages: ", currentTopicMessages());
+	});
 
 	createEffect(() => {
 		console.log("*".repeat(100));
 		console.log("loading: ", loading());
 		console.log("topics: ", unwrap(topics));
 		const topicMessages = topics.find(
-			(topic) => topic.id === topicActive(),
+			(topic) => topic.id === currentTopicId(),
 		)?.messages;
 		setMessageHistory(topicMessages || []);
 		console.log("*".repeat(100));
@@ -251,7 +245,7 @@ function App() {
 
 			const newAssistantMessage: Omit<TopicMessage, "id"> = {
 				role: "assistant",
-				topicId: topicActive(),
+				topicId: currentTopicId() as string,
 				content: response.response,
 				timestamp: new Date(),
 				tokensUsed: response.usage?.total_tokens || 0,
@@ -281,7 +275,7 @@ function App() {
 	const handleSubmit = (prompt: string) => {
 		const userMessage: Omit<TopicMessage, "id" | "tokensUsed"> = {
 			role: "user",
-			topicId: topicActive(),
+			topicId: currentTopicId() as string,
 			content: prompt,
 			timestamp: new Date(),
 		};
@@ -291,12 +285,12 @@ function App() {
 		mutation.mutate(updatedHistory);
 	};
 
-	// Nettoyage important
 	onCleanup(() => {
 		if (transitionTimeout) {
 			clearTimeout(transitionTimeout);
 		}
 	});
+
 	createEffect(() => {
 		currentTopicMessages();
 		// currentStreamedResponse();
@@ -341,7 +335,6 @@ function App() {
 			setStreamHeight(0);
 		}
 	});
-	//
 
 	return (
 		<div class="h-screen max-h-screen flex overflow-hidden">
@@ -355,10 +348,6 @@ function App() {
 				<Sidebar
 					isCollapsed={isCollapsed()}
 					setIsCollapsed={setIsCollapsed}
-					topicId={topicId()}
-					setTopicId={setTopicId}
-					topicActive={topicActive()}
-					setTopicActive={setCurrentTopic}
 					setCurrentProvider={setCurrentProvider}
 					currentProvider={currentProvider}
 				/>
@@ -412,7 +401,7 @@ function App() {
 						setModel={setModel}
 						setPromptSettings={setPromptSettings}
 						promptSettings={promptSettings}
-						topicId={topicActive()}
+						topicId={currentTopicId() as string}
 					/>
 				</div>
 			</div>

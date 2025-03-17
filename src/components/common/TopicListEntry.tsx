@@ -17,11 +17,6 @@ interface TopicListEntryProps {
 function TopicListEntry(props: TopicListEntryProps) {
 	const { topicId, onClick, setIsCollapsed } = props;
 
-	createEffect(() => {
-		console.log("TopicListEntry");
-		console.log(props);
-	});
-
 	const isActive = () => props.isActive;
 	const topicName = () => props.topicName;
 	const { editTopicName } = useTopics();

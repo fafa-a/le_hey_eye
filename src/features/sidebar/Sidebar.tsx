@@ -14,35 +14,23 @@ import { unwrap } from "solid-js/store";
 interface SidebarProps {
 	isCollapsed: boolean;
 	setIsCollapsed: Setter<boolean>;
-	topicId: string;
-	setTopicId: Setter<string>;
-	topicActive: string;
-	setTopicActive: (topicId: string) => void;
 	setCurrentProvider: Setter<Provider>;
 	currentProvider: Accessor<Provider>;
 }
 
 export function Sidebar(props: SidebarProps) {
-	const {
-		setTopicId,
-		setTopicActive,
-		setIsCollapsed,
-		setCurrentProvider,
-		currentProvider,
-	} = props;
-	const topicActive = () => props.topicActive;
+	const { setIsCollapsed, setCurrentProvider, currentProvider } = props;
 	const isCollapsed = () => props.isCollapsed;
-	const { topics, addTopic } = useTopics();
+	const { topics, addTopic, setCurrentTopic, currentTopicId } = useTopics();
 
 	const handleNewTopic = () => {
 		console.warn("handleNewTopic");
 		const newTopicId = uid(16);
-		setTopicId(newTopicId);
 		addTopic({
 			id: newTopicId,
 			name: "New Conversation",
 		});
-		setTopicActive(newTopicId);
+		setCurrentTopic(newTopicId);
 	};
 
 	createEffect(() => {
@@ -75,8 +63,8 @@ export function Sidebar(props: SidebarProps) {
 									<TopicListEntryThumbnail
 										topicId={topic.id}
 										topicName={topic.name}
-										isActive={topic.id === topicActive()}
-										onClick={() => setTopicActive(topic.id)}
+										isActive={topic.id === currentTopicId()}
+										onClick={() => setCurrentTopic(topic.id)}
 										bgColor={topic.bgColor}
 										setIsCollapsed={setIsCollapsed}
 										isCollapsed={isCollapsed()}
@@ -92,8 +80,8 @@ export function Sidebar(props: SidebarProps) {
 								<TopicListEntry
 									topicId={topic.id}
 									topicName={topic.name}
-									isActive={topic.id === topicActive()}
-									onClick={() => setTopicActive(topic.id)}
+									isActive={topic.id === currentTopicId()}
+									onClick={() => setCurrentTopic(topic.id)}
 									bgColor={topic.bgColor}
 									setIsCollapsed={setIsCollapsed}
 									isCollapsed={isCollapsed()}
