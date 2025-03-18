@@ -1,8 +1,6 @@
 import Markdown from "@/components/common/Markdown";
 import {
-	type Accessor,
 	createEffect,
-	createMemo,
 	createSignal,
 	For,
 	onCleanup,
@@ -10,7 +8,7 @@ import {
 	Show,
 } from "solid-js";
 import ChatMessage from "./ChatMessage";
-import { TopicMessage, useTopics } from "@/context/topicsContext";
+import { useTopics } from "@/context/topicsContext";
 import { listen } from "@tauri-apps/api/event";
 
 interface MessageListProps {
@@ -18,86 +16,90 @@ interface MessageListProps {
 }
 
 const MessageList = (props: MessageListProps) => {
-	const { currentTopicMessages, topics, currentTopicId } = useTopics();
-
-	const [messagesContainer, setMessagesContainer] =
-		createSignal<HTMLDivElement>();
-	const [contentRef, setContentRef] = createSignal<HTMLDivElement>();
-	const [markdownContainerRef, setMarkdownContainerRef] =
-		createSignal<HTMLDivElement>();
+	const { currentTopicMessages } = useTopics();
 
 	const [currentStreamedResponse, setCurrentStreamedResponse] =
 		createSignal("");
 	const [streamHeight, setStreamHeight] = createSignal(0);
 
+	let messagesContainerRef: HTMLDivElement | undefined;
+	const setMessagesContainer = (el: HTMLDivElement) => {
+		messagesContainerRef = el;
+	};
+
+	let contentRef: HTMLDivElement | undefined;
+	const setContentRef = (el: HTMLDivElement) => {
+		contentRef = el;
+	};
+
+	let markdownContainerRef: HTMLDivElement | undefined;
+	const setMarkdownContainerRef = (el: HTMLDivElement) => {
+		markdownContainerRef = el;
+	};
+
+	const scrollToBottom = () => {
+		if (messagesContainerRef) {
+			messagesContainerRef.scrollTop = messagesContainerRef.scrollHeight;
+		}
+	};
+
 	onMount(() => {
 		let rawResponseText = "";
 
-		const unlistenPromise = listen("stream-response", (event) => {
+		const streamHandler = (event: any) => {
 			rawResponseText = event.payload as string;
 
-			queueMicrotask(() => {
-				if (rawResponseText !== currentStreamedResponse()) {
-					setCurrentStreamedResponse(rawResponseText);
-				}
-			});
-		});
-		const unlistenMessageAdded = listen("message-added", () => {
-			setCurrentStreamedResponse("");
-		});
+			if (rawResponseText !== currentStreamedResponse()) {
+				queueMicrotask(() => setCurrentStreamedResponse(rawResponseText));
+			}
+		};
+
+		const resetHandler = () => setCurrentStreamedResponse("");
+
+		const unlistenPromise = listen("stream-response", streamHandler);
+		const unlistenMessageAdded = listen("message-added", resetHandler);
 
 		onCleanup(async () => {
-			const unlisten = await unlistenPromise;
-			unlisten();
-			const unlistenMessage = await unlistenMessageAdded;
-			unlistenMessage();
+			(await unlistenPromise)();
+			(await unlistenMessageAdded)();
 		});
 	});
-
-	const scrollToBottom = () => {
-		const container = messagesContainer();
-		if (container) {
-			container.scrollTop = container.scrollHeight - container.offsetHeight;
-			container.scrollTop = container.scrollHeight;
-		}
-	};
 
 	createEffect(() => {
 		currentTopicMessages();
 		currentStreamedResponse();
-		setTimeout(scrollToBottom, 20);
+
+		requestAnimationFrame(scrollToBottom);
 	});
 
 	createEffect(() => {
 		const response = currentStreamedResponse();
-		const container = messagesContainer();
-		const content = contentRef();
 
-		if (response && container && content) {
-			const containerRect = container.getBoundingClientRect();
+		if (!response) {
+			setStreamHeight(0);
+			return;
+		}
+
+		if (!messagesContainerRef || !contentRef) return;
+
+		requestAnimationFrame(() => {
+			if (!contentRef) return;
+
+			// const containerRect = messagesContainerRef!.getBoundingClientRect();
 			const viewportHeight = window.innerHeight;
-			const spaceBelow = viewportHeight - containerRect.bottom;
-
-			const contentHeight = content.scrollHeight;
+			const contentHeight = contentRef.scrollHeight;
 
 			const minHeight = 150;
 			const idealHeight = Math.max(
 				minHeight,
 				Math.min(500, contentHeight + 50),
 			);
-
 			const finalHeight = Math.min(idealHeight, viewportHeight * 0.7);
 
 			setStreamHeight(finalHeight);
 
-			setTimeout(() => {
-				if (container) {
-					container.scrollTop = container.scrollHeight;
-				}
-			}, 0);
-		} else if (!response) {
-			setStreamHeight(0);
-		}
+			requestAnimationFrame(scrollToBottom);
+		});
 	});
 
 	return (
