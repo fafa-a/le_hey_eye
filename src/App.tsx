@@ -1,12 +1,4 @@
-import {
-	createEffect,
-	createMemo,
-	createSignal,
-	For,
-	onCleanup,
-	onMount,
-	Show,
-} from "solid-js";
+import { createEffect, createMemo, createSignal, onCleanup } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
 import { createMutation } from "@tanstack/solid-query";
 import type { StreamResponse } from "../types/cloudflare";
@@ -15,14 +7,12 @@ import type {
 	ChatRequest,
 } from "../types/core";
 
-import { listen } from "@tauri-apps/api/event";
 import { PromptInput } from "@features/chat/prompt/PromptInput";
 import { Sidebar } from "@/features/sidebar/Sidebar";
-import ChatMessage from "@/features/chat/message/ChatMessage";
 import { unwrap } from "solid-js/store";
 import { useTopics } from "@/context/topicsContext";
-import Markdown from "./components/common/Markdown";
 import type { Provider, TopicMessage } from "../types/core";
+import MessageList from "./features/chat/message/message-list";
 
 async function generateAIResponse(
 	provider: Provider,
@@ -58,49 +48,26 @@ async function generateAIResponse(
 const MAX_MESSAGES = 4;
 
 function App() {
-	const { topics, addMessage, loading } = useTopics();
+	const { topics, addMessage } = useTopics();
 	const [model, setModel] = createSignal<string>("claude-3-7-sonnet-20250219");
 	const [system, setSystem] = createSignal<string>(
 		"You are a helpful assistant.",
 	);
 	const [currentProvider, setCurrentProvider] =
 		createSignal<Provider>("Anthropic");
-	const [topicId, setTopicId] = createSignal("");
 
-	const { currentTopicId } = useTopics();
-
-	createEffect(() => {
-		console.log("App");
-		console.log("currentTopicId", currentTopicId());
-	});
+	const { currentTopicId, currentTopicMessages } = useTopics();
 
 	const [isCollapsed, setIsCollapsed] = createSignal(false);
 	const [messageHistory, setMessageHistory] = createSignal<
 		Omit<TopicMessage, "id">[]
 	>([]);
-	const [messagesContainer, setMessagesContainer] =
-		createSignal<HTMLDivElement>();
-	const [contentRef, setContentRef] = createSignal<HTMLDivElement>();
-	const [markdownContainerRef, setMarkdownContainerRef] =
-		createSignal<HTMLDivElement>();
-
-	const [streamHeight, setStreamHeight] = createSignal(0);
-
-	const currentTopicMessages = createMemo(() => {
-		const currentTopic = topics.find((topic) => topic.id === currentTopicId());
-		return currentTopic?.messages || [];
-	});
-
 	const isTopicMessagesEmpty = createMemo(
 		() => currentTopicMessages().length === 0,
 	);
-	createEffect(() => {
-		console.log("currentTopicMessages: ", currentTopicMessages());
-	});
 
 	createEffect(() => {
 		console.log("*".repeat(100));
-		console.log("loading: ", loading());
 		console.log("topics: ", unwrap(topics));
 		const topicMessages = topics.find(
 			(topic) => topic.id === currentTopicId(),
@@ -157,9 +124,6 @@ function App() {
 		presence_penalty: promptSettings().presence_penalty,
 	});
 
-	const [currentStreamedResponse, setCurrentStreamedResponse] =
-		createSignal("");
-
 	const getMessagesForAPI = (
 		messages: Omit<TopicMessage, "id">[],
 		userMessageCount: number,
@@ -176,25 +140,6 @@ function App() {
 		return [...recentMessages];
 	};
 
-	onMount(() => {
-		let rawResponseText = "";
-
-		const unlistenPromise = listen("stream-response", (event) => {
-			rawResponseText = event.payload as string;
-
-			queueMicrotask(() => {
-				if (rawResponseText !== currentStreamedResponse()) {
-					setCurrentStreamedResponse(rawResponseText);
-				}
-			});
-		});
-
-		onCleanup(async () => {
-			const unlisten = await unlistenPromise;
-			unlisten();
-		});
-	});
-
 	// const details = createQuery(() => ({
 	// 	queryKey: ["details"],
 	// 	queryFn: async () => {
@@ -204,6 +149,7 @@ function App() {
 	// 	console.log("details: ", data);
 	// },
 	// }));
+
 	const mapMessageToMessageContent = (
 		messages: Omit<TopicMessage, "id">[],
 	): ChatMessageType[] => {
@@ -219,7 +165,6 @@ function App() {
 		mutationFn: async (
 			topicMessages: TopicMessage[],
 		): Promise<StreamResponse> => {
-			setCurrentStreamedResponse("");
 			const apiMessages = getMessagesForAPI(topicMessages, MAX_MESSAGES);
 			const messages = mapMessageToMessageContent(apiMessages);
 
@@ -241,8 +186,6 @@ function App() {
 			return await generateAIResponse(currentProvider(), model(), apiRequest);
 		},
 		onSuccess: (response) => {
-			console.log("response: ", response);
-
 			const newAssistantMessage: Omit<TopicMessage, "id"> = {
 				role: "assistant",
 				topicId: currentTopicId() as string,
@@ -267,11 +210,9 @@ function App() {
 					temperature: promptSettings().temperature,
 				};
 			});
-			setCurrentStreamedResponse("");
 		},
 	}));
-	let transitionTimeout: NodeJS.Timeout | undefined;
-	//
+
 	const handleSubmit = (prompt: string) => {
 		const userMessage: Omit<TopicMessage, "id" | "tokensUsed"> = {
 			role: "user",
@@ -281,60 +222,8 @@ function App() {
 		};
 
 		const updatedHistory = [...messageHistory(), userMessage] as TopicMessage[];
-
 		mutation.mutate(updatedHistory);
 	};
-
-	onCleanup(() => {
-		if (transitionTimeout) {
-			clearTimeout(transitionTimeout);
-		}
-	});
-
-	createEffect(() => {
-		currentTopicMessages();
-		// currentStreamedResponse();
-
-		setTimeout(() => {
-			const container = messagesContainer();
-			if (container) {
-				container.scrollTop = container.scrollHeight - container.offsetHeight;
-				container.scrollTop = container.scrollHeight;
-			}
-		}, 0);
-	});
-
-	createEffect(() => {
-		const response = currentStreamedResponse();
-		const container = messagesContainer();
-		const content = contentRef();
-
-		if (response && container && content) {
-			const containerRect = container.getBoundingClientRect();
-			const viewportHeight = window.innerHeight;
-			const spaceBelow = viewportHeight - containerRect.bottom;
-
-			const contentHeight = content.scrollHeight;
-
-			const minHeight = 150;
-			const idealHeight = Math.max(
-				minHeight,
-				Math.min(500, contentHeight + 50),
-			);
-
-			const finalHeight = Math.min(idealHeight, viewportHeight * 0.7);
-
-			setStreamHeight(finalHeight);
-
-			setTimeout(() => {
-				if (container) {
-					container.scrollTop = container.scrollHeight;
-				}
-			}, 0);
-		} else if (!response) {
-			setStreamHeight(0);
-		}
-	});
 
 	return (
 		<div class="h-screen max-h-screen flex overflow-hidden">
@@ -359,40 +248,8 @@ function App() {
 					"justify-center": isTopicMessagesEmpty(),
 				}}
 			>
-				<Show when={!isTopicMessagesEmpty()}>
-					<div
-						class="flex-1 overflow-y-auto w-full min-h-0 min-w-full"
-						ref={setMessagesContainer}
-					>
-						<div class="space-y-4 w-full p-3 min-w-full">
-							<For each={currentTopicMessages()}>
-								{(message) => (
-									<ChatMessage message={message} pairId={message.pairId} />
-								)}
-							</For>
-							<Show when={currentStreamedResponse()}>
-								<div
-									class="w-full min-w-full overflow-hidden"
-									style={{
-										height: currentStreamedResponse()
-											? `${streamHeight()}px`
-											: "auto",
-									}}
-									ref={setMarkdownContainerRef}
-								>
-									<div ref={setContentRef}>
-										<Markdown>{currentStreamedResponse()}</Markdown>
-									</div>
-								</div>
-							</Show>
-							<Show when={mutation.isPending && !currentStreamedResponse()}>
-								<div class="p-4 rounded w-full">
-									<div class="animate-pulse text-slate-500">Thinking...</div>
-								</div>
-							</Show>
-						</div>
-					</div>
-				</Show>
+				<MessageList mutation={mutation} />
+
 				<div class="overflow-y-auto min-h-[120px] max-h-[55%]">
 					<PromptInput
 						onSubmit={handleSubmit}

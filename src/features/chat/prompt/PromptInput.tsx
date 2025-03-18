@@ -8,6 +8,7 @@ import {
 	Match,
 	type Setter,
 	Switch,
+	createEffect,
 	createSignal,
 } from "solid-js";
 import type { StreamResponse } from "../../../../types/cloudflare";
@@ -15,6 +16,7 @@ import type { ChatRequest } from "../../../../types/core";
 import type { TopicMessage } from "@/context/topicsContext";
 import { useTopics } from "@/context/topicsContext";
 import ModelSettingsPopover from "@features/chat/settings/SettingsPopover";
+import { unwrap } from "solid-js/store";
 
 interface PromptInputProps {
 	onSubmit: (prompt: string) => void;
@@ -37,6 +39,8 @@ interface PromptInputProps {
 
 export function PromptInput(props: PromptInputProps) {
 	const { onSubmit, mutation } = props;
+	const pending = () => unwrap(mutation).isPending;
+	console.log({ pending });
 	const topicId = () => props.topicId;
 	const { addMessage } = useTopics();
 
@@ -58,7 +62,7 @@ export function PromptInput(props: PromptInputProps) {
 		e.preventDefault();
 		if (prompt().trim()) {
 			onSubmit(prompt());
-			const message: Omit<TopicMessage, "id"> = {
+			const message: Omit<TopicMessage, "id" | "tokensUsed" | "pairId"> = {
 				role: "user",
 				topicId: topicId(),
 				content: prompt(),
@@ -71,9 +75,13 @@ export function PromptInput(props: PromptInputProps) {
 		}
 	};
 
+	createEffect(() => {
+		console.log("PromptInput pending: ", pending());
+	});
+
 	return (
 		<form class="w-full flex h-full p-3" onSubmit={handleSubmit}>
-			<div class="flex gap-1 w-full h-full p-0.5 rounded-lg border border-slate-100 hover:border-slate-300 shadow-md transition-colors duration-2000 ease-in-out">
+			<div class="flex gap-1 w-full h-full p-0.5 rounded-lg border border-slate-100 hover:border-slate-300 shadow-md">
 				<TextFieldRoot class="w-full h-full border-none">
 					<TextArea
 						ref={(el) => {
@@ -105,7 +113,7 @@ export function PromptInput(props: PromptInputProps) {
 					>
 						<Switch>
 							<Match when={mutation.isPending}>
-								<div class="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+								<div class="animate-pulse h-4 w-4  rounded-full bg-neutral-500" />
 							</Match>
 							<Match when={!mutation.isPending}>
 								<Send width={20} height={20} class="text-slate-500" />

@@ -10,7 +10,7 @@ import "katex/dist/katex.min.css";
 import "highlight.js/styles/base16/onedark.min.css";
 import highlightjs from "highlight.js";
 import { writeClipboard } from "@solid-primitives/clipboard";
-import { createSignal, Show } from "solid-js";
+import { createEffect, createSignal, Show } from "solid-js";
 import { Button } from "../ui/button";
 import Copy from "../icons/Copy";
 import Checkmark from "../icons/Checkmark";
@@ -24,9 +24,7 @@ function Markdown(props: any) {
 			components={{
 				code: (props: any) => {
 					const unwrappedProps = unwrap(props);
-					console.log("unwrappedProps", unwrappedProps);
 					const value = unwrappedProps.node.children[0].value;
-					console.log("value", value);
 					const language = unwrappedProps.class?.replace("language-", "");
 					const [copied, setCopied] = createSignal(false);
 

@@ -6,6 +6,8 @@ import {
 	useContext,
 	type JSX,
 	type Setter,
+	createEffect,
+	createMemo,
 } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import type {
@@ -18,6 +20,7 @@ import type {
 import { uid } from "uid";
 import { invoke } from "@tauri-apps/api/core";
 import { modelSettingsStore } from "./model-settings-store";
+import { emit } from "@tauri-apps/api/event";
 
 const generateRandomColor = () => {
 	const colors = ["red", "blue", "green", "yellow", "purple", "pink", "indigo"];
@@ -46,6 +49,7 @@ interface TopicsContextValue {
 	highlightedMessagePair: Accessor<string | null>;
 	setHighlightedMessagePair: Setter<string | null>;
 	regenerateMessage: (messageId: string) => Promise<void>;
+	currentTopicMessages: () => TopicMessage[];
 }
 
 const TopicsContext = createContext<TopicsContextValue>();
@@ -59,6 +63,10 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 	const [highlightedMessagePair, setHighlightedMessagePair] = createSignal<
 		number | null
 	>(null);
+	const [messagesUpdated, setMessagesUpdated] = createSignal(0);
+	const [messagesStore, setMessagesStore] = createStore<
+		Record<string, TopicMessage[]>
+	>({});
 
 	const loadTopics = async () => {
 		setLoading(true);
@@ -118,6 +126,12 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 					bgColor: topic.bg_color,
 					lastAccessedAt: new Date(topic.last_accessed_at),
 				});
+
+				const messagesMap: Record<string, TopicMessage[]> = {};
+				for (const topic of loadedTopics) {
+					messagesMap[topic.id] = topic.messages;
+				}
+				setMessagesStore(messagesMap);
 			}
 
 			setTopics(loadedTopics);
@@ -183,6 +197,11 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 			console.error("Failed to set current topic:", error);
 		}
 	};
+
+	createEffect(() => {
+		console.log("TOPIC CONTEXT");
+		console.log("currentTopicMessages: ", currentTopicMessages());
+	});
 
 	const addTopic = async (
 		topic: Omit<Topic, "createdAt" | "messages" | "bgColor" | "lastAccessedAt">,
@@ -250,6 +269,7 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 			id: newMessageId,
 			...message,
 		};
+		console.log("addMessage: ", newMessage);
 
 		const contentStr =
 			typeof newMessage.content === "string"
@@ -271,6 +291,10 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 					topic.messages.push(newMessage);
 				}),
 			);
+			setMessagesStore(message.topicId, (prev = []) => [...prev, newMessage]);
+			setMessagesUpdated((n) => n + 1);
+
+			emit("message-added");
 		} catch (error) {
 			console.error("Failed to add message:", error);
 			throw error;
@@ -291,6 +315,7 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 				"messages",
 				() => topicMessages,
 			);
+			setMessagesUpdated((n) => n + 1);
 		} catch (error) {
 			console.error("Failed to remove message:", error);
 			throw error;
@@ -298,18 +323,31 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 	};
 
 	const regenerateMessage = async (messageId: string) => {
-		try {
-			removeMessage(messageId);
-			const response = await invoke("send_message", {
-				provider,
-				model,
-				request,
-			});
-		} catch (error) {
-			console.error("Failed to regenerate message:", error);
-			throw error;
-		}
+		// try {
+		// 	removeMessage(messageId);
+		// 	const response = await invoke("send_message", {
+		// 		provider,
+		// 		model,
+		// 		request,
+		// 	});
+		// } catch (error) {
+		// 	console.error("Failed to regenerate message:", error);
+		// 	throw error;
+		// }
 	};
+
+	const currentTopicMessages = () => {
+		const id = currentTopicId();
+		if (!id) return [];
+		return messagesStore[id] || [];
+	};
+
+	// const currentTopicMessages = createMemo<TopicMessage[]>(() => {
+	// 	messagesUpdated();
+	// 	return (
+	// 		topics.find((topic) => topic.id === currentTopicId())?.messages || []
+	// 	);
+	// });
 
 	const value: TopicsContextValue = {
 		topics,
@@ -323,6 +361,7 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 		removeMessage,
 		highlightedMessagePair,
 		setHighlightedMessagePair,
+		currentTopicMessages,
 	};
 
 	return (
