@@ -43,7 +43,7 @@ interface TopicsContextValue {
 	removeTopic: (id: string) => void;
 	editTopicName: (id: string, name: string) => void;
 	addMessage: (message: Omit<TopicMessage, "id">) => void;
-	removeMessage: (messageId: string) => void;
+	removeMessage: (messageId: string, pairId: string) => void;
 	currentTopicId: Accessor<string | undefined>;
 	setCurrentTopic: (id: string) => Promise<void>;
 	highlightedMessagePair: Accessor<string | null>;
@@ -63,7 +63,6 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 	const [highlightedMessagePair, setHighlightedMessagePair] = createSignal<
 		number | null
 	>(null);
-	const [messagesUpdated, setMessagesUpdated] = createSignal(0);
 	const [messagesStore, setMessagesStore] = createStore<
 		Record<string, TopicMessage[]>
 	>({});
@@ -198,11 +197,6 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 		}
 	};
 
-	createEffect(() => {
-		console.log("TOPIC CONTEXT");
-		console.log("currentTopicMessages: ", currentTopicMessages());
-	});
-
 	const addTopic = async (
 		topic: Omit<Topic, "createdAt" | "messages" | "bgColor" | "lastAccessedAt">,
 	) => {
@@ -292,7 +286,6 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 				}),
 			);
 			setMessagesStore(message.topicId, (prev = []) => [...prev, newMessage]);
-			setMessagesUpdated((n) => n + 1);
 
 			emit("message-added");
 		} catch (error) {
@@ -301,7 +294,7 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 		}
 	};
 
-	const removeMessage = async (messageId: string) => {
+	const removeMessage = async (messageId: string, pairId: string) => {
 		try {
 			await invoke("remove_message", { messageId });
 			const topicMessages = await invoke<TopicMessage[]>(
@@ -315,7 +308,9 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 				"messages",
 				() => topicMessages,
 			);
-			setMessagesUpdated((n) => n + 1);
+			setMessagesStore(currentTopicId(), (prev = []) =>
+				prev.filter((msg) => msg.pairId !== pairId),
+			);
 		} catch (error) {
 			console.error("Failed to remove message:", error);
 			throw error;

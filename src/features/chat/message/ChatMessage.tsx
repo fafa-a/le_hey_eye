@@ -126,6 +126,11 @@ interface ChatMessageFooterProps {
 	messageId: string;
 	pairId: string;
 	content: string;
+	onDelete: () => void;
+	onEdit: () => void;
+	onCopy: () => void;
+	onRegenerate: () => void;
+	isCopied: Accessor<boolean>;
 }
 
 const ChatMessageFooter = ({
@@ -134,6 +139,11 @@ const ChatMessageFooter = ({
 	messageId,
 	pairId,
 	content,
+	onDelete,
+	onEdit,
+	onCopy,
+	onRegenerate,
+	isCopied,
 }: ChatMessageFooterProps) => {
 	const time = new Date();
 	const options: Intl.DateTimeFormatOptions = {
@@ -141,32 +151,32 @@ const ChatMessageFooter = ({
 		minute: "2-digit",
 		hour12: false,
 	};
-	const [copied, setCopied] = createSignal(false);
+	// const [copied, setCopied] = createSignal(false);
 	const formattedTime = new Intl.DateTimeFormat(undefined, options).format(
 		time,
 	);
-	const { removeMessage } = useTopics();
+	// const { removeMessage } = useTopics();
 
-	const copyMessageContent = async () => {
-		try {
-			await writeClipboard(content.replace(/\n$/, ""));
-			setCopied(true);
-			setTimeout(() => setCopied(false), 1500);
-		} catch (err) {
-			console.error("Error while copying message content:", err);
-		}
-	};
+	// const copyMessageContent = async () => {
+	// 	try {
+	// 		await writeClipboard(content.replace(/\n$/, ""));
+	// 		setCopied(true);
+	// 		setTimeout(() => setCopied(false), 1500);
+	// 	} catch (err) {
+	// 		console.error("Error while copying message content:", err);
+	// 	}
+	// };
 
 	return (
 		<div class="flex items-center gap-2 mb-2">
 			<ChatMessageToolbar
 				role={role}
-				onDelete={() => removeMessage(messageId)}
+				onDelete={onDelete}
 				pairId={pairId}
-				onEdit={() => console.log("Edit")}
-				onCopy={copyMessageContent}
-				isCopied={copied}
-				onRegenerate={() => console.log("Regenerate")}
+				onEdit={onEdit}
+				onCopy={onCopy}
+				isCopied={isCopied}
+				onRegenerate={onRegenerate}
 			/>
 			<span class="text-xs text-gray-300">{formattedTime}</span>
 			{role === "assistant" && tokensUsed && (
@@ -180,8 +190,32 @@ interface ChatMessageProps {
 	message: TopicMessage;
 }
 
-const ChatMessage = ({ message }: ChatMessageProps) => {
+const MemoizedChatMessage = ({ message }: ChatMessageProps) => {
 	const { highlightedMessagePair } = useTopics();
+	const [copied, setCopied] = createSignal(false);
+	const { removeMessage } = useTopics();
+
+	const copyMessageContent = async () => {
+		try {
+			await writeClipboard(message.content.replace(/\n$/, ""));
+			setCopied(true);
+			setTimeout(() => setCopied(false), 1500);
+		} catch (err) {
+			console.error("Error while copying message content:", err);
+		}
+	};
+
+	const handleDelete = () => {
+		removeMessage(message.id, message.pairId);
+	};
+
+	const handleRegenerate = () => {
+		console.log("Regenerate", message.id);
+	};
+
+	const handleEdit = () => {
+		console.log("Edit", message.id);
+	};
 
 	return (
 		<div class="flex flex-col gap-1 w-full">
@@ -211,11 +245,20 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
 						messageId={message.id}
 						pairId={message.pairId}
 						content={message.content}
+						onDelete={handleDelete}
+						onEdit={handleEdit}
+						onCopy={copyMessageContent}
+						onRegenerate={handleRegenerate}
+						isCopied={copied}
 					/>
 				</div>
 			</div>
 		</div>
 	);
+};
+
+const ChatMessage = (props: ChatMessageProps) => {
+	return <MemoizedChatMessage message={props.message} pairId={props.pairId} />;
 };
 
 export default ChatMessage;
