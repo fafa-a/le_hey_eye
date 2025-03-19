@@ -1,6 +1,7 @@
 import Markdown from "@/components/common/Markdown";
 import {
 	createEffect,
+	createMemo,
 	createSignal,
 	For,
 	onCleanup,
@@ -10,7 +11,7 @@ import {
 import ChatMessage from "./ChatMessage";
 import { useTopics } from "@/context/topicsContext";
 import { listen } from "@tauri-apps/api/event";
-import { unwrap } from "solid-js/store";
+import { createScrollPosition } from "@solid-primitives/scroll";
 
 interface MessageListProps {
 	mutation: any;
@@ -19,10 +20,6 @@ interface MessageListProps {
 const MessageList = (props: MessageListProps) => {
 	const { currentTopicMessages } = useTopics();
 
-	createEffect(() => {
-		console.log("Messages loaded: ", unwrap(currentTopicMessages()).length);
-	});
-
 	const [currentStreamedResponse, setCurrentStreamedResponse] =
 		createSignal("");
 	const [streamHeight, setStreamHeight] = createSignal(0);
@@ -30,6 +27,46 @@ const MessageList = (props: MessageListProps) => {
 	let messagesContainerRef: HTMLDivElement | undefined;
 	const setMessagesContainer = (el: HTMLDivElement) => {
 		messagesContainerRef = el;
+	};
+
+	const [displayCount, setDisplayCount] = createSignal(10);
+	const [isLoadingMore, setIsLoadingMore] = createSignal(false);
+
+	const visibleMessages = createMemo(() => {
+		const allMessages = currentTopicMessages();
+		const count = Math.min(displayCount(), allMessages.length);
+		return allMessages.slice(-count);
+	});
+
+	const handleScroll = (e: Event) => {
+		const target = e.target as HTMLDivElement;
+
+		if (
+			!isLoadingMore() &&
+			target.scrollTop < 100 &&
+			target.scrollTop > 0 &&
+			displayCount() < currentTopicMessages().length
+		) {
+			setIsLoadingMore(true);
+
+			const oldHeight = target.scrollHeight;
+			const oldTop = target.scrollTop;
+
+			setDisplayCount((prev) =>
+				Math.min(prev + 5, currentTopicMessages().length),
+			);
+
+			queueMicrotask(() => {
+				if (target) {
+					const newHeight = target.scrollHeight;
+					target.scrollTop = oldTop + (newHeight - oldHeight);
+				}
+
+				setTimeout(() => {
+					setIsLoadingMore(false);
+				}, 500);
+			});
+		}
 	};
 
 	let contentRef: HTMLDivElement | undefined;
@@ -47,6 +84,12 @@ const MessageList = (props: MessageListProps) => {
 			messagesContainerRef.scrollTop = messagesContainerRef.scrollHeight;
 		}
 	};
+
+	createEffect(() => {
+		console.log("DB Messages count:", currentTopicMessages().length);
+		console.log("VISIBLE Messages count:", visibleMessages().length);
+		console.log("Display count:", displayCount());
+	});
 
 	onMount(() => {
 		let rawResponseText = "";
@@ -106,15 +149,19 @@ const MessageList = (props: MessageListProps) => {
 			requestAnimationFrame(scrollToBottom);
 		});
 	});
-
+	// createEffect(() => {
+	// 	console.log(scrollY());
+	// });
+	//
 	return (
 		<Show when={currentTopicMessages().length > 0}>
 			<div
 				class="flex-1 overflow-y-auto w-full min-h-0 min-w-full"
 				ref={setMessagesContainer}
+				onScroll={handleScroll}
 			>
 				<div class="space-y-4 w-full p-3 min-w-full">
-					<For each={currentTopicMessages()}>
+					<For each={visibleMessages()}>
 						{(message) => (
 							<ChatMessage message={message} pairId={message.pairId} />
 						)}
