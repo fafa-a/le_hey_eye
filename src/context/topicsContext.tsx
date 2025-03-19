@@ -8,6 +8,7 @@ import {
 	type Setter,
 	createEffect,
 	createMemo,
+	batch,
 } from "solid-js";
 import { createStore, produce } from "solid-js/store";
 import type {
@@ -63,7 +64,8 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 	const [highlightedMessagePair, setHighlightedMessagePair] = createSignal<
 		number | null
 	>(null);
-	const [messagesStore, setMessagesStore] = createStore<
+
+	const [messagesByTopicId, setMessagesByTopicId] = createStore<
 		Record<string, TopicMessage[]>
 	>({});
 
@@ -73,67 +75,69 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 			const topicsData = await invoke<DbTopic[]>("get_all_topics");
 			console.log("topicsData: ", topicsData);
 			const loadedTopics: Topic[] = [];
+			const loadedMessagesByTopicId: Record<string, TopicMessage[]> = {};
 
-			for (const topic of topicsData) {
-				const messagesData = await invoke<DbTopicMessage[]>(
-					"get_messages_for_topic",
-					{
-						topicId: topic.id,
-					},
-				);
-
-				const messages: TopicMessage[] = (() => {
-					let currentPairId = "";
-					let lastUserMessageId: string | null = null;
-
-					return messagesData.map((msg, index) => {
-						if (msg.role === "user") {
-							lastUserMessageId = msg.id;
-							currentPairId = `pair-${msg.id}`;
-						} else if (msg.role === "assistant") {
-							if (
-								lastUserMessageId &&
-								index > 0 &&
-								messagesData[index - 1].role === "user"
-							) {
-							} else {
-								currentPairId = `single-${msg.id}`;
-							}
-							lastUserMessageId = null;
-						} else {
-							currentPairId = `other-${msg.id}`;
-						}
-
-						return {
-							id: msg.id,
+			await Promise.all(
+				topicsData.map(async (topic) => {
+					const messagesData = await invoke<DbTopicMessage[]>(
+						"get_messages_for_topic",
+						{
 							topicId: topic.id,
-							role: msg.role as ChatRole,
-							content: String(msg.content).startsWith("{")
-								? JSON.parse(String(msg.content))
-								: msg.content,
-							timestamp: new Date(msg.timestamp),
-							tokensUsed: msg.tokens_used,
-							pairId: currentPairId,
-						};
+						},
+					);
+
+					const messages: TopicMessage[] = (() => {
+						let currentPairId = "";
+						let lastUserMessageId: string | null = null;
+
+						return messagesData.map((msg, index) => {
+							if (msg.role === "user") {
+								lastUserMessageId = msg.id;
+								currentPairId = `pair-${msg.id}`;
+							} else if (msg.role === "assistant") {
+								if (
+									lastUserMessageId &&
+									index > 0 &&
+									messagesData[index - 1].role === "user"
+								) {
+								} else {
+									currentPairId = `single-${msg.id}`;
+								}
+								lastUserMessageId = null;
+							} else {
+								currentPairId = `other-${msg.id}`;
+							}
+
+							return {
+								id: msg.id,
+								topicId: topic.id,
+								role: msg.role as ChatRole,
+								content: String(msg.content).startsWith("{")
+									? JSON.parse(String(msg.content))
+									: msg.content,
+								timestamp: new Date(msg.timestamp),
+								tokensUsed: msg.tokens_used,
+								pairId: currentPairId,
+							};
+						});
+					})();
+
+					loadedMessagesByTopicId[topic.id] = messages;
+					loadedTopics.push({
+						id: topic.id,
+						name: topic.name,
+						createdAt: new Date(topic.created_at),
+						messages,
+						bgColor: topic.bg_color,
+						lastAccessedAt: new Date(topic.last_accessed_at),
 					});
-				})();
-				loadedTopics.push({
-					id: topic.id,
-					name: topic.name,
-					createdAt: new Date(topic.created_at),
-					messages,
-					bgColor: topic.bg_color,
-					lastAccessedAt: new Date(topic.last_accessed_at),
-				});
+				}),
+			);
 
-				const messagesMap: Record<string, TopicMessage[]> = {};
-				for (const topic of loadedTopics) {
-					messagesMap[topic.id] = topic.messages;
-				}
-				setMessagesStore(messagesMap);
-			}
-
-			setTopics(loadedTopics);
+			batch(() => {
+				setTopics(loadedTopics);
+				setMessagesByTopicId(loadedMessagesByTopicId);
+			});
 
 			try {
 				const lastAccessedId = await invoke<string | null>(
@@ -263,7 +267,6 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 			id: newMessageId,
 			...message,
 		};
-		console.log("addMessage: ", newMessage);
 
 		const contentStr =
 			typeof newMessage.content === "string"
@@ -279,13 +282,18 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 				tokensUsed: newMessage.tokensUsed,
 			});
 
-			setTopics(
-				(topic) => topic.id === newMessage.topicId,
-				produce((topic: Topic) => {
-					topic.messages.push(newMessage);
-				}),
-			);
-			setMessagesStore(message.topicId, (prev = []) => [...prev, newMessage]);
+			batch(() => {
+				setTopics(
+					(topic) => topic.id === newMessage.topicId,
+					produce((topic: Topic) => {
+						topic.messages.push(newMessage);
+					}),
+				);
+				setMessagesByTopicId(message.topicId, (prev = []) => [
+					...prev,
+					newMessage,
+				]);
+			});
 
 			emit("message-added");
 		} catch (error) {
@@ -303,14 +311,17 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 					topicId: currentTopicId(),
 				},
 			);
-			setTopics(
-				(topic) => topic.id === currentTopicId(),
-				"messages",
-				() => topicMessages,
-			);
-			setMessagesStore(currentTopicId(), (prev = []) =>
-				prev.filter((msg) => msg.pairId !== pairId),
-			);
+
+			batch(() => {
+				setTopics(
+					(topic) => topic.id === currentTopicId(),
+					"messages",
+					() => topicMessages,
+				);
+				setMessagesByTopicId(currentTopicId() as string, (prev = []) =>
+					prev.filter((msg) => msg.pairId !== pairId),
+				);
+			});
 		} catch (error) {
 			console.error("Failed to remove message:", error);
 			throw error;
@@ -331,18 +342,18 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 		// }
 	};
 
-	const currentTopicMessages = () => {
-		const id = currentTopicId();
-		if (!id) return [];
-		return messagesStore[id] || [];
-	};
+	// const currentTopicMessages = () => {
+	// 	const id = currentTopicId();
+	// 	if (!id) return [];
+	// 	return messagesStore[id] || [];
+	// };
 
-	// const currentTopicMessages = createMemo<TopicMessage[]>(() => {
-	// 	messagesUpdated();
-	// 	return (
-	// 		topics.find((topic) => topic.id === currentTopicId())?.messages || []
-	// 	);
-	// });
+	const currentTopicMessages = createMemo(() => {
+		const topicId = currentTopicId();
+		if (!topicId) return [];
+
+		return messagesByTopicId[topicId] || [];
+	});
 
 	const value: TopicsContextValue = {
 		topics,

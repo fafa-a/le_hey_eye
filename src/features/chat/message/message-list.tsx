@@ -10,6 +10,7 @@ import {
 import ChatMessage from "./ChatMessage";
 import { useTopics } from "@/context/topicsContext";
 import { listen } from "@tauri-apps/api/event";
+import { unwrap } from "solid-js/store";
 
 interface MessageListProps {
 	mutation: any;
@@ -17,6 +18,10 @@ interface MessageListProps {
 
 const MessageList = (props: MessageListProps) => {
 	const { currentTopicMessages } = useTopics();
+
+	createEffect(() => {
+		console.log("Messages loaded: ", unwrap(currentTopicMessages()).length);
+	});
 
 	const [currentStreamedResponse, setCurrentStreamedResponse] =
 		createSignal("");
