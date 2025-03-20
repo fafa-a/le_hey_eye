@@ -1,4 +1,3 @@
-import { cn } from "@/libs/cn";
 import type {
 	NumberFieldDecrementTriggerProps,
 	NumberFieldDescriptionProps,
@@ -13,6 +12,7 @@ import type { PolymorphicProps } from "@kobalte/core/polymorphic";
 import type { ComponentProps, ValidComponent, VoidProps } from "solid-js";
 import { splitProps } from "solid-js";
 import { textfieldLabel } from "./text-field";
+import { cn } from "@/lib/utils";
 
 export const NumberFieldHiddenInput = NumberFieldPrimitive.HiddenInput;
 

@@ -1,4 +1,4 @@
-import { cn } from "@/libs/cn";
+import { cn } from "@/lib/utils";
 import type { PolymorphicProps } from "@kobalte/core/polymorphic";
 import type {
 	SelectContentProps,

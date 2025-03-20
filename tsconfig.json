@@ -8,9 +8,10 @@
 		"types": ["node"],
 		"baseUrl": "./",
 		"paths": {
+			// "~/*": ["./src/*"],
 			"@/*": ["./src/*"],
 			"@components/*": ["./src/components/*"],
-			"@lib/*": ["src/libs/*"],
+			"@lib/*": ["src/lib/*"],
 			"@icons/*": ["./src/components/icons/*"],
 			"@features/*": ["./src/features/*"]
 		},

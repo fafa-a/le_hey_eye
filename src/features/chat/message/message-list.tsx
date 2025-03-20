@@ -84,12 +84,6 @@ const MessageList = (props: MessageListProps) => {
 		}
 	};
 
-	createEffect(() => {
-		console.log("DB Messages count:", currentTopicMessages().length);
-		console.log("VISIBLE Messages count:", visibleMessages().length);
-		console.log("Display count:", displayCount());
-	});
-
 	onMount(() => {
 		let rawResponseText = "";
 

@@ -44,9 +44,10 @@ export default defineConfig(async () => ({
 	},
 	resolve: {
 		alias: {
+			"~": resolve(__dirname, "./src"),
 			"@": resolve(__dirname, "./src"),
 			"@components": resolve(__dirname, "./src/components"),
-			"@lib": resolve(__dirname, "./src/libs"),
+			"@lib": resolve(__dirname, "./src/lib"),
 			"@icons": resolve(__dirname, "./src/components/icons"),
 			"@features": resolve(__dirname, "./src/features"),
 		},

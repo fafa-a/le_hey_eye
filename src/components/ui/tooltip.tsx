@@ -1,4 +1,3 @@
-import { cn } from "@/libs/cn";
 import type { PolymorphicProps } from "@kobalte/core/polymorphic";
 import type {
 	TooltipContentProps,
@@ -6,6 +5,7 @@ import type {
 } from "@kobalte/core/tooltip";
 import { Tooltip as TooltipPrimitive } from "@kobalte/core/tooltip";
 import { type ValidComponent, mergeProps, splitProps } from "solid-js";
+import { cn } from "~/lib/utils";
 
 export const TooltipTrigger = TooltipPrimitive.Trigger;
 
