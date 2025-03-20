@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import solid from "vite-plugin-solid";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import prismjs from "vite-plugin-prismjs";
 
 const host = process.env.TAURI_DEV_HOST;
 
@@ -10,7 +11,12 @@ const __dirname = dirname(__filename);
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
-	plugins: [solid()],
+	plugins: [
+		solid(),
+		prismjs({
+			languages: "all",
+		}),
+	],
 
 	// Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
 	//

@@ -1,24 +1,22 @@
 import { unwrap } from "solid-js/store";
 import { SolidMarkdown } from "solid-markdown";
-//@ts-ignore
-import { CodeInput } from "@srsholmes/solid-code-input";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import remarkBreaks from "remark-breaks";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
-import "highlight.js/styles/base16/onedark.min.css";
-import highlightjs from "highlight.js";
 import { writeClipboard } from "@solid-primitives/clipboard";
 import { createSignal, Show } from "solid-js";
 import { Button } from "../ui/button";
 import Copy from "../icons/copy";
 import Checkmark from "../icons/checkmark";
+import CodeHighlight from "./code-highlight";
+import ComponentTooltip from "./component-tooltip";
 
 function Markdown(props: any) {
 	return (
 		<SolidMarkdown
-			class="break-words w-full whitespace-pre-wrap"
+			class="break-words w-full whitespace-pre-wrap space-y-1.5"
 			remarkPlugins={[remarkGfm, remarkMath, remarkBreaks]}
 			rehypePlugins={[rehypeKatex]}
 			components={{
@@ -34,6 +32,7 @@ function Markdown(props: any) {
 						try {
 							await writeClipboard(String(value).replace(/\n$/, ""));
 							setCopied(true);
+							setTimeout(() => setCopied(false), 1500);
 						} catch (err) {
 							console.error("Erreur lors de la copie:", err);
 						}
@@ -47,29 +46,27 @@ function Markdown(props: any) {
 
 					return (
 						value && (
-							<div class="flex flex-col bg-neutral-50 rounded-md my-1 p-1 max-w-full">
+							<div class="flex flex-col bg-neutral-800 rounded-md p-1 max-w-full">
 								<div class="flex justify-between items-center">
 									<span class="text-xs text-neutral-400">{language}</span>
-									<Button
-										variant="ghost"
-										size="xs"
-										onClick={copyCode}
-										disabled={copied()}
-										title={copied() ? "Copied!" : "Copy"}
-									>
-										<Show when={!copied()} fallback={<Checkmark />}>
-											<Copy />
-										</Show>
-									</Button>
+									<ComponentTooltip content="Copy code" placement="top">
+										<Button
+											variant="ghost"
+											size="xs"
+											onClick={copyCode}
+											disabled={copied()}
+											title={copied() ? "Copied!" : "Copy"}
+										>
+											<Show when={!copied()} fallback={<Checkmark />}>
+												<Copy />
+											</Show>
+										</Button>
+									</ComponentTooltip>
 								</div>
-								<CodeInput
-									{...props}
-									autoHeight={true}
-									resize="both"
-									highlightjs={highlightjs}
-									value={String(value).replace(/\n$/, "")}
+								<CodeHighlight
+									code={String(value).replace(/\n$/, "")}
 									language={language}
-									class="break-words whitespace-pre-wrap "
+									class="w-full overflow-auto break-words whitespace-pre-wrap"
 								/>
 							</div>
 						)
