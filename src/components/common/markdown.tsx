@@ -48,11 +48,12 @@ function Markdown(props: any) {
 						value && (
 							<div class="flex flex-col bg-neutral-800 rounded-md p-1 max-w-full">
 								<div class="flex justify-between items-center">
-									<span class="text-xs text-neutral-400">{language}</span>
+									<span class="text-xs text-neutral-500">{language}</span>
 									<ComponentTooltip content="Copy code" placement="top">
 										<Button
 											variant="ghost"
 											size="xs"
+											class="text-neutral-500 hover:bg-neutral-700 hover:text-neutral-300"
 											onClick={copyCode}
 											disabled={copied()}
 											title={copied() ? "Copied!" : "Copy"}

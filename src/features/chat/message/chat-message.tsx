@@ -22,7 +22,7 @@ const DeleteButton = ({
 			size="xs"
 			variant="ghost"
 			onClick={onDelete}
-			class="hover:bg-red-100"
+			class="text-gray-300 hover:bg-red-100"
 			onMouseEnter={() => setHighlightedMessagePair(pairId)}
 			onMouseLeave={() => setHighlightedMessagePair(null)}
 		>
@@ -33,7 +33,12 @@ const DeleteButton = ({
 
 const CopyButton = ({ onCopy }: { onCopy: () => void }) => {
 	return (
-		<Button size="xs" variant="ghost" onClick={onCopy}>
+		<Button
+			size="xs"
+			variant="ghost"
+			class="text-gray-300 hover:bg-neutral-200"
+			onClick={onCopy}
+		>
 			<Copy />
 		</Button>
 	);
@@ -41,7 +46,12 @@ const CopyButton = ({ onCopy }: { onCopy: () => void }) => {
 
 const EditButton = ({ onEdit }: { onEdit: () => void }) => {
 	return (
-		<Button size="xs" variant="ghost" onClick={onEdit}>
+		<Button
+			size="xs"
+			variant="ghost"
+			class="text-gray-300 hover:bg-neutral-200"
+			onClick={onEdit}
+		>
 			<Edit />
 		</Button>
 	);
@@ -49,7 +59,12 @@ const EditButton = ({ onEdit }: { onEdit: () => void }) => {
 
 const RegenerateButton = ({ onRegenerate }: { onRegenerate: () => void }) => {
 	return (
-		<Button size="xs" variant="ghost" onClick={onRegenerate}>
+		<Button
+			size="xs"
+			variant="ghost"
+			class="text-gray-300 hover:bg-neutral-200"
+			onClick={onRegenerate}
+		>
 			<Regenerate />
 		</Button>
 	);
