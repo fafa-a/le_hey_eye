@@ -10,17 +10,26 @@ import type { Provider } from "types/core";
 import { uid } from "uid";
 import GeneralSettings from "./components/general-settings";
 import { unwrap } from "solid-js/store";
+import Settings from "@icons/settings";
+import ComponentTooltip from "@/components/common/component-tooltip";
 
 interface SidebarProps {
 	isCollapsed: boolean;
 	setIsCollapsed: Setter<boolean>;
 	setCurrentProvider: Setter<Provider>;
 	currentProvider: Accessor<Provider>;
+	setIsSettingsPanelOpen: Setter<boolean>;
 }
 
 export function Sidebar(props: SidebarProps) {
-	const { setIsCollapsed, setCurrentProvider, currentProvider } = props;
+	const {
+		setIsCollapsed,
+		setCurrentProvider,
+		currentProvider,
+		setIsSettingsPanelOpen,
+	} = props;
 	const isCollapsed = () => props.isCollapsed;
+
 	const { topics, addTopic, setCurrentTopic, currentTopicId } = useTopics();
 
 	const handleNewTopic = () => {
@@ -98,28 +107,31 @@ export function Sidebar(props: SidebarProps) {
 					"flex-col justify-end pr-2": isCollapsed(),
 				}}
 			>
-				<GeneralSettings
-					setCurrentProvider={setCurrentProvider}
-					currentProvider={currentProvider}
-				/>
-				<Button
-					variant="ghost"
-					size="sm"
-					onClick={handleNewTopic}
-					title="New Chat"
-				>
-					<Show
-						when={isCollapsed()}
-						fallback={
-							<div class="flex items-center gap-0.5">
-								<Add height={20} width={20} />
-								<span class="text-sm">New Chat</span>
-							</div>
-						}
+				<ComponentTooltip content="General Settings" placement="top">
+					<Button
+						variant="ghost"
+						size="sm"
+						onClick={() => setIsSettingsPanelOpen((prev) => !prev)}
 					>
-						<Add height={20} width={20} />
-					</Show>
-				</Button>
+						<Settings height={20} width={20} />
+					</Button>
+				</ComponentTooltip>
+
+				<ComponentTooltip content="Open a new chat" placement="top">
+					<Button variant="ghost" size="sm" onClick={handleNewTopic}>
+						<Show
+							when={isCollapsed()}
+							fallback={
+								<div class="flex items-center gap-0.5">
+									<Add height={20} width={20} />
+									<span class="text-sm">New Chat</span>
+								</div>
+							}
+						>
+							<Add height={20} width={20} />
+						</Show>
+					</Button>
+				</ComponentTooltip>
 
 				<Button
 					variant="ghost"

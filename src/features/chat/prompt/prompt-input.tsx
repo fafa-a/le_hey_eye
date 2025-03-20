@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import Send from "@components/icons/send";
 import { TextArea } from "@components/ui/textarea";
-import { TextFieldRoot } from "@components/ui/text-field";
+import { TextField } from "@components/ui/text-field";
 import type { CreateMutationResult } from "@tanstack/solid-query";
 import {
 	type Accessor,
@@ -82,7 +82,7 @@ export function PromptInput(props: PromptInputProps) {
 	return (
 		<form class="w-full flex h-full p-3" onSubmit={handleSubmit}>
 			<div class="flex gap-1 w-full h-full p-0.5 rounded-lg border border-slate-100 hover:border-slate-300 shadow-md">
-				<TextFieldRoot class="w-full h-full border-none">
+				<TextField class="w-full h-full border-none">
 					<TextArea
 						ref={(el) => {
 							textareaRef = el;
@@ -103,7 +103,7 @@ export function PromptInput(props: PromptInputProps) {
 							}
 						}}
 					/>
-				</TextFieldRoot>
+				</TextField>
 				<div class="flex flex-col">
 					<Button
 						type="submit"

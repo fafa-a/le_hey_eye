@@ -14,7 +14,7 @@ import { ComboboxModels } from "./components/combobox-models";
 import {
 	TextField,
 	TextFieldLabel,
-	TextFieldRoot,
+	TextFieldInput,
 } from "@components/ui/text-field";
 import CustomSwitch from "@components/common/switch";
 import SliderComponent from "@components/common/slider";
@@ -61,7 +61,7 @@ const ModelSettingsPopover = ({
 					</PopoverTitle>
 					<PopoverDescription class="grid gap-2">
 						<ComboboxModels setModel={setModel} />
-						<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
+						<TextField class="grid grid-cols-3 items-center gap-4">
 							<TextFieldLabel class="text-right">Stream</TextFieldLabel>
 							<CustomSwitch
 								onChange={(value) => {
@@ -72,8 +72,8 @@ const ModelSettingsPopover = ({
 								}}
 								value={promptSettings().stream ?? false}
 							/>
-						</TextFieldRoot>
-						<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
+						</TextField>
+						<TextField class="grid grid-cols-3 items-center gap-4">
 							<TextFieldLabel class="text-right">Max. tokens</TextFieldLabel>
 							<div class="col-span-2 h-8">
 								<SliderComponent
@@ -88,8 +88,8 @@ const ModelSettingsPopover = ({
 									maxValue={8192}
 								/>
 							</div>
-						</TextFieldRoot>
-						<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
+						</TextField>
+						<TextField class="grid grid-cols-3 items-center gap-4">
 							<TextFieldLabel class="text-right">Temperature</TextFieldLabel>
 							<div class="col-span-2 h-8">
 								<SliderComponent
@@ -105,8 +105,8 @@ const ModelSettingsPopover = ({
 									step={0.1}
 								/>
 							</div>
-						</TextFieldRoot>
-						<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
+						</TextField>
+						<TextField class="grid grid-cols-3 items-center gap-4">
 							<TextFieldLabel class="text-right">Top p</TextFieldLabel>
 							<div class="col-span-2 h-8">
 								<SliderComponent
@@ -122,8 +122,8 @@ const ModelSettingsPopover = ({
 									step={0.1}
 								/>
 							</div>
-						</TextFieldRoot>
-						<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
+						</TextField>
+						<TextField class="grid grid-cols-3 items-center gap-4">
 							<TextFieldLabel class="text-right">Top k</TextFieldLabel>
 							<div class="col-span-2 h-8">
 								<SliderComponent
@@ -138,8 +138,8 @@ const ModelSettingsPopover = ({
 									maxValue={50}
 								/>
 							</div>
-						</TextFieldRoot>
-						<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
+						</TextField>
+						<TextField class="grid grid-cols-3 items-center gap-4">
 							<TextFieldLabel class="text-right">Seed</TextFieldLabel>
 							<div class="col-span-2 h-8">
 								<SliderComponent
@@ -155,8 +155,8 @@ const ModelSettingsPopover = ({
 									step={10}
 								/>
 							</div>
-						</TextFieldRoot>
-						<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
+						</TextField>
+						<TextField class="grid grid-cols-3 items-center gap-4">
 							<TextFieldLabel class="text-right">
 								Repetition penalty
 							</TextFieldLabel>
@@ -174,8 +174,8 @@ const ModelSettingsPopover = ({
 									step={0.1}
 								/>
 							</div>
-						</TextFieldRoot>
-						<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
+						</TextField>
+						<TextField class="grid grid-cols-3 items-center gap-4">
 							<TextFieldLabel class="text-right">
 								Frequency penalty
 							</TextFieldLabel>
@@ -193,8 +193,8 @@ const ModelSettingsPopover = ({
 									step={0.1}
 								/>
 							</div>{" "}
-						</TextFieldRoot>
-						<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
+						</TextField>
+						<TextField class="grid grid-cols-3 items-center gap-4">
 							<TextFieldLabel class="text-right">
 								Presence penalty
 							</TextFieldLabel>
@@ -212,8 +212,8 @@ const ModelSettingsPopover = ({
 									step={0.1}
 								/>
 							</div>
-						</TextFieldRoot>
-						<TextFieldRoot class="grid grid-cols-3 items-center gap-4">
+						</TextField>
+						<TextField class="grid grid-cols-3 items-center gap-4">
 							<TextFieldLabel class="text-right">Lora</TextFieldLabel>
 							<TextField
 								value={promptSettings().lora ?? ""}
@@ -225,7 +225,7 @@ const ModelSettingsPopover = ({
 									}))
 								}
 							/>
-						</TextFieldRoot>
+						</TextField>
 					</PopoverDescription>
 				</div>
 			</PopoverContent>

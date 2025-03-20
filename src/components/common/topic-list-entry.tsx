@@ -1,5 +1,5 @@
 import { useTopics } from "@/context/topics-context";
-import { TextField, TextFieldRoot } from "@components/ui/text-field";
+import { TextField, TextFieldInput } from "@components/ui/text-field";
 import { type Setter, Show, createEffect, createSignal } from "solid-js";
 import TopicListEntryTools from "./topic-list-entry-tools";
 import ComponentTooltip from "./component-tooltip";
@@ -61,8 +61,8 @@ function TopicListEntry(props: TopicListEntryProps) {
 				when={!isEditing()}
 				fallback={
 					<form ref={setFormRef} onSubmit={handleSubmit} class="w-full ">
-						<TextFieldRoot>
-							<TextField
+						<TextField>
+							<TextFieldInput
 								ref={setInputRef}
 								type="text"
 								placeholder="New Topic list entry"
@@ -70,7 +70,7 @@ function TopicListEntry(props: TopicListEntryProps) {
 								value={topicName()}
 								class="w-full max-h-8 rounded-l-full overflow-hidden text-ellipsis focus-visible:ring-0 focus-visible:outline-none"
 							/>
-						</TextFieldRoot>
+						</TextField>
 					</form>
 				}
 			>

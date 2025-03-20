@@ -39,7 +39,7 @@ const GeneralSettings = (props: GeneralSettingsProps) => {
 			<SheetTrigger>
 				<Settings width={20} height={20} />
 			</SheetTrigger>
-			<SheetContent side="left">
+			<SheetContent side="left" class="bg-red-500 w-[100vw]">
 				<SheetHeader>
 					<SheetTitle>General Settings</SheetTitle>
 					<SheetDescription>Configure settings</SheetDescription>

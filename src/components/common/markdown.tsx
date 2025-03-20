@@ -56,7 +56,6 @@ function Markdown(props: any) {
 											class="text-neutral-500 hover:bg-neutral-700 hover:text-neutral-300"
 											onClick={copyCode}
 											disabled={copied()}
-											title={copied() ? "Copied!" : "Copy"}
 										>
 											<Show when={!copied()} fallback={<Checkmark />}>
 												<Copy />

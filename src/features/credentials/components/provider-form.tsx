@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { TextField, TextFieldRoot } from "@/components/ui/text-field";
+import { TextField, TextFieldInput } from "@/components/ui/text-field";
 import { invoke } from "@tauri-apps/api/core";
 import { createForm } from "@tanstack/solid-form";
 import { createEffect, createSignal, For } from "solid-js";
@@ -109,8 +109,8 @@ export default function ProviderForm(props: ProviderFormProps) {
 									const currentFieldConfig = () => fieldConfig;
 
 									return (
-										<TextFieldRoot>
-											<TextField
+										<TextField>
+											<TextFieldInput
 												id={field().name}
 												name={field().name}
 												type={currentFieldConfig().type}
@@ -138,7 +138,7 @@ export default function ProviderForm(props: ProviderFormProps) {
 												}}
 												required={currentFieldConfig().required}
 											/>
-										</TextFieldRoot>
+										</TextField>
 									);
 								}}
 							</form.Field>
