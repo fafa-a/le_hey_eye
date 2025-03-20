@@ -1,16 +1,16 @@
 import type { MessageRole } from "../../../../types/cloudflare";
 import { Button } from "@components/ui/button";
-import Edit from "@icons/Edit";
-import Copy from "@icons/Copy";
-import Delete from "@icons/Trash";
-import Regenerate from "@icons/Reset";
-import Markdown from "@/components/common/Markdown";
-import { useTopics } from "@/context/topicsContext";
+import Edit from "@icons/edit";
+import Copy from "@icons/copy";
+import Delete from "@icons/trash";
+import Regenerate from "@icons/reset";
+import Markdown from "@/components/common/markdown";
+import { useTopics } from "@/context/topics-context";
 import type { TopicMessage } from "../../../../types/core";
-import ComponentTooltip from "@/components/common/ComponentTooltip";
+import ComponentTooltip from "@/components/common/component-tooltip";
 import { type Accessor, createSignal } from "solid-js";
 import { writeClipboard } from "@solid-primitives/clipboard";
-import Checkmark from "@/components/icons/Checkmark";
+import Checkmark from "@/components/icons/checkmark";
 
 const DeleteButton = ({
 	onDelete,

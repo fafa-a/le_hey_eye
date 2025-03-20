@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { TextField, TextFieldRoot } from "@/components/ui/textfield";
+import { TextField, TextFieldRoot } from "@/components/ui/text-field";
 import { invoke } from "@tauri-apps/api/core";
 import { createForm } from "@tanstack/solid-form";
 import { createEffect, createSignal, For } from "solid-js";

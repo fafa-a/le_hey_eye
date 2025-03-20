@@ -1,4 +1,4 @@
-import Markdown from "@/components/common/Markdown";
+import Markdown from "@/components/common/markdown";
 import {
 	createEffect,
 	createMemo,
@@ -8,10 +8,9 @@ import {
 	onMount,
 	Show,
 } from "solid-js";
-import ChatMessage from "./ChatMessage";
-import { useTopics } from "@/context/topicsContext";
+import ChatMessage from "./chat-message";
+import { useTopics } from "@/context/topics-context";
 import { listen } from "@tauri-apps/api/event";
-import { createScrollPosition } from "@solid-primitives/scroll";
 
 interface MessageListProps {
 	mutation: any;

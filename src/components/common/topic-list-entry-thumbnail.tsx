@@ -1,5 +1,5 @@
 import type { Setter } from "solid-js";
-import ComponentTooltip from "./ComponentTooltip";
+import ComponentTooltip from "./component-tooltip";
 
 interface TopicListEntryThumbnailProps {
 	topicId: string;

@@ -1,6 +1,6 @@
 import { createSignal } from "solid-js";
-import { Credentials } from "./Credentials";
-import { Select } from "./Select";
+import { Credentials } from "./credentials";
+import { Select } from "./select";
 interface NavigationProps {
 	setModel: (model: string) => void;
 }

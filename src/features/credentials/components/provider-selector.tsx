@@ -7,7 +7,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import ProviderOptions from "./ProviderOptions";
+import ProviderOptions from "./provider-options";
 import type { Provider } from "types/core";
 
 interface SelectProps {

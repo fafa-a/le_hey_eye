@@ -1,8 +1,8 @@
-import { useTopics } from "@/context/topicsContext";
-import { TextField, TextFieldRoot } from "@components/ui/textfield";
+import { useTopics } from "@/context/topics-context";
+import { TextField, TextFieldRoot } from "@components/ui/text-field";
 import { type Setter, Show, createEffect, createSignal } from "solid-js";
-import TopicListEntryTools from "./TopicListEntryTools";
-import ComponentTooltip from "./ComponentTooltip";
+import TopicListEntryTools from "./topic-list-entry-tools";
+import ComponentTooltip from "./component-tooltip";
 
 interface TopicListEntryProps {
 	topicId: string;

@@ -1,9 +1,9 @@
 /* @refresh reload */
 import { render } from "solid-js/web";
-import App from "./App";
+import App from "./app";
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
 
-import { TopicsProvider } from "./context/topicsContext";
+import { TopicsProvider } from "./context/topics-context";
 
 const queryClient = new QueryClient();
 

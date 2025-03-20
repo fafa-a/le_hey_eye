@@ -1,4 +1,4 @@
-import Settings from "@icons/Settings";
+import Settings from "@icons/settings";
 import {
 	Sheet,
 	SheetContent,
@@ -7,15 +7,10 @@ import {
 	SheetTitle,
 	SheetTrigger,
 } from "@/components/ui/sheet";
-import ProviderSelector from "@features/credentials/components/ProviderSelector";
-import {
-	type Accessor,
-	createEffect,
-	createSignal,
-	type Setter,
-} from "solid-js";
+import ProviderSelector from "@/features/credentials/components/provider-selector";
+import { type Accessor, createSignal, type Setter } from "solid-js";
 import type { Provider } from "types/core";
-import ProviderForm from "@/features/credentials/components/ProviderForm";
+import ProviderForm from "@/features/credentials/components/provider-form";
 
 interface GeneralSettingsProps {
 	setCurrentProvider: Setter<Provider>;

@@ -1,14 +1,14 @@
 import { Button } from "@/components/ui/button";
-import { useTopics } from "@/context/topicsContext";
-import TopicListEntry from "@components/common/TopicListEntry";
-import TopicListEntryThumbnail from "@components/common/TopicListEntryThumbnail";
-import Add from "@icons/Add";
-import SidePanelClose from "@icons/SidePanelClose";
-import SidePanelOpen from "@icons/SidePanelOpen";
+import { useTopics } from "@/context/topics-context";
+import TopicListEntry from "@/components/common/topic-list-entry";
+import TopicListEntryThumbnail from "@/components/common/topic-list-entry-thumbnail";
+import Add from "@icons/add";
+import SidePanelClose from "@icons/side-panel-close";
+import SidePanelOpen from "@icons/side-panel-open";
 import { type Accessor, createEffect, For, type Setter, Show } from "solid-js";
 import type { Provider } from "types/core";
 import { uid } from "uid";
-import GeneralSettings from "./components/GeneralSettings";
+import GeneralSettings from "./components/general-settings";
 import { unwrap } from "solid-js/store";
 
 interface SidebarProps {

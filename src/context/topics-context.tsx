@@ -6,7 +6,6 @@ import {
 	useContext,
 	type JSX,
 	type Setter,
-	createEffect,
 	createMemo,
 	batch,
 } from "solid-js";
@@ -20,7 +19,6 @@ import type {
 } from "types/core";
 import { uid } from "uid";
 import { invoke } from "@tauri-apps/api/core";
-import { modelSettingsStore } from "./model-settings-store";
 import { emit } from "@tauri-apps/api/event";
 
 const generateRandomColor = () => {

@@ -1,19 +1,12 @@
-import { useTopics } from "@/context/topicsContext";
-import {
-	createEffect,
-	type Setter,
-	Match,
-	Switch,
-	createMemo,
-	createSignal,
-} from "solid-js";
+import { useTopics } from "@/context/topics-context";
+import { type Setter, Match, Switch, createMemo, createSignal } from "solid-js";
 import { Button } from "@components/ui/button";
-import Edit from "@icons/Edit";
-import PopoverConfirmAction from "./PopoverConfirmAction";
-import Delete from "@icons/Trash";
-import ThreeDots from "@icons/ThreeDots";
-import Checkmark from "@icons/Checkmark";
-import Close from "@icons/CloseLarge";
+import Edit from "@icons/edit";
+import PopoverConfirmAction from "./popover-confirm-action";
+import Delete from "@icons/trash";
+import ThreeDots from "@icons/three-dots";
+import Checkmark from "@icons/checkmark";
+import Close from "@icons/close-large";
 import { onClickOutside } from "solidjs-use";
 
 interface TopicListEntryToolsProps {

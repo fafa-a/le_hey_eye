@@ -1,6 +1,6 @@
 import { Button } from "@components/ui/button";
 import type { JSX } from "solid-js";
-import ComponentTooltip from "./ComponentTooltip";
+import ComponentTooltip from "./component-tooltip";
 
 interface ButtonTooltipProps {
 	tooltipContent: string | JSX.Element;

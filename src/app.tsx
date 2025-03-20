@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, onCleanup } from "solid-js";
+import { createEffect, createMemo, createSignal } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
 import { createMutation } from "@tanstack/solid-query";
 import type { StreamResponse } from "../types/cloudflare";
@@ -7,10 +7,10 @@ import type {
 	ChatRequest,
 } from "../types/core";
 
-import { PromptInput } from "@features/chat/prompt/PromptInput";
-import { Sidebar } from "@/features/sidebar/Sidebar";
+import { PromptInput } from "@features/chat/prompt/prompt-input";
+import { Sidebar } from "@/features/sidebar/sidebar";
 import { unwrap } from "solid-js/store";
-import { useTopics } from "@/context/topicsContext";
+import { useTopics } from "@/context/topics-context";
 import type { Provider, TopicMessage } from "../types/core";
 import MessageList from "./features/chat/message/message-list";
 

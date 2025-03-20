@@ -10,10 +10,10 @@ import "katex/dist/katex.min.css";
 import "highlight.js/styles/base16/onedark.min.css";
 import highlightjs from "highlight.js";
 import { writeClipboard } from "@solid-primitives/clipboard";
-import { createEffect, createSignal, Show } from "solid-js";
+import { createSignal, Show } from "solid-js";
 import { Button } from "../ui/button";
-import Copy from "../icons/Copy";
-import Checkmark from "../icons/Checkmark";
+import Copy from "../icons/copy";
+import Checkmark from "../icons/checkmark";
 
 function Markdown(props: any) {
 	return (

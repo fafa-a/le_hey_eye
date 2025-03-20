@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
-import Send from "@components/icons/Send";
+import Send from "@components/icons/send";
 import { TextArea } from "@components/ui/textarea";
-import { TextFieldRoot } from "@components/ui/textfield";
+import { TextFieldRoot } from "@components/ui/text-field";
 import type { CreateMutationResult } from "@tanstack/solid-query";
 import {
 	type Accessor,
@@ -13,9 +13,9 @@ import {
 } from "solid-js";
 import type { StreamResponse } from "../../../../types/cloudflare";
 import type { ChatRequest } from "../../../../types/core";
-import type { TopicMessage } from "@/context/topicsContext";
-import { useTopics } from "@/context/topicsContext";
-import ModelSettingsPopover from "@features/chat/settings/SettingsPopover";
+import type { TopicMessage } from "@/context/topics-context";
+import { useTopics } from "@/context/topics-context";
+import ModelSettingsPopover from "@features/chat/settings/settings-popover";
 import { unwrap } from "solid-js/store";
 
 interface PromptInputProps {

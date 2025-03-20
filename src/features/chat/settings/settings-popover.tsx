@@ -7,17 +7,17 @@ import {
 	PopoverTrigger,
 } from "@components/ui/popover";
 import { Button } from "@components/ui/button";
-import SettingsAdjust from "@icons/SettingsAdjust";
+import SettingsAdjust from "@icons/settings-adjust";
 import type { ChatRequest } from "types/core";
 import type { Accessor, Setter } from "solid-js";
-import { ComboboxModels } from "./components/ComboboxModels";
+import { ComboboxModels } from "./components/combobox-models";
 import {
 	TextField,
 	TextFieldLabel,
 	TextFieldRoot,
-} from "@components/ui/textfield";
-import CustomSwitch from "@components/common/Switch";
-import SliderComponent from "@components/common/Slider";
+} from "@components/ui/text-field";
+import CustomSwitch from "@components/common/switch";
+import SliderComponent from "@components/common/slider";
 
 interface SettingsPopoverProps {
 	model: Accessor<string>;
