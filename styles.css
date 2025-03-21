@@ -94,3 +94,8 @@
 		--radius: 0.5rem;
 	}
 }
+
+/* .app-blur { */
+/* 	filter: blur(4px); */
+/* 	will-change: filter; */
+/* } */

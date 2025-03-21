@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal } from "solid-js";
+import { createEffect, createMemo, createSignal, Show } from "solid-js";
 import { invoke } from "@tauri-apps/api/core";
 import { createMutation } from "@tanstack/solid-query";
 import type { StreamResponse } from "../types/cloudflare";
@@ -13,6 +13,7 @@ import { unwrap } from "solid-js/store";
 import { useTopics } from "@/context/topics-context";
 import type { Provider, TopicMessage } from "../types/core";
 import MessageList from "./features/chat/message/message-list";
+import SettingsPanel from "@/features/settings-panel/settings-panel";
 
 async function generateAIResponse(
 	provider: Provider,
@@ -59,6 +60,7 @@ function App() {
 	const { currentTopicId, currentTopicMessages } = useTopics();
 
 	const [isCollapsed, setIsCollapsed] = createSignal(false);
+	const [isSettingsPanelOpen, setIsSettingsPanelOpen] = createSignal(false);
 	const [messageHistory, setMessageHistory] = createSignal<
 		Omit<TopicMessage, "id">[]
 	>([]);
@@ -226,12 +228,13 @@ function App() {
 	};
 
 	return (
-		<div class="h-screen max-h-screen flex overflow-hidden">
+		<div class="h-screen max-h-screen flex overflow-hidden ">
 			<div
-				class="h-full transition-all flex-shrink-0"
+				class="h-full flex-shrink-0"
 				classList={{
 					"w-[60px] ": isCollapsed(),
 					"w-[20%] max-w-[300px] min-w-[200px]": !isCollapsed(),
+					"blur-sm will-change-transform": isSettingsPanelOpen(),
 				}}
 			>
 				<Sidebar
@@ -239,6 +242,7 @@ function App() {
 					setIsCollapsed={setIsCollapsed}
 					setCurrentProvider={setCurrentProvider}
 					currentProvider={currentProvider}
+					setIsSettingsPanelOpen={setIsSettingsPanelOpen}
 				/>
 			</div>
 
@@ -246,6 +250,7 @@ function App() {
 				class="flex flex-col flex-1 w-full min-w-0 h-full p-5 xl:max-w-[900px] 2xl:max-w-[1200px] mx-auto"
 				classList={{
 					"justify-center": isTopicMessagesEmpty(),
+					"blur-sm will-change-transform": isSettingsPanelOpen(),
 				}}
 			>
 				<MessageList mutation={mutation} />
@@ -262,6 +267,28 @@ function App() {
 					/>
 				</div>
 			</div>
+			<Show when={isSettingsPanelOpen()}>
+				<div
+					class="fixed inset-0 blur-lg will-change-transform "
+					onClick={() => setIsSettingsPanelOpen(false)}
+					onKeyDown={(e) => {
+						if (e.key === "Escape") {
+							setIsSettingsPanelOpen(false);
+						}
+					}}
+				/>
+				<div class="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
+					<div class="w-4/5 h-4/5 bg-white rounded-lg shadow-xl flex overflow-hidden pointer-events-auto">
+						<SettingsPanel
+							setIsOpen={setIsSettingsPanelOpen}
+							model={model()}
+							setModel={setModel}
+							promptSettings={promptSettings()}
+							setPromptSettings={setPromptSettings}
+						/>
+					</div>
+				</div>
+			</Show>
 		</div>
 	);
 }
