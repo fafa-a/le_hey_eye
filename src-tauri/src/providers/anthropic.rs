@@ -2,7 +2,8 @@ use crate::core::credentials::{self, AnthropicCredentials};
 use crate::core::endpoints;
 use crate::core::llm_trait::{AnthropicAdapter, LLMProvider};
 use crate::core::models::{
-    BaseModelSettings, ChatRequest, ChatRole, ContentItem, ContentType, ProviderCapabilities, ProviderType, StreamResponse, TokenUsage
+    BaseModelSettings, ChatRequest, ChatRole, ContentItem, ContentType, ProviderCapabilities,
+    ProviderType, StreamResponse, TokenUsage,
 };
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
@@ -368,12 +369,11 @@ pub struct Usage {
     pub cache_read_input_tokens: Option<u32>,
 }
 
-
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[ts(export, export_to = "../../types/anthropic.ts")]
 pub struct AnthropicModelSettings {
     pub base: BaseModelSettings,
-    
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub thinking: Option<AnthropicThinkingConfig>,
 
@@ -393,7 +393,7 @@ impl AnthropicModelSettings {
             tool_choice: None,
         }
     }
-    
+
     // Gardez les méthodes utilitaires spécifiques
     pub fn with_thinking(mut self, budget_tokens: u32) -> Result<Self, String> {
         // Votre implémentation existante
@@ -736,7 +736,7 @@ impl AnthropicAdapter for AnthropicProviderWrapper {
             top_p: request.top_p,
             top_k: request.top_k,
             tools: request.tools,
-            tool_choice: request.tool_choice
+            tool_choice: request.tool_choice,
         }
     }
 
@@ -954,11 +954,52 @@ impl AnthropicProvider {
     #[allow(dead_code)]
     pub fn list_models_impl<R: tauri::Runtime>(
         &self,
-        _app: Arc<tauri::AppHandle<R>>,
+        app: Arc<tauri::AppHandle<R>>, 
     ) -> tauri::async_runtime::JoinHandle<Result<Vec<String>, String>> {
-        tauri::async_runtime::spawn(
-            async move { Ok(vec!["claude-3-7-sonnet-20250219".to_string()]) },
-        )
+        tauri::async_runtime::spawn(async move {
+            let AnthropicCredentials { api_key } =
+                credentials::get_anthropic_credentials(&app).await?;
+
+            let api_url = endpoints::get_models_url("anthropic", None)?;
+
+            let client = reqwest::Client::new();
+
+            let response = client
+                .get(api_url) 
+                .header("x-api-key", api_key)
+                .header("anthropic-version", "2023-06-01")
+                .header("Content-Type", "application/json")
+                .send()
+                .await
+                .map_err(|e| e.to_string())?;
+
+            if !response.status().is_success() {
+                return Err(format!(
+                    "API request failed with status: {}",
+                    response.status()
+                ));
+            }
+
+            let models_response: serde_json::Value =
+                response.json().await.map_err(|e| e.to_string())?;
+
+            let models = if let Some(data) = models_response.get("data").and_then(|d| d.as_array())
+            {
+                data.iter()
+                    .filter_map(|model| {
+                        model.get("id").and_then(|id| id.as_str()).map(String::from)
+                    })
+                    .collect()
+            } else {
+                vec![
+                    "claude-3-opus-20240229".to_string(),
+                    "claude-3-sonnet-20240229".to_string(),
+                    "claude-3-haiku-20240307".to_string(),
+                ]
+            };
+
+            Ok(models)
+        })
     }
 
     // #[allow(dead_code)]

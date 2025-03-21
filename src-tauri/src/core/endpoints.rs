@@ -14,7 +14,7 @@ pub const CLOUDFLARE: ProviderEndpoints = ProviderEndpoints {
 
 pub const ANTHROPIC: ProviderEndpoints = ProviderEndpoints {
     api_url: "https://api.anthropic.com/v1/messages",
-    models_url: None,
+    models_url: Some("https://api.anthropic.com/v1/models"),
 };
 
 pub const MISTRAL: ProviderEndpoints = ProviderEndpoints {

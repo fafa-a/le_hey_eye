@@ -123,5 +123,10 @@ pub async fn save_credentials<R: Runtime>(
 #[tauri::command]
 #[allow(dead_code)]
 pub fn get_supported_providers() -> Vec<ProviderType> {
-    vec![ProviderType::Cloudflare, ProviderType::Anthropic, ProviderType::Mistral,ProviderType::OpenAI]
+    vec![
+        ProviderType::Cloudflare,
+        ProviderType::Anthropic,
+        ProviderType::Mistral,
+        ProviderType::OpenAI,
+    ]
 }

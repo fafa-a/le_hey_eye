@@ -81,6 +81,11 @@ pub async fn list_models<R: Runtime>(
     let app_arc = Arc::new(app);
 
     match provider.provider_id() {
+        "anthropic" => {
+            let provider = crate::providers::anthropic::AnthropicProvider {};
+            let handle = provider.list_models_impl(app_arc);
+            handle.await.unwrap()
+        }
         "cloudflare" => {
             let provider = crate::providers::cloudflare::CloudflareProvider {};
             let handle = provider.list_models_impl(app_arc);
