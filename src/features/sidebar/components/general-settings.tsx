@@ -10,7 +10,7 @@ import {
 import ProviderSelector from "@/features/credentials/components/provider-selector";
 import { type Accessor, createSignal, type Setter } from "solid-js";
 import type { Provider } from "types/core";
-import ProviderForm from "@/features/credentials/components/provider-form";
+import ProviderForm from "@/features/credentials/components/provider-credential-form";
 
 interface GeneralSettingsProps {
 	setCurrentProvider: Setter<Provider>;
