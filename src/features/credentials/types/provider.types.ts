@@ -20,6 +20,7 @@ export type ProviderFormConfig = {
 	name: string;
 	icon: string;
 	fields: ProviderFormField[];
+	settings: Record<string, string | number | boolean>;
 };
 
 export type ProviderCredential = {

@@ -30,6 +30,13 @@ export const PROVIDER_CONFIGURATION: ProviderFormConfig[] = [
 				placeholder: "Your Anthropic API Key",
 			},
 		],
+		settings: {
+			max_tokens: 1024,
+			stream: true,
+			temperature: 0.1,
+			top_k: 1,
+			top_p: 0.1,
+		},
 	},
 	{
 		id: "cloudflare",
@@ -51,5 +58,12 @@ export const PROVIDER_CONFIGURATION: ProviderFormConfig[] = [
 				placeholder: "Your Cloudflare API Token",
 			},
 		],
+		settings: {
+			max_tokens: 1024,
+			stream: true,
+			temperature: 0.1,
+			top_k: 1,
+			top_p: 0.1,
+		},
 	},
 ];
