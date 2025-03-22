@@ -11,7 +11,7 @@ interface ProviderFormProps {
 	provider: string;
 }
 
-export default function ProviderForm(props: ProviderFormProps) {
+export default function ProviderCredentialForm(props: ProviderFormProps) {
 	const [providerConfig, setProviderConfig] =
 		createSignal<ProviderFormConfig | null>(null);
 
@@ -86,7 +86,7 @@ export default function ProviderForm(props: ProviderFormProps) {
 				}
 			}}
 		>
-			<div class="flex flex-col gap-1">
+			<div class="flex flex-col gap-1 w-full">
 				<For each={providerConfig()?.fields || []}>
 					{(fieldConfig) => (
 						<form.Field name={fieldConfig.key}>
@@ -94,7 +94,7 @@ export default function ProviderForm(props: ProviderFormProps) {
 								const currentFieldConfig = () => fieldConfig;
 
 								return (
-									<TextField>
+									<TextField class="w-full">
 										<TextFieldInput
 											id={field().name}
 											name={field().name}

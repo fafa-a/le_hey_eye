@@ -1,7 +1,8 @@
 import { type Component, createSignal, For } from "solid-js";
 import NavItem from "./components/nav-item";
-import CarbonSettings from "@/components/icons/settings";
 import Providers from "./components/providers";
+import CarbonClose from "@/components/icons/close";
+import { Button } from "@/components/ui/button";
 
 interface SettingsPanelProps {
 	setIsOpen: (isOpen: boolean) => void;
@@ -11,15 +12,15 @@ interface SettingsPanelProps {
 	setPromptSettings: (settings: any) => void;
 }
 
-const SettingsPanel: Component<SettingsPanelProps> = (props) => {
-	const [activeSection, setActiveSection] = createSignal("models");
+const items = [
+	{ id: "providers", label: "Providers" },
+	// { id: "preference", label: "Preference" },
+	// { id: "profile", label: "Profile" },
+	// { id: "prompt", label: "Default Prompt" },
+];
 
-	const items = [
-		{ id: "providers", label: "Providers" },
-		{ id: "preference", label: "Preference" },
-		{ id: "profile", label: "Profile" },
-		{ id: "prompt", label: "Default Prompt" },
-	];
+const SettingsPanel: Component<SettingsPanelProps> = (props) => {
+	const [activeSection, setActiveSection] = createSignal("providers");
 
 	const renderContent = () => {
 		switch (activeSection()) {
@@ -189,49 +190,28 @@ const SettingsPanel: Component<SettingsPanelProps> = (props) => {
 				);
 		}
 	};
-
 	return (
-		<>
-			<div class="w-64 bg-gray-50 border-r overflow-y-auto">
-				<div class="flex items-center justify-between p-4 border-b">
-					<h2 class="text-xl font-bold">Paramètres</h2>
-					<button
+		<div class="grid grid-cols-[200px_1fr] h-full">
+			<div class="bg-neutral-50 border-r p-4">
+				<div class="flex items-center justify-between border-b p-2">
+					<h2 class="text-xl font-bold">Settings</h2>
+					<Button
+						variant="ghost"
+						size="sm"
 						onClick={() => props.setIsOpen(false)}
-						class="p-1 rounded-full hover:bg-gray-200"
 					>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="20"
-							height="20"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						>
-							<path d="M18 6 6 18"></path>
-							<path d="m6 6 12 12"></path>
-						</svg>
-					</button>
+						<CarbonClose width={16} height={16} />
+					</Button>
 				</div>
-
-				<nav class="p-2">
-					<For each={items}>
-						{(item) => (
-							<NavItem
-								label={item.label}
-								icon={item.icon}
-								onClick={() => setActiveSection(item.id)}
-								isActive={activeSection() === item.id}
-							/>
-						)}
-					</For>
+				<nav class="mt-4">
+					<NavItem label="Providers" isActive={true} />
 				</nav>
 			</div>
 
-			<div class="w-full overflow-y-auto">{renderContent()}</div>
-		</>
+			<div class="grid grid-rows-[30%_auto] grid-cols-[2fr_3fr] gap-1 p-1">
+				<Providers />
+			</div>
+		</div>
 	);
 };
 

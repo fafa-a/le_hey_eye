@@ -12,15 +12,23 @@ export type ProviderFormField = {
 	required: boolean;
 	placeholder?: string;
 	validation?: FieldValidation;
-	options?: Array<{ value: string; label: string }>; // Pour le type 'select'
+	options?: Array<{ value: string; label: string }>;
 };
+
+export interface ModelSettings {
+	max_tokens: number;
+	stream: boolean;
+	temperature: number;
+	top_p: number;
+	top_k: number;
+}
 
 export type ProviderFormConfig = {
 	id: string;
 	name: string;
 	icon: string;
 	fields: ProviderFormField[];
-	settings: Record<string, string | number | boolean>;
+	settings: ModelSettings;
 };
 
 export type ProviderCredential = {
