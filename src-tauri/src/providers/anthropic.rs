@@ -500,8 +500,6 @@ impl std::ops::DerefMut for AnthropicModelSettings {
     }
 }
 
-
-
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AnthropicResponse {
     pub id: String,
@@ -954,7 +952,7 @@ impl AnthropicProvider {
     #[allow(dead_code)]
     pub fn list_models_impl<R: tauri::Runtime>(
         &self,
-        app: Arc<tauri::AppHandle<R>>, 
+        app: Arc<tauri::AppHandle<R>>,
     ) -> tauri::async_runtime::JoinHandle<Result<Vec<String>, String>> {
         tauri::async_runtime::spawn(async move {
             let AnthropicCredentials { api_key } =
@@ -965,7 +963,7 @@ impl AnthropicProvider {
             let client = reqwest::Client::new();
 
             let response = client
-                .get(api_url) 
+                .get(api_url)
                 .header("x-api-key", api_key)
                 .header("anthropic-version", "2023-06-01")
                 .header("Content-Type", "application/json")
