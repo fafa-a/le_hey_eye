@@ -25,8 +25,7 @@ pub async fn initialize_database(app_handle: &AppHandle) -> Result<DatabaseConne
     let db_path = get_db_path(app_handle);
     let db_url = format!("sqlite:{}?mode=rwc", db_path.to_string_lossy());
     let mut opt = ConnectOptions::new(&db_url);
-    opt
-        .max_connections(1)
+    opt.max_connections(1)
         .min_connections(1)
         .connect_timeout(Duration::from_secs(10))
         .idle_timeout(Duration::from_secs(60))

@@ -17,7 +17,7 @@ pub struct Model {
     pub temperature: f32,
     #[sea_orm(column_type = "Float", nullable)]
     pub top_k: i32,
-    #[sea_orm(column_type = "Integer", nullable)]
+    #[sea_orm(column_type = "Float", nullable)]
     pub top_p: f32,
 }
 

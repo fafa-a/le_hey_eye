@@ -42,13 +42,3 @@ pub mod prelude {
     pub use super::topics::Model as TopicModel;
     pub use super::topics::Relation as TopicRelation;
 }
-
-pub fn get_all_entities() -> Vec<sea_orm::EntityTrait> {
-    vec![
-        anthropic_models_settings::Entity,
-        messages::Entity,
-        models_settings::Entity,
-        provider_tools::Entity,
-        topics::Entity,
-    ]
-}
