@@ -21,6 +21,8 @@ use entity::topics::{
 };
 use migration::{Migrator, MigratorTrait};
 
+
+
 fn get_db_path(app: &tauri::AppHandle) -> PathBuf {
     let app_dir = app
         .path()
