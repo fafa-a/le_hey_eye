@@ -1,8 +1,15 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize, TS)]
 #[sea_orm(table_name = "models_settings")]
+#[ts(
+    export,
+    export_to = "../../../../types/entity.ts",
+    rename = "ModelSettings",
+    rename_all = "camelCase"
+)]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,

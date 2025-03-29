@@ -1,9 +1,16 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use ts_rs::TS;
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize, TS)]
 #[sea_orm(table_name = "anthropic_models_settings")]
+#[ts(
+    export,
+    export_to = "../../../../types/entity.ts",
+    rename = "AnthropicModelSettings",
+    rename_all = "camelCase"
+)]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,

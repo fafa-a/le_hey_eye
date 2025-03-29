@@ -1,19 +1,30 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
+use ts_rs::TS;
 
-#[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize, TS)]
 #[sea_orm(rs_type = "String", db_type = "Text", enum_name = "role_type")]
+#[ts(export, export_to = "../../../../types/entity.ts", rename = "Role")]
 pub enum RoleType {
     #[sea_orm(string_value = "system")]
+    #[serde(rename = "system")]
     System,
     #[sea_orm(string_value = "user")]
+    #[serde(rename = "user")]
     User,
     #[sea_orm(string_value = "assistant")]
+    #[serde(rename = "assistant")]
     Assistant,
 }
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize, TS)]
 #[sea_orm(table_name = "messages")]
+#[ts(
+    export,
+    export_to = "../../../../types/entity.ts",
+    rename = "Message",
+    rename_all = "camelCase"
+)]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
