@@ -2,47 +2,47 @@
 import type { JsonValue } from "../src-tauri/src/entity/bindings/serde_json/JsonValue.js";
 
 export type AnthropicModelSettings = {
-  id: number;
-  topicId: number;
-  thinking: JsonValue;
-  budgetTokens: number;
-  tools: JsonValue | null;
+	id: number;
+	topicId: number;
+	thinking: JsonValue;
+	budgetTokens: number;
+	tools: JsonValue | null;
 };
 
 export type AppAppearance = {
-  id: number;
-  theme: Theme;
-  codeTheme: Theme;
-  thumbnailRandomColor: boolean;
+	id: number;
+	theme: Theme;
+	codeTheme: Theme;
+	thumbnailRandomColor: boolean;
 };
 
 export type Message = {
-  id: number;
-  topicId: number;
-  role: Role;
-  content: string;
-  createdAt: string;
-  tokensUsed: number | null;
-  updatedAt: string | null;
+	id: number;
+	topicId: number;
+	role: Role;
+	content: string;
+	createdAt: string;
+	tokensUsed: number | null;
+	updatedAt: string | null;
 };
 
 export type ModelSettings = {
-  id: number;
-  topicId: number;
-  provider: string;
-  system: string;
-  name: string;
-  stream: boolean;
-  maxTokens: number;
-  temperature: number;
-  topK: number;
-  topP: number;
+	id: number;
+	topicId: number;
+	provider: string;
+	system: string;
+	name: string;
+	stream: boolean;
+	maxTokens: number;
+	temperature: number;
+	topK: number;
+	topP: number;
 };
 
 export type ProviderTool = {
-  id: number;
-  providerName: string;
-  tool: JsonValue;
+	id: number;
+	providerName: string;
+	tool: JsonValue;
 };
 
 export type Role = "system" | "user" | "assistant";
@@ -50,8 +50,8 @@ export type Role = "system" | "user" | "assistant";
 export type Theme = "system" | "dark" | "light";
 
 export type Topic = {
-  id: number;
-  name: string;
-  createdAt: string;
-  lastAccessedAt: string;
+	id: number;
+	name: string;
+	createdAt: string;
+	lastAccessedAt: string;
 };

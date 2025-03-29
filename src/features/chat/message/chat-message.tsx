@@ -208,7 +208,7 @@ interface ChatMessageProps {
 const MemoizedChatMessage = ({ message }: ChatMessageProps) => {
 	const { highlightedMessagePair } = useTopics();
 	const [copied, setCopied] = createSignal(false);
-	const { removeMessage } = useTopics();
+	const { removeMessages: removeMessage } = useTopics();
 
 	const copyMessageContent = async () => {
 		try {

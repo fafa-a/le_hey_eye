@@ -42,7 +42,7 @@ interface TopicsContextValue {
 	removeTopic: (id: string) => void;
 	editTopicName: (id: string, name: string) => void;
 	addMessage: (message: Omit<TopicMessage, "id">) => void;
-	removeMessage: (messageId: string, pairId: string) => void;
+	removeMessages: (messageId: string, pairId: string) => void;
 	currentTopicId: Accessor<string | undefined>;
 	setCurrentTopic: (id: string) => Promise<void>;
 	highlightedMessagePair: Accessor<string | null>;
@@ -78,7 +78,7 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 			await Promise.all(
 				topicsData.map(async (topic) => {
 					const messagesData = await invoke<DbTopicMessage[]>(
-						"get_messages_for_topic",
+						"get_messages_by_topic",
 						{
 							topicId: topic.id,
 						},
@@ -147,13 +147,10 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 			}
 
 			if (loadedTopics.length === 0) {
-				const initialTopicId = uid(16);
 				const dateToISOString = new Date().toISOString();
 
 				const defaultTopic: Omit<Topic, "createdAt" | "lastAccessedAt"> = {
-					id: initialTopicId,
 					name: "New Conversation",
-					bgColor: generateRandomColor(),
 					messages: [],
 				};
 				try {
@@ -300,11 +297,12 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 		}
 	};
 
-	const removeMessage = async (messageId: string, pairId: string) => {
+	const removeMessages = async (messageIds: string[], pairId: string) => {
 		try {
-			await invoke("remove_message", { messageId });
+			await invoke("remove_messages", { messageIds });
+
 			const topicMessages = await invoke<TopicMessage[]>(
-				"get_messages_for_topic",
+				"get_messages_by_topic",
 				{
 					topicId: currentTopicId(),
 				},
@@ -362,7 +360,7 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 		removeTopic,
 		editTopicName,
 		addMessage,
-		removeMessage,
+		removeMessages,
 		highlightedMessagePair,
 		setHighlightedMessagePair,
 		currentTopicMessages,
