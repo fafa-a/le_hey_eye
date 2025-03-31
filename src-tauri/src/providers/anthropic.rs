@@ -287,7 +287,7 @@ pub enum SystemPromptType {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../types/core.ts")]
+#[ts(export, export_to = "../../../shared/types/llm/core.ts")]
 #[serde(untagged)]
 pub enum AnthropicSystemPrompt {
     Simple(String),

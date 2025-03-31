@@ -62,7 +62,7 @@ pub async fn get_all_topics(db: State<'_, DatabaseConnection>) -> Result<Vec<Mod
 #[command]
 pub async fn get_messages_by_topic(
     db: State<'_, DatabaseConnection>,
-    topic_id: String,
+    topic_id: i32,
 ) -> Result<Vec<MessagesModel>, String> {
     Messages::find()
         .filter(MessagesColumn::TopicId.eq(topic_id))
@@ -73,7 +73,7 @@ pub async fn get_messages_by_topic(
 }
 
 #[command]
-pub async fn add_topic(db: State<'_, DatabaseConnection>, name: String) -> Result<i32, String> {
+pub async fn add_topic(db: State<'_, DatabaseConnection>, name: String) -> Result<Model, String> {
     let now = Utc::now().fixed_offset();
 
     let new_topic = TopicActiveModel {
@@ -88,7 +88,7 @@ pub async fn add_topic(db: State<'_, DatabaseConnection>, name: String) -> Resul
         .await
         .map_err(|e: DbErr| e.to_string())?;
 
-    Ok(result.id)
+    Ok(result)
 }
 
 #[command]

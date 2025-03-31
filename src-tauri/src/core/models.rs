@@ -7,7 +7,7 @@ use crate::providers::anthropic::{
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, TS)]
-#[ts(export, export_to = "../../types/core.ts")]
+#[ts(export, export_to = "../../shared/types/llm/core.ts")]
 pub enum ProviderType {
     Anthropic,
     Cloudflare,
@@ -300,7 +300,7 @@ impl BaseModelSettings {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../types/core.ts")]
+#[ts(export, export_to = "../../shared/types/llm/core.ts")]
 pub enum ChatRole {
     #[serde(rename = "system")]
     System,
@@ -327,7 +327,7 @@ pub struct Image {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../types/core.ts")]
+#[ts(export, export_to = "../../shared/types/llm/core.ts")]
 pub struct ChatRequest {
     pub messages: Vec<ChatMessage>,
     pub system: AnthropicSystemPrompt,
@@ -375,14 +375,14 @@ pub struct ChatRequest {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../types/core.ts")]
+#[ts(export, export_to = "../../shared/types/llm/core.ts")]
 pub struct ChatMessage {
     pub role: ChatRole,
     pub content: ContentType,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../types/core.ts")]
+#[ts(export, export_to = "../../shared/types/llm/core.ts")]
 #[serde(untagged)]
 pub enum ContentType {
     PlainText(String),
@@ -408,14 +408,16 @@ pub struct ImageSource {
     pub data: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../shared/types/llm/core.ts")]
 pub struct TokenUsage {
     pub prompt_tokens: u32,
     pub completion_tokens: u32,
     pub total_tokens: u32,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export, export_to = "../../shared/types/llm/core.ts")]
 pub struct StreamResponse {
     #[serde(rename = "response")]
     pub response: String,
