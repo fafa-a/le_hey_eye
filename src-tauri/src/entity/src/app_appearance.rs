@@ -4,7 +4,11 @@ use ts_rs::TS;
 
 #[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize, TS)]
 #[sea_orm(rs_type = "String", db_type = "Text", enum_name = "theme_type")]
-#[ts(export, export_to = "../../../../types/entity.ts", rename = "Theme")]
+#[ts(
+    export,
+    export_to = "../../../../shared/types/db/enum.ts",
+    rename = "Theme"
+)]
 pub enum ThemeType {
     #[sea_orm(string_value = "system")]
     #[serde(rename = "system")]
@@ -21,7 +25,7 @@ pub enum ThemeType {
 #[sea_orm(table_name = "app_appearance")]
 #[ts(
     export,
-    export_to = "../../../../types/entity.ts",
+    export_to = "../../../../shared/types/db/app-apperance.ts",
     rename = "AppAppearance",
     rename_all = "camelCase"
 )]

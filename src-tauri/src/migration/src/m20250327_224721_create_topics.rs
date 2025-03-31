@@ -17,7 +17,7 @@ impl MigrationTrait for Migration {
                     .col(date_time(Topics::LastAccessedAt))
                     .to_owned(),
             )
-            .await;
+            .await?;
 
         manager
             .create_index(

@@ -2,7 +2,11 @@ pub mod anthropic_models_settings;
 pub mod app_appearance;
 pub mod messages;
 pub mod models_settings;
-pub mod provider_tools;
+pub mod providers_tools;
+pub mod thinking;
+pub mod tool_properties;
+pub mod tool_required_props;
+pub mod tools;
 pub mod topics;
 
 pub mod prelude {
@@ -30,11 +34,35 @@ pub mod prelude {
     pub use super::models_settings::Model as ModelsSettingsModel;
     pub use super::models_settings::Relation as ModelsSettingsRelation;
 
-    pub use super::provider_tools::ActiveModel as ProviderToolActiveModel;
-    pub use super::provider_tools::Column as ProviderToolColumn;
-    pub use super::provider_tools::Entity as ProviderTools;
-    pub use super::provider_tools::Model as ProviderToolModel;
-    pub use super::provider_tools::Relation as ProviderToolRelation;
+    pub use super::providers_tools::ActiveModel as ProviderToolActiveModel;
+    pub use super::providers_tools::Column as ProviderToolColumn;
+    pub use super::providers_tools::Entity as ProviderTools;
+    pub use super::providers_tools::Model as ProviderToolModel;
+    pub use super::providers_tools::Relation as ProviderToolRelation;
+
+    pub use super::thinking::ActiveModel as ThinkingActiveModel;
+    pub use super::thinking::Column as ThinkingColumn;
+    pub use super::thinking::Entity as Thinking;
+    pub use super::thinking::Model as ThinkingModel;
+    pub use super::thinking::Relation as ThinkingRelation;
+
+    pub use super::tool_properties::ActiveModel as ToolPropertyActiveModel;
+    pub use super::tool_properties::Column as ToolPropertyColumn;
+    pub use super::tool_properties::Entity as ToolProperties;
+    pub use super::tool_properties::Model as ToolPropertyModel;
+    pub use super::tool_properties::Relation as ToolPropertyRelation;
+
+    pub use super::tool_required_props::ActiveModel as ToolRequiredPropActiveModel;
+    pub use super::tool_required_props::Column as ToolRequiredPropColumn;
+    pub use super::tool_required_props::Entity as ToolRequiredProps;
+    pub use super::tool_required_props::Model as ToolRequiredPropModel;
+    pub use super::tool_required_props::Relation as ToolRequiredPropRelation;
+
+    pub use super::tools::ActiveModel as ToolActiveModel;
+    pub use super::tools::Column as ToolColumn;
+    pub use super::tools::Entity as Tools;
+    pub use super::tools::Model as ToolModel;
+    pub use super::tools::Relation as ToolRelation;
 
     pub use super::topics::ActiveModel as TopicActiveModel;
     pub use super::topics::Column as TopicColumn;

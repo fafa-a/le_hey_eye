@@ -3,29 +3,19 @@ use serde::{Deserialize, Serialize};
 use ts_rs::TS;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize, TS)]
-#[sea_orm(table_name = "models_settings")]
+#[sea_orm(table_name = "thinking")]
 #[ts(
     export,
-    export_to = "../../../../shared/types/db/models-settings.ts",
-    rename = "ModelSettings",
+    export_to = "../../../../shared/types/db/providers/anthropic.ts",
+    rename = "Thinking",
     rename_all = "camelCase"
 )]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    #[sea_orm(column_type = "Integer")]
     pub topic_id: i32,
-    pub provider: String,
-    pub system: String,
-    pub name: String,
-    pub stream: bool,
-    pub max_tokens: i32,
-    #[sea_orm(column_type = "Float", nullable)]
-    pub temperature: f32,
-    #[sea_orm(column_type = "Float", nullable)]
-    pub top_k: i32,
-    #[sea_orm(column_type = "Float", nullable)]
-    pub top_p: f32,
+    pub budget_tokens: i32,
+    pub enabled: bool,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
@@ -36,13 +26,6 @@ pub enum Relation {
         to = "super::topics::Column::Id"
     )]
     Topic,
-
-    #[sea_orm(
-        has_one = "super::anthropic_models_settings::Entity",
-        from = "Column::Id",
-        to = "super::anthropic_models_settings::Column::Id"
-    )]
-    AnthropicModelSettings,
 }
 
 impl Related<super::topics::Entity> for Entity {
@@ -53,7 +36,9 @@ impl Related<super::topics::Entity> for Entity {
 
 impl Related<super::anthropic_models_settings::Entity> for Entity {
     fn to() -> RelationDef {
-        super::topics::Relation::AnthropicModelsSettings.def()
+        super::anthropic_models_settings::Relation::Thinking
+            .def()
+            .rev()
     }
 }
 

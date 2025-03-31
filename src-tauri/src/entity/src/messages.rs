@@ -4,7 +4,11 @@ use ts_rs::TS;
 
 #[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum, Serialize, Deserialize, TS)]
 #[sea_orm(rs_type = "String", db_type = "Text", enum_name = "role_type")]
-#[ts(export, export_to = "../../../../types/entity.ts", rename = "Role")]
+#[ts(
+    export,
+    export_to = "../../../../shared/types/db/enum.ts",
+    rename = "Role"
+)]
 pub enum RoleType {
     #[sea_orm(string_value = "system")]
     #[serde(rename = "system")]
@@ -21,7 +25,7 @@ pub enum RoleType {
 #[sea_orm(table_name = "messages")]
 #[ts(
     export,
-    export_to = "../../../../types/entity.ts",
+    export_to = "../../../../shared/types/db/messages.ts",
     rename = "Message",
     rename_all = "camelCase"
 )]

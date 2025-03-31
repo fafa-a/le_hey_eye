@@ -6,7 +6,7 @@ use ts_rs::TS;
 #[sea_orm(table_name = "topics")]
 #[ts(
     export,
-    export_to = "../../../../types/entity.ts",
+    export_to = "../../../../shared/types/db/topics.ts",
     rename = "Topic",
     rename_all = "camelCase"
 )]
@@ -24,6 +24,10 @@ pub enum Relation {
     Messages,
     #[sea_orm(has_many = "super::models_settings::Entity")]
     ModelsSettings,
+    #[sea_orm(has_many = "super::thinking::Entity")]
+    Thinking,
+    #[sea_orm(has_many = "super::anthropic_models_settings::Entity")]
+    AnthropicModelsSettings,
 }
 
 impl Related<super::messages::Entity> for Entity {

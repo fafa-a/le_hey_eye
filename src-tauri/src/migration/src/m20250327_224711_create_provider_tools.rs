@@ -16,7 +16,8 @@ impl MigrationTrait for Migration {
                     .col(json_binary(ProviderTool::Tool))
                     .to_owned(),
             )
-            .await;
+            .await?;
+
         manager
             .create_index(
                 Index::create()

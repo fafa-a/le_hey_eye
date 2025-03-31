@@ -1,13 +1,12 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use ts_rs::TS;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize, TS)]
 #[sea_orm(table_name = "providers_tools")]
 #[ts(
     export,
-    export_to = "../../../../types/entity.ts",
+    export_to = "../../../../shared/types/db/providers/anthropic.ts",
     rename = "ProviderTool",
     rename_all = "camelCase"
 )]
@@ -15,23 +14,27 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
     pub provider_name: String,
-    #[sea_orm(column_type = "Json")]
-    pub tool: Value,
+    pub tool_id: i32,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(
-        belongs_to = "super::anthropic_models_settings::Entity",
+        belongs_to = "super::tools::Entity",
         from = "Column::Id",
-        to = "super::anthropic_models_settings::Column::Id"
+        to = "super::tools::Column::Id"
     )]
-    AnthropicModelsSettings,
+    Tool,
 }
 
 impl Related<super::anthropic_models_settings::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::AnthropicModelsSettings.def()
+        Relation::Tool.def()
+    }
+}
+impl Related<super::tools::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Tool.def()
     }
 }
 
