@@ -1,5 +1,4 @@
 import { createEffect, createMemo, createSignal, Show } from "solid-js";
-import { invoke } from "@tauri-apps/api/core";
 import { createMutation } from "@tanstack/solid-query";
 import type { StreamResponse } from "../types/cloudflare";
 import type {
@@ -14,24 +13,25 @@ import { useTopics } from "@/context/topics-context";
 import type { Provider, TopicMessage } from "../types/core";
 import MessageList from "./features/chat/message/message-list";
 import SettingsPanel from "@/features/settings-panel/settings-panel";
+import { llmApi } from "../shared/api.ts";
 
-async function generateAIResponse(
-	provider: Provider,
-	model: string,
-	request: ChatRequest,
-): Promise<StreamResponse> {
-	try {
-		const response = await invoke("send_message", {
-			provider,
-			model,
-			request,
-		});
-		return response as StreamResponse;
-	} catch (error) {
-		console.error("API Error:", error);
-		throw error;
-	}
-}
+// async function generateAIResponse(
+// 	provider: Provider,
+// 	model: string,
+// 	request: ChatRequest,
+// ): Promise<StreamResponse> {
+// 	try {
+// 		const response = await invoke("send_message", {
+// 			provider,
+// 			model,
+// 			request,
+// 		});
+// 		return response as StreamResponse;
+// 	} catch (error) {
+// 		console.error("API Error:", error);
+// 		throw error;
+// 	}
+// }
 
 // async function getCloudflareModelDetails(
 // 	model: string,
@@ -185,7 +185,8 @@ function App() {
 				// temperature: promptSettings().temperature,
 			};
 
-			return await generateAIResponse(currentProvider(), model(), apiRequest);
+			// return await generateAIResponse(currentProvider(), model(), apiRequest);
+			return await llmApi.sendMessage(currentProvider(), model(), apiRequest);
 		},
 		onSuccess: (response) => {
 			const newAssistantMessage: Omit<TopicMessage, "id"> = {

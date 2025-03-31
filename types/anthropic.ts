@@ -3,33 +3,33 @@ import type { AnthropicThinkingConfig } from "./core.js";
 import type { BaseModelSettings } from "./core.js";
 
 export type AnthropicModelSettings = {
-	base: BaseModelSettings;
-	thinking: AnthropicThinkingConfig | null;
-	tools: Array<AnthropicTool> | null;
-	tool_choice: AnthropicToolChoice | null;
+  base: BaseModelSettings;
+  thinking: AnthropicThinkingConfig | null;
+  tools: Array<AnthropicTool> | null;
+  tool_choice: AnthropicToolChoice | null;
 };
 
 export type AnthropicTool = {
-	name: string;
-	description: string | null;
-	input_schema: InputSchema;
+  name: string;
+  description: string | null;
+  input_schema: InputSchema;
 };
 
 export type AnthropicToolChoice = {
-	type: AnthropicToolChoiceType;
-	disable_parallel_tool_use: boolean | null;
+  type: AnthropicToolChoiceType;
+  disable_parallel_tool_use: boolean | null;
 };
 
 export type AnthropicToolChoiceType = "auto";
 
 export type InputSchema = {
-	type: string;
-	properties: { [key in string]?: PropertySchema };
-	required: Array<string> | null;
+  type: string;
+  properties: { [key in string]?: PropertySchema };
+  required: Array<string> | null;
 };
 
 export type PropertySchema = {
-	type: string;
-	description: string | null;
-	enum_values: Array<string> | null;
+  type: string;
+  description: string | null;
+  enum_values: Array<string> | null;
 };
