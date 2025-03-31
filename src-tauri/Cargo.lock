@@ -2826,6 +2826,7 @@ dependencies = [
  "serde_json",
  "tauri",
  "tauri-build",
+ "tauri-named-invoke",
  "tauri-plugin-opener",
  "tauri-plugin-store",
  "ts-rs",
@@ -5798,6 +5799,16 @@ dependencies = [
  "syn 2.0.97",
  "tauri-codegen",
  "tauri-utils",
+]
+
+[[package]]
+name = "tauri-named-invoke"
+version = "1.0.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d863ba9a0f038446c775b78814dc5a52419223e9b9ba94bf229438851acb766e"
+dependencies = [
+ "glob",
+ "regex",
 ]
 
 [[package]]

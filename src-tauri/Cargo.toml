@@ -16,6 +16,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
+tauri-named-invoke = "1.0.4"
 
 
 [workspace]
@@ -35,7 +36,6 @@ futures = "0.3"
 futures-util = "0.3"
 tauri-plugin-store = "2"
 magic-crypt = "4.0.1"
-# rusqlite = "=0.34.0"
 chrono = "0.4.40"
 sea-orm = { version = "1.1.7", features = [
     "sqlx-sqlite", 
@@ -43,5 +43,4 @@ sea-orm = { version = "1.1.7", features = [
     "macros"
 ] }
 log = "0.4.27"
-
 
