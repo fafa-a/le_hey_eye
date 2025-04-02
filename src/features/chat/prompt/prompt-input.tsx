@@ -34,7 +34,7 @@ interface PromptInputProps {
 	promptSettings: Accessor<
 		Omit<ChatRequest, "messages" | "functions" | "tools">
 	>;
-	topicId: string;
+	topicId: number;
 }
 
 export function PromptInput(props: PromptInputProps) {

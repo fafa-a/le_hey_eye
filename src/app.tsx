@@ -1,50 +1,23 @@
-import { createEffect, createMemo, createSignal, Show } from "solid-js";
 import { createMutation } from "@tanstack/solid-query";
-import type { StreamResponse } from "../types/cloudflare";
+import { Show, createEffect, createMemo, createSignal } from "solid-js";
+
 import type {
 	ChatMessage as ChatMessageType,
 	ChatRequest,
-} from "../types/core";
+	ChatRole,
+	StreamResponse,
+} from "../shared/types/llm/core.ts";
 
-import { PromptInput } from "@features/chat/prompt/prompt-input";
+import { type TopicMessage, useTopics } from "@/context/topics-context";
 import { Sidebar } from "@/features/sidebar/sidebar";
+import { PromptInput } from "@features/chat/prompt/prompt-input";
 import { unwrap } from "solid-js/store";
-import { useTopics } from "@/context/topics-context";
-import type { Provider, TopicMessage } from "../types/core";
-import MessageList from "./features/chat/message/message-list";
+
 import SettingsPanel from "@/features/settings-panel/settings-panel";
 import { llmApi } from "../shared/api.ts";
-
-// async function generateAIResponse(
-// 	provider: Provider,
-// 	model: string,
-// 	request: ChatRequest,
-// ): Promise<StreamResponse> {
-// 	try {
-// 		const response = await invoke("send_message", {
-// 			provider,
-// 			model,
-// 			request,
-// 		});
-// 		return response as StreamResponse;
-// 	} catch (error) {
-// 		console.error("API Error:", error);
-// 		throw error;
-// 	}
-// }
-
-// async function getCloudflareModelDetails(
-// 	model: string,
-// ): Promise<CloudflareModelResponse> {
-// 	try {
-// 		return (await invoke("get_model_details", {
-// 			model,
-// 		})) as CloudflareModelResponse;
-// 	} catch (error) {
-// 		console.error("API Error:", error);
-// 		throw error;
-// 	}
-// }
+import type { ProviderType } from "../shared/types/llm/core.js";
+import MessageList from "./features/chat/message/message-list";
+import { helper } from "./lib/helper.ts";
 
 const MAX_MESSAGES = 4;
 
@@ -55,7 +28,7 @@ function App() {
 		"You are a helpful assistant.",
 	);
 	const [currentProvider, setCurrentProvider] =
-		createSignal<Provider>("Anthropic");
+		createSignal<ProviderType>("Anthropic");
 
 	const { currentTopicId, currentTopicMessages } = useTopics();
 
@@ -155,10 +128,10 @@ function App() {
 	const mapMessageToMessageContent = (
 		messages: Omit<TopicMessage, "id">[],
 	): ChatMessageType[] => {
-		return messages.map((message) => {
+		return messages.map((msg) => {
 			return {
-				role: message.role,
-				content: message.content,
+				role: msg.role,
+				content: helper.message.mapContent(msg.content),
 			};
 		});
 	};
@@ -189,12 +162,10 @@ function App() {
 			return await llmApi.sendMessage(currentProvider(), model(), apiRequest);
 		},
 		onSuccess: (response) => {
-			const newAssistantMessage: Omit<TopicMessage, "id"> = {
-				role: "assistant",
-				topicId: currentTopicId() as string,
+			const newAssistantMessage = {
+				role: "assistant" as ChatRole,
+				topicId: currentTopicId(),
 				content: response.response,
-				timestamp: new Date(),
-				tokensUsed: response.usage?.total_tokens || 0,
 			};
 			addMessage(newAssistantMessage);
 
@@ -217,11 +188,10 @@ function App() {
 	}));
 
 	const handleSubmit = (prompt: string) => {
-		const userMessage: Omit<TopicMessage, "id" | "tokensUsed"> = {
-			role: "user",
-			topicId: currentTopicId() as string,
+		const userMessage = {
+			role: "user" as ChatRole,
+			topicId: currentTopicId(),
 			content: prompt,
-			timestamp: new Date(),
 		};
 
 		const updatedHistory = [...messageHistory(), userMessage] as TopicMessage[];
@@ -264,7 +234,7 @@ function App() {
 						setModel={setModel}
 						setPromptSettings={setPromptSettings}
 						promptSettings={promptSettings}
-						topicId={currentTopicId() as string}
+						topicId={currentTopicId()}
 					/>
 				</div>
 			</div>
