@@ -15,6 +15,7 @@ import { dbApi } from "../../shared/api.ts";
 import type {
 	Topic as TopicType,
 	Message as TopicMessageType,
+	Role as ChatRole,
 } from "../../shared/types";
 
 const generateRandomColor = () => {
@@ -35,15 +36,15 @@ interface TopicsContextValue {
 	addTopic: (
 		topic: Omit<Topic, "createdAt" | "messages" | "lastAccessedAt">,
 	) => void;
-	removeTopic: (id: string) => void;
-	editTopicName: (id: string, name: string) => void;
+	removeTopic: (id: number) => void;
+	editTopicName: (id: number, name: string) => void;
 	addMessage: (message: Omit<TopicMessage, "id">) => void;
-	removeMessages: (messageId: string, pairId: string) => void;
-	currentTopicId: Accessor<string | undefined>;
-	setCurrentTopic: (id: string) => Promise<void>;
+	removeMessages: (messageId: number[], pairId: string) => void;
+	currentTopicId: Accessor<number>;
+	setCurrentTopic: (id: number) => Promise<void>;
 	highlightedMessagePair: Accessor<string | null>;
 	setHighlightedMessagePair: Setter<string | null>;
-	regenerateMessage: (messageId: string) => Promise<void>;
+	regenerateMessage: (messageId: number) => Promise<void>;
 	currentTopicMessages: () => TopicMessage[];
 }
 
@@ -52,15 +53,13 @@ const TopicsContext = createContext<TopicsContextValue>();
 export function TopicsProvider(props: { children: JSX.Element }) {
 	const [topics, setTopics] = createStore<Topic[]>([]);
 	const [loading, setLoading] = createSignal(false);
-	const [currentTopicId, setCurrentTopicId] = createSignal<string | undefined>(
-		undefined,
-	);
+	const [currentTopicId, setCurrentTopicId] = createSignal<number>(1);
 	const [highlightedMessagePair, setHighlightedMessagePair] = createSignal<
-		number | null
+		string | null
 	>(null);
 
 	const [messagesByTopicId, setMessagesByTopicId] = createStore<
-		Record<string, TopicMessage[]>
+		Record<number, TopicMessage[]>
 	>({});
 
 	const loadTopics = async () => {
@@ -104,8 +103,10 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 								content: String(msg.content).startsWith("{")
 									? JSON.parse(String(msg.content))
 									: msg.content,
-								createdAt: new Date(msg.createdAt),
-								updatedAt: new Date(msg.updatedAt || msg.createdAt),
+								createdAt: new Date(msg.createdAt).toISOString(),
+								updatedAt: new Date(
+									msg.updatedAt || msg.createdAt,
+								).toISOString(),
 								tokensUsed: msg.tokensUsed,
 								pairId: currentPairId,
 							};
@@ -131,7 +132,7 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 			try {
 				const lastAccessedId = await dbApi.getLastAccessedTopic();
 				if (lastAccessedId) {
-					setCurrentTopicId(lastAccessedId.toString());
+					setCurrentTopicId(lastAccessedId);
 				}
 			} catch (error) {
 				console.error("Failed to get last topic active at:", error);
@@ -157,13 +158,13 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 		loadTopics();
 	});
 
-	const setCurrentTopic = async (id: string) => {
-		if (!id || id === currentTopicId()) return;
+	const setCurrentTopic = async (id: number) => {
+		if (!id || +id === currentTopicId()) return;
 
 		try {
 			updateTopicAccess(id);
-			const now = new Date();
-			setTopics((topic) => topic.id === +id, "lastAccessedAt", now);
+			const now = new Date().toISOString();
+			setTopics((topic) => topic.id === id, "lastAccessedAt", now);
 
 			setCurrentTopicId(id);
 		} catch (error) {
@@ -187,37 +188,37 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 				},
 				...prev,
 			]);
-			setCurrentTopicId(newTopic.id.toString());
+			setCurrentTopicId(newTopic.id);
 		} catch (error) {
 			console.error("Failed to add topic:", error);
 		}
 	};
 
-	const removeTopic = async (id: string) => {
+	const removeTopic = async (id: number) => {
 		try {
-			await dbApi.removeTopic(+id);
+			await dbApi.removeTopic(id);
 
-			setTopics((prev) => prev.filter((topic) => topic.id !== +id));
+			setTopics((prev) => prev.filter((topic) => topic.id !== id));
 		} catch (error) {
 			console.error("Failed to remove topic:", error);
 			throw error;
 		}
 	};
 
-	const updateTopicAccess = async (topicId: string) => {
+	const updateTopicAccess = async (topicId: number) => {
 		try {
-			await dbApi.updateTopicAccess(+topicId);
+			await dbApi.updateTopicAccess(topicId);
 		} catch (error) {
 			console.error("Failed to update topic access:", error);
 			throw error;
 		}
 	};
 
-	const editTopicName = async (id: string, name: string) => {
+	const editTopicName = async (id: number, name: string) => {
 		try {
-			await dbApi.editTopicName(+id, name);
+			await dbApi.editTopicName(id, name);
 
-			setTopics((topic) => topic.id === +id, "name", name);
+			setTopics((topic) => topic.id === id, "name", name);
 		} catch (error) {
 			console.error("Failed to edit topic name:", error);
 			throw error;
@@ -235,11 +236,18 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 				: JSON.stringify(newMessage.content);
 
 		try {
-			const message = await dbApi.addMessage(
+			const result = await dbApi.addMessage(
 				+newMessage.topicId,
 				newMessage.role,
 				contentStr,
 			);
+			const pairId =
+				newMessage.role === "user" ? `pair-${result.id}` : `pair-${result.id}`;
+
+			const message = {
+				...result,
+				pairId,
+			};
 
 			batch(() => {
 				setTopics(
@@ -248,7 +256,7 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 						topic.messages.push(message);
 					}),
 				);
-				setMessagesByTopicId(message.topicId.toString(), (prev = []) => [
+				setMessagesByTopicId(message.topicId, (prev = []) => [
 					...prev,
 					message,
 				]);
@@ -261,21 +269,28 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 		}
 	};
 
-	const removeMessages = async (messageIds: string[], pairId: string) => {
+	const removeMessages = async (messageIds: number[]) => {
 		try {
-			await dbApi.removeMessages([+messageIds]);
+			await dbApi.removeMessages(messageIds);
 			if (currentTopicId() !== undefined) {
-				const topicMessages = await dbApi.getMessagesByTopic(+currentTopicId());
+				const topicMessages = await dbApi.getMessagesByTopic(currentTopicId());
+				const topicMessagesWithPairId = topicMessages.map((msg) => {
+					const pairId =
+						msg.role === "user" ? `pair-${msg.id}` : `pair-${msg.id}`;
+					return {
+						...msg,
+						pairId,
+					};
+				});
 
+				//TODO maybe you can simplify this 2 times same thing
 				batch(() => {
 					setTopics(
 						(topic) => topic.id === currentTopicId(),
 						"messages",
-						() => topicMessages,
+						() => topicMessagesWithPairId,
 					);
-					setMessagesByTopicId(currentTopicId() as string, (prev = []) =>
-						prev.filter((msg) => msg.pairId !== pairId),
-					);
+					setMessagesByTopicId(currentTopicId(), () => topicMessagesWithPairId);
 				});
 			}
 		} catch (error) {
@@ -284,7 +299,8 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 		}
 	};
 
-	const regenerateMessage = async (messageId: string) => {
+	const regenerateMessage = async (messageId: number) => {
+		console.log("regenerateMessage", messageId);
 		// try {
 		// 	removeMessage(messageId);
 		// } catch (error) {
@@ -292,12 +308,6 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 		// 	throw error;
 		// }
 	};
-
-	// const currentTopicMessages = () => {
-	// 	const id = currentTopicId();
-	// 	if (!id) return [];
-	// 	return messagesStore[id] || [];
-	// };
 
 	const currentTopicMessages = createMemo(() => {
 		const topicId = currentTopicId();
@@ -319,6 +329,7 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 		highlightedMessagePair,
 		setHighlightedMessagePair,
 		currentTopicMessages,
+		regenerateMessage,
 	};
 
 	return (
