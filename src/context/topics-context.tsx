@@ -17,6 +17,7 @@ import type {
 	Message as TopicMessageType,
 	Role as ChatRole,
 } from "../../shared/types";
+import { helper } from "@/lib/helper.ts";
 
 const generateRandomColor = () => {
 	const colors = ["red", "blue", "green", "yellow", "purple", "pink", "indigo"];
@@ -38,7 +39,12 @@ interface TopicsContextValue {
 	) => void;
 	removeTopic: (id: number) => void;
 	editTopicName: (id: number, name: string) => void;
-	addMessage: (message: Omit<TopicMessage, "id">) => void;
+	addMessage: (
+		message: Omit<
+			TopicMessage,
+			"id" | "createdAt" | "tokensUsed" | "updatedAt" | "pairId"
+		>,
+	) => void;
 	removeMessages: (messageId: number[], pairId: string) => void;
 	currentTopicId: Accessor<number>;
 	setCurrentTopic: (id: number) => Promise<void>;
@@ -66,7 +72,6 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 		setLoading(true);
 		try {
 			const topicsData = await dbApi.getAllTopics();
-			console.log("topicsData: ", topicsData);
 			const loadedTopics: Topic[] = [];
 			const loadedMessagesByTopicId: Record<string, TopicMessage[]> = {};
 
@@ -100,9 +105,7 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 								id: msg.id,
 								topicId: topic.id,
 								role: msg.role as ChatRole,
-								content: String(msg.content).startsWith("{")
-									? JSON.parse(String(msg.content))
-									: msg.content,
+								content: helper.message.mapContent(msg.content),
 								createdAt: new Date(msg.createdAt).toISOString(),
 								updatedAt: new Date(
 									msg.updatedAt || msg.createdAt,
@@ -224,8 +227,12 @@ export function TopicsProvider(props: { children: JSX.Element }) {
 			throw error;
 		}
 	};
-
-	const addMessage = async (message: Omit<TopicMessage, "id">) => {
+	const addMessage = async (
+		message: Omit<
+			TopicMessage,
+			"id" | "createdAt" | "tokensUsed" | "updatedAt" | "pairId"
+		>,
+	) => {
 		const newMessage = {
 			...message,
 		};

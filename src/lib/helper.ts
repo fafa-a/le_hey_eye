@@ -1,8 +1,6 @@
-import type { ContentType } from "src-tauri/bindings/ContentType";
-
 export const helper = {
 	message: {
-		mapContent(msg: string): ContentType {
+		mapContent(msg: string) {
 			return String(msg).startsWith("{") ? JSON.parse(String(msg)) : msg;
 		},
 	},
