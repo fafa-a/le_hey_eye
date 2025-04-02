@@ -382,8 +382,8 @@ pub struct ChatMessage {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../shared/types/llm/core.ts")]
-#[serde(untagged)]
+#[ts(export)]
+#[serde(tag = "type")]
 pub enum ContentType {
     PlainText(String),
     StructuredContent(Vec<ContentItem>),

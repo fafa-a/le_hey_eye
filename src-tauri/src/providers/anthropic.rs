@@ -25,7 +25,7 @@ pub enum AnthropicMessageRole {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../types/core.ts")]
+#[ts(export)]
 #[serde(tag = "type")]
 pub enum ContentBlock {
     #[serde(rename = "text")]
@@ -36,7 +36,7 @@ pub enum ContentBlock {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../types/core.ts")]
+#[ts(export)]
 pub struct AnthropicImageSource {
     #[serde(rename = "type")]
     pub source_type: ImageSourceType,
@@ -45,7 +45,7 @@ pub struct AnthropicImageSource {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../types/core.ts")]
+#[ts(export)]
 #[serde(rename_all = "lowercase")]
 pub enum ImageSourceType {
     #[serde(rename = "base64")]
@@ -53,7 +53,7 @@ pub enum ImageSourceType {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../types/core.ts")]
+#[ts(export)]
 pub enum ImageMediaType {
     #[serde(rename = "image/jpeg")]
     Jpeg,
@@ -130,7 +130,7 @@ pub struct AnthropicMessage {
 }
 
 #[derive(Debug, Clone, TS)]
-#[ts(export, export_to = "../../types/core.ts")]
+#[ts(export)]
 pub enum MessageContent {
     String(String),
     Blocks(Vec<ContentBlock>),
@@ -151,7 +151,7 @@ impl Serialize for MessageContent {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../types/anthropic.ts")]
+#[ts(export)]
 pub struct AnthropicToolChoice {
     #[serde(rename = "type")]
     pub choice_type: AnthropicToolChoiceType,
@@ -164,14 +164,14 @@ pub struct AnthropicToolChoice {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../types/anthropic.ts")]
+#[ts(export)]
 pub enum AnthropicToolChoiceType {
     #[serde(rename = "auto")]
     Auto,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../types/anthropic.ts")]
+#[ts(export)]
 pub struct AnthropicTool {
     pub name: String,
 
@@ -182,7 +182,7 @@ pub struct AnthropicTool {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../types/anthropic.ts")]
+#[ts(export)]
 pub struct InputSchema {
     #[serde(rename = "type")]
     pub schema_type: String,
@@ -194,7 +194,7 @@ pub struct InputSchema {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../types/anthropic.ts")]
+#[ts(export)]
 pub struct PropertySchema {
     #[serde(rename = "type")]
     pub property_type: String,
@@ -244,7 +244,7 @@ impl PropertySchema {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../types/core.ts")]
+#[ts(export, export_to = "../../shared/types/llm/providers/anthropic.ts")]
 pub struct AnthropicThinkingConfig {
     #[serde(rename = "type")]
     pub thinking_type: AnthropicThinkingType,
@@ -252,7 +252,7 @@ pub struct AnthropicThinkingConfig {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../types/core.ts")]
+#[ts(export)]
 #[serde(rename_all = "lowercase")]
 pub enum AnthropicThinkingType {
     Enabled,
@@ -280,7 +280,7 @@ pub struct SystemPromptData {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../types/core.ts")]
+#[ts(export)]
 pub enum SystemPromptType {
     #[serde(rename = "text")]
     Text,
@@ -370,7 +370,7 @@ pub struct Usage {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
-#[ts(export, export_to = "../../types/anthropic.ts")]
+#[ts(export)]
 pub struct AnthropicModelSettings {
     pub base: BaseModelSettings,
 
