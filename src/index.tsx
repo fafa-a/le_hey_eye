@@ -3,17 +3,17 @@ import { render } from "solid-js/web";
 import App from "./app";
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query";
 
-import { TopicsProvider } from "./context/topics-context";
+import { GlobalProvider } from "./context/global-context.tsx";
 
 const queryClient = new QueryClient();
 
 render(
 	() => (
-		<TopicsProvider>
+		<GlobalProvider>
 			<QueryClientProvider client={queryClient}>
 				<App />
 			</QueryClientProvider>
-		</TopicsProvider>
+		</GlobalProvider>
 	),
 	document.getElementById("root") as HTMLElement,
 );
