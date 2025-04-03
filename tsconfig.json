@@ -13,7 +13,8 @@
 			"@components/*": ["./src/components/*"],
 			"@lib/*": ["src/lib/*"],
 			"@icons/*": ["./src/components/icons/*"],
-			"@features/*": ["./src/features/*"]
+			"@features/*": ["./src/features/*"],
+			"@store/*": ["./src/store/*"]
 		},
 
 		/* Bundler mode */

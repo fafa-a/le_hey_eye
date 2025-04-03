@@ -24,7 +24,7 @@ import type { ProviderType } from "../shared/types/llm/core.js";
 import MessageList from "./features/chat/message/message-list";
 import { helper } from "./lib/helper.ts";
 import { useGlobalContext } from "./context/global-context.tsx";
-import type { Topic, TopicMessage } from "./store/topics.ts";
+import type { Topic, TopicMessage } from "@store/topics.ts";
 
 const MAX_MESSAGES = 4;
 

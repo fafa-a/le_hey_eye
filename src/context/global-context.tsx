@@ -1,8 +1,8 @@
-import { createContext, type JSX, useContext } from "solid-js";
-import type { TopicsStore } from "./topics-context";
 import type { UIStore } from "@/store/ui";
 import * as UI from "@/store/ui";
-import * as Topics from "@/store/topics";
+import * as Topics from "@store/topics";
+import type { TopicsStore } from "@store/topics";
+import { type JSX, createContext, useContext } from "solid-js";
 
 interface GlobalStore {
 	topics: TopicsStore;

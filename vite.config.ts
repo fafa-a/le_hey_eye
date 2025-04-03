@@ -50,6 +50,7 @@ export default defineConfig(async () => ({
 			"@lib": resolve(__dirname, "./src/lib"),
 			"@icons": resolve(__dirname, "./src/components/icons"),
 			"@features": resolve(__dirname, "./src/features"),
+			"@store": resolve(__dirname, "./src/store"),
 		},
 	},
 }));
