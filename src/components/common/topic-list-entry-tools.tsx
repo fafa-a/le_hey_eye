@@ -1,4 +1,3 @@
-import { useTopics } from "@/context/topics-context";
 import { type Setter, Match, Switch, createMemo, createSignal } from "solid-js";
 import { Button } from "@components/ui/button";
 import Edit from "@icons/edit";
@@ -8,9 +7,10 @@ import ThreeDots from "@icons/three-dots";
 import Checkmark from "@icons/checkmark";
 import Close from "@icons/close-large";
 import { onClickOutside } from "solidjs-use";
+import { useGlobalContext } from "@/context/global-context";
 
 interface TopicListEntryToolsProps {
-	topicId: string;
+	topicId: number;
 	topicName: string;
 	isActive: boolean;
 	bgColor: string;
@@ -29,9 +29,8 @@ const state = {
 function TopicListEntryTools(props: TopicListEntryToolsProps) {
 	const { topicId, setSettingsOpen, setIsEditing, onSubmit } = props;
 	const topicName = () => props.topicName;
-	const settingsOpen = () => props.settingsOpen;
 	const isEditing = () => props.isEditing;
-	const { removeTopic } = useTopics();
+	const { removeTopic } = useGlobalContext().topics;
 	const [target, setTarget] = createSignal<HTMLElement>();
 
 	onClickOutside(target, () => {

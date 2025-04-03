@@ -1,5 +1,11 @@
 import { createMutation } from "@tanstack/solid-query";
-import { Show, createEffect, createMemo, createSignal } from "solid-js";
+import {
+	Show,
+	createEffect,
+	createMemo,
+	createSignal,
+	onMount,
+} from "solid-js";
 
 import type {
 	ChatMessage as ChatMessageType,
@@ -8,7 +14,6 @@ import type {
 	StreamResponse,
 } from "../shared/types/llm/core.ts";
 
-import { type TopicMessage, useTopics } from "@/context/topics-context";
 import { Sidebar } from "@/features/sidebar/sidebar";
 import { PromptInput } from "@features/chat/prompt/prompt-input";
 import { unwrap } from "solid-js/store";
@@ -18,11 +23,22 @@ import { llmApi } from "../shared/api.ts";
 import type { ProviderType } from "../shared/types/llm/core.js";
 import MessageList from "./features/chat/message/message-list";
 import { helper } from "./lib/helper.ts";
+import { useGlobalContext } from "./context/global-context.tsx";
+import type { Topic, TopicMessage } from "./store/topics.ts";
 
 const MAX_MESSAGES = 4;
 
 function App() {
-	const { topics, addMessage } = useTopics();
+	const {
+		topics,
+		addMessage,
+		loadTopics,
+		currentTopicId,
+		currentTopicMessages,
+	} = useGlobalContext().topics;
+	const { sidebarCollapsed, settingsPanelOpen, setSettingsPanelOpen } =
+		useGlobalContext().ui;
+
 	const [model, setModel] = createSignal<string>("claude-3-7-sonnet-20250219");
 	const [system, setSystem] = createSignal<string>(
 		"You are a helpful assistant.",
@@ -30,10 +46,6 @@ function App() {
 	const [currentProvider, setCurrentProvider] =
 		createSignal<ProviderType>("Anthropic");
 
-	const { currentTopicId, currentTopicMessages } = useTopics();
-
-	const [isCollapsed, setIsCollapsed] = createSignal(false);
-	const [isSettingsPanelOpen, setIsSettingsPanelOpen] = createSignal(false);
 	const [messageHistory, setMessageHistory] = createSignal<
 		Omit<TopicMessage, "id">[]
 	>([]);
@@ -41,15 +53,25 @@ function App() {
 		() => currentTopicMessages().length === 0,
 	);
 
+	onMount(() => {
+		loadTopics();
+	});
+
 	createEffect(() => {
 		console.log("*".repeat(100));
 		console.log("topics: ", unwrap(topics));
 		const topicMessages = topics.find(
-			(topic) => topic.id === currentTopicId(),
+			(topic: Topic) => topic.id === currentTopicId(),
 		)?.messages;
 		setMessageHistory(topicMessages || []);
 		console.log("*".repeat(100));
 	}, topics);
+
+	createEffect(() => {
+		console.log("*".repeat(100));
+		console.log({ sidebarCollapsed: sidebarCollapsed() });
+		console.log({ setIsSettingsPanelOpen: settingsPanelOpen() });
+	});
 
 	const [promptSettings, setPromptSettings] = createSignal<
 		Omit<ChatRequest, "messages" | "functions" | "tools">
@@ -158,7 +180,6 @@ function App() {
 				// temperature: promptSettings().temperature,
 			};
 
-			// return await generateAIResponse(currentProvider(), model(), apiRequest);
 			return await llmApi.sendMessage(currentProvider(), model(), apiRequest);
 		},
 		onSuccess: (response) => {
@@ -200,28 +221,16 @@ function App() {
 
 	return (
 		<div class="h-screen max-h-screen flex overflow-hidden ">
-			<div
-				class="h-full flex-shrink-0"
-				classList={{
-					"w-[60px] ": isCollapsed(),
-					"w-[20%] max-w-[300px] min-w-[200px]": !isCollapsed(),
-					"blur-sm will-change-transform": isSettingsPanelOpen(),
-				}}
-			>
-				<Sidebar
-					isCollapsed={isCollapsed()}
-					setIsCollapsed={setIsCollapsed}
-					setCurrentProvider={setCurrentProvider}
-					currentProvider={currentProvider}
-					setIsSettingsPanelOpen={setIsSettingsPanelOpen}
-				/>
-			</div>
+			<Sidebar
+				setCurrentProvider={setCurrentProvider}
+				currentProvider={currentProvider}
+			/>
 
 			<div
 				class="flex flex-col flex-1 w-full min-w-0 h-full p-5 xl:max-w-[900px] 2xl:max-w-[1200px] mx-auto"
 				classList={{
 					"justify-center": isTopicMessagesEmpty(),
-					"blur-sm will-change-transform": isSettingsPanelOpen(),
+					"blur-sm will-change-transform": settingsPanelOpen(),
 				}}
 			>
 				<MessageList mutation={mutation} />
@@ -238,20 +247,20 @@ function App() {
 					/>
 				</div>
 			</div>
-			<Show when={isSettingsPanelOpen()}>
+			<Show when={settingsPanelOpen()}>
 				<div
 					class="fixed inset-0 blur-lg will-change-transform "
-					onClick={() => setIsSettingsPanelOpen(false)}
+					onClick={() => setSettingsPanelOpen(false)}
 					onKeyDown={(e) => {
 						if (e.key === "Escape") {
-							setIsSettingsPanelOpen(false);
+							setSettingsPanelOpen(false);
 						}
 					}}
 				/>
 				<div class="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
 					<div class="w-4/5 h-4/5 bg-white rounded-lg shadow-xl flex overflow-hidden pointer-events-auto">
 						<SettingsPanel
-							setIsOpen={setIsSettingsPanelOpen}
+							setIsOpen={setSettingsPanelOpen}
 							model={model()}
 							setModel={setModel}
 							promptSettings={promptSettings()}

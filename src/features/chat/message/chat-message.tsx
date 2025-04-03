@@ -5,18 +5,18 @@ import Copy from "@icons/copy";
 import Delete from "@icons/trash";
 import Regenerate from "@icons/reset";
 import Markdown from "@/components/common/markdown";
-import { useTopics } from "@/context/topics-context";
 import type { TopicMessage } from "../../../../types/core";
 import ComponentTooltip from "@/components/common/component-tooltip";
 import { type Accessor, createSignal } from "solid-js";
 import { writeClipboard } from "@solid-primitives/clipboard";
 import Checkmark from "@/components/icons/checkmark";
+import { useGlobalContext } from "@/context/global-context";
 
 const DeleteButton = ({
 	onDelete,
 	pairId,
 }: { onDelete: () => void; pairId: string }) => {
-	const { setHighlightedMessagePair } = useTopics();
+	const { setHighlightedMessagePair } = useGlobalContext().topics;
 	return (
 		<Button
 			size="xs"
@@ -170,7 +170,7 @@ const ChatMessageFooter = ({
 	const formattedTime = new Intl.DateTimeFormat(undefined, options).format(
 		time,
 	);
-	// const { removeMessage } = useTopics();
+	// const { removeMessage } = useGlobalContext().topics;
 
 	// const copyMessageContent = async () => {
 	// 	try {
@@ -206,9 +206,9 @@ interface ChatMessageProps {
 }
 
 const MemoizedChatMessage = ({ message }: ChatMessageProps) => {
-	const { highlightedMessagePair } = useTopics();
 	const [copied, setCopied] = createSignal(false);
-	const { removeMessages: removeMessage } = useTopics();
+	const { removeMessages: removeMessage, highlightedMessagePair } =
+		useGlobalContext().topics;
 
 	const copyMessageContent = async () => {
 		try {

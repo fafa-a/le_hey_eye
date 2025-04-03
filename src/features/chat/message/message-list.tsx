@@ -9,15 +9,15 @@ import {
 	Show,
 } from "solid-js";
 import ChatMessage from "./chat-message";
-import { useTopics } from "@/context/topics-context";
 import { listen } from "@tauri-apps/api/event";
+import { useGlobalContext } from "@/context/global-context";
 
 interface MessageListProps {
 	mutation: any;
 }
 
 const MessageList = (props: MessageListProps) => {
-	const { currentTopicMessages } = useTopics();
+	const { currentTopicMessages } = useGlobalContext().topics;
 
 	const [currentStreamedResponse, setCurrentStreamedResponse] =
 		createSignal("");

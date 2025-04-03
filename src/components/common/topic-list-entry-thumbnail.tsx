@@ -1,5 +1,6 @@
 import type { Setter } from "solid-js";
 import ComponentTooltip from "./component-tooltip";
+import { useGlobalContext } from "@/context/global-context";
 
 interface TopicListEntryThumbnailProps {
 	topicId: string;
@@ -7,14 +8,14 @@ interface TopicListEntryThumbnailProps {
 	isActive: boolean;
 	onClick: () => void;
 	bgColor: string;
-	setIsCollapsed: Setter<boolean>;
-	isCollapsed: boolean;
 }
 
 function TopicListEntryThumbnail(props: TopicListEntryThumbnailProps) {
-	const { onClick, setIsCollapsed } = props;
+	const { onClick } = props;
 	const isActive = () => props.isActive;
 	const topicName = () => props.topicName;
+
+	const { toggleSidebar } = useGlobalContext().ui;
 
 	return (
 		<ComponentTooltip content={topicName()} placement="right-start">
@@ -34,7 +35,7 @@ function TopicListEntryThumbnail(props: TopicListEntryThumbnailProps) {
 				}}
 				ondblclick={(e) => {
 					e.stopPropagation();
-					setIsCollapsed(!props.isCollapsed);
+					toggleSidebar();
 				}}
 			/>
 		</ComponentTooltip>

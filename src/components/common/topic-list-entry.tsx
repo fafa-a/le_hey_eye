@@ -1,8 +1,8 @@
-import { useTopics } from "@/context/topics-context";
 import { TextField, TextFieldInput } from "@components/ui/text-field";
-import { type Setter, Show, createEffect, createSignal } from "solid-js";
+import { Show, createEffect, createSignal } from "solid-js";
 import TopicListEntryTools from "./topic-list-entry-tools";
 import ComponentTooltip from "./component-tooltip";
+import { useGlobalContext } from "@/context/global-context";
 
 interface TopicListEntryProps {
 	topicId: string;
@@ -10,16 +10,15 @@ interface TopicListEntryProps {
 	isActive: boolean;
 	onClick: () => void;
 	bgColor: string;
-	setIsCollapsed: Setter<boolean>;
-	isCollapsed: boolean;
 }
 
 function TopicListEntry(props: TopicListEntryProps) {
-	const { topicId, onClick, setIsCollapsed } = props;
+	const { topicId, onClick } = props;
+	const { toggleSidebar } = useGlobalContext().ui;
 
 	const isActive = () => props.isActive;
 	const topicName = () => props.topicName;
-	const { editTopicName } = useTopics();
+	const { editTopicName } = useGlobalContext().topics;
 	const [isEditing, setIsEditing] = createSignal(false);
 	const [settingsOpen, setSettingsOpen] = createSignal(false);
 	let formRef: HTMLFormElement;
@@ -89,7 +88,7 @@ function TopicListEntry(props: TopicListEntryProps) {
 						class={`flex-shrink-0 w-8 h-8 ${props.bgColor} rounded-full`}
 						ondblclick={(e) => {
 							e.stopPropagation();
-							setIsCollapsed(!props.isCollapsed);
+							toggleSidebar();
 						}}
 					/>
 					<ComponentTooltip content={topicName()} placement="right-end">

@@ -14,9 +14,9 @@ import {
 import type { StreamResponse } from "../../../../types/cloudflare";
 import type { ChatRequest } from "../../../../types/core";
 import type { TopicMessage } from "@/context/topics-context";
-import { useTopics } from "@/context/topics-context";
 import ModelSettingsPopover from "@features/chat/settings/settings-popover";
 import { unwrap } from "solid-js/store";
+import { useGlobalContext } from "@/context/global-context";
 
 interface PromptInputProps {
 	onSubmit: (prompt: string) => void;
@@ -42,7 +42,7 @@ export function PromptInput(props: PromptInputProps) {
 	const pending = () => unwrap(mutation).isPending;
 	console.log({ pending });
 	const topicId = () => props.topicId;
-	const { addMessage } = useTopics();
+	const { addMessage } = useGlobalContext().topics;
 
 	const [prompt, setPrompt] = createSignal("");
 	let textareaRef: HTMLTextAreaElement | undefined;
