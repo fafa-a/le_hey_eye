@@ -12,7 +12,7 @@ impl MigrationTrait for Migration {
                     .table(ToolProperties::Table)
                     .if_not_exists()
                     .col(pk_auto(ToolProperties::Id))
-                    .col(string(ToolProperties::ToolId).not_null())
+                    .col(integer(ToolProperties::ToolId).not_null())
                     .col(string(ToolProperties::Name).not_null())
                     .col(string(ToolProperties::TypeName).not_null())
                     .col(string(ToolProperties::Description))

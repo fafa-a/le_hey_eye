@@ -12,7 +12,7 @@ impl MigrationTrait for Migration {
                     .table(Messages::Table)
                     .if_not_exists()
                     .col(pk_auto(Messages::Id))
-                    .col(string(Messages::TopicId))
+                    .col(integer(Messages::TopicId))
                     .col(string(Messages::Role))
                     .col(string(Messages::Content))
                     .col(date_time(Messages::CreatedAt))

@@ -34,7 +34,7 @@ pub async fn send_message<R: Runtime>(
     let request: ChatRequest = match serde_json::from_value(request.clone()) {
         Ok(req) => req,
         Err(e) => {
-            println!("Désérialisation error: {}", e);
+            println!("Deserialization error: {}", e);
             println!(
                 "JSON structure: {}",
                 serde_json::to_string_pretty(&request).unwrap()

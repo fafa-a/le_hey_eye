@@ -10,6 +10,7 @@ use ts_rs::TS;
     rename = "Tool",
     rename_all = "camelCase"
 )]
+#[serde(rename_all = "camelCase")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,

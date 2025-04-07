@@ -29,6 +29,7 @@ pub enum RoleType {
     rename = "Message",
     rename_all = "camelCase"
 )]
+#[serde(rename_all = "camelCase")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
@@ -37,7 +38,8 @@ pub struct Model {
     pub role: RoleType,
     pub content: String,
     pub created_at: DateTimeWithTimeZone,
-    pub tokens_used: Option<i32>,
+    #[sea_orm(nullable)]
+    pub tokens_used: i32,
     #[sea_orm(nullable)]
     pub updated_at: Option<DateTimeWithTimeZone>,
 }

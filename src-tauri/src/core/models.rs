@@ -331,6 +331,7 @@ pub struct Image {
 pub struct ChatRequest {
     pub messages: Vec<ChatMessage>,
     pub system: AnthropicSystemPrompt,
+
     #[serde(skip_serializing_if = "Option::is_none")]
     pub max_tokens: Option<u32>,
     #[ts(optional)]
@@ -383,7 +384,7 @@ pub struct ChatMessage {
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
 #[ts(export)]
-#[serde(tag = "type")]
+#[serde(untagged)]
 pub enum ContentType {
     PlainText(String),
     StructuredContent(Vec<ContentItem>),

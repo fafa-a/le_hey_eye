@@ -100,6 +100,7 @@ pub async fn add_message(
     tokens_used: Option<i32>,
 ) -> Result<i32, String> {
     let timestamp = Utc::now().fixed_offset();
+    let tokens_used_value = tokens_used.unwrap_or(0);
 
     let new_message = MessagesActiveModel {
         id: NotSet,
@@ -108,13 +109,16 @@ pub async fn add_message(
         content: Set(content),
         created_at: Set(timestamp),
         updated_at: Set(Some(timestamp)),
-        tokens_used: Set(tokens_used),
+        tokens_used: Set(tokens_used_value),
     };
+    println!("new_message: {:?}", new_message);
 
     let result = new_message
         .insert(&*db)
         .await
         .map_err(|e: DbErr| e.to_string())?;
+
+    println!("result: {:?}", result);
 
     Ok(result.id)
 }

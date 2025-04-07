@@ -13,8 +13,8 @@ impl MigrationTrait for Migration {
                     .table(Thinking::Table)
                     .if_not_exists()
                     .col(pk_auto(Thinking::Id))
-                    .col(string(Thinking::TopicId).not_null())
-                    .col(string(Thinking::BudgetTokens).not_null())
+                    .col(integer(Thinking::TopicId).not_null())
+                    .col(integer(Thinking::BudgetTokens).not_null())
                     .col(boolean(Thinking::Enabled).not_null())
                     .to_owned(),
             )
