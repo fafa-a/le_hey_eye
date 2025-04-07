@@ -5,7 +5,7 @@ import ComponentTooltip from "./component-tooltip";
 import { useGlobalContext } from "@/context/global-context";
 
 interface TopicListEntryProps {
-	topicId: string;
+	topicId: number;
 	topicName: string;
 	isActive: boolean;
 	onClick: () => void;
@@ -48,11 +48,18 @@ function TopicListEntry(props: TopicListEntryProps) {
 	});
 
 	return (
+		// <div
+		// 	class={`flex max-w-full max-h-9 ${props.bgColor}/10 rounded-l-full hover:${props.bgColor}/50`}
+		// 	classList={{
+		// 		[`opacity-100 border ${props.bgColor.replace("bg-", "border-")}`]:
+		// 			isActive(),
+		// 		"opacity-60": !isActive(),
+		// 	}}
+		// >
 		<div
-			class={`flex max-w-full max-h-9 ${props.bgColor}/10 rounded-l-full hover:${props.bgColor}/50`}
+			class="flex max-w-full max-h-9 bg-neutral-500/10 rounded-l-full hover:bg-neutral-500/50"
 			classList={{
-				[`opacity-100 border ${props.bgColor.replace("bg-", "border-")}`]:
-					isActive(),
+				"opacity-100 border border-neutral-500": isActive(),
 				"opacity-60": !isActive(),
 			}}
 		>
