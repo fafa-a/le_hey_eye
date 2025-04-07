@@ -40,10 +40,7 @@ export interface TopicsStore {
 	removeTopic: (id: number) => void;
 	editTopicName: (id: number, name: string) => void;
 	addMessage: (
-		message: Omit<
-			TopicMessage,
-			"id" | "createdAt" | "tokensUsed" | "updatedAt" | "pairId"
-		>,
+		message: Omit<TopicMessage, "id" | "createdAt" | "updatedAt" | "pairId">,
 	) => void;
 	removeMessages: (messageId: number[], pairId: string) => void;
 	currentTopicId: Accessor<number>;
@@ -70,12 +67,14 @@ const loadTopics = async () => {
 	setLoading(true);
 	try {
 		const topicsData = await dbApi.getAllTopics();
+		console.log("topicsData", topicsData);
 		const loadedTopics: Topic[] = [];
 		const loadedMessagesByTopicId: Record<string, TopicMessage[]> = {};
 
 		await Promise.all(
 			topicsData.map(async (topic) => {
 				const messagesData = await dbApi.getMessagesByTopic(topic.id);
+				console.log("messagesData", messagesData);
 				if (!messagesData.length) return;
 
 				const messages: TopicMessage[] = (() => {
@@ -83,6 +82,8 @@ const loadTopics = async () => {
 					let lastUserMessageId: string | null = null;
 
 					return messagesData.map((msg, index) => {
+						if (!msg.id) return;
+
 						if (msg.role === "user") {
 							lastUserMessageId = msg.id.toString();
 							currentPairId = `pair-${msg.id}`;
@@ -221,11 +222,9 @@ const editTopicName = async (id: number, name: string) => {
 	}
 };
 const addMessage = async (
-	message: Omit<
-		TopicMessage,
-		"id" | "createdAt" | "tokensUsed" | "updatedAt" | "pairId"
-	>,
+	message: Omit<TopicMessage, "id" | "createdAt" | "updatedAt" | "pairId">,
 ) => {
+	console.log("addMessage", message);
 	const newMessage = {
 		...message,
 	};
@@ -240,9 +239,13 @@ const addMessage = async (
 			+newMessage.topicId,
 			newMessage.role,
 			contentStr,
+			newMessage.tokensUsed,
 		);
+		console.log("result", result);
+
 		const pairId =
 			newMessage.role === "user" ? `pair-${result.id}` : `pair-${result.id}`;
+		console.log("pairId", pairId);
 
 		const message = {
 			...result,
@@ -262,7 +265,6 @@ const addMessage = async (
 		emit("message-added");
 	} catch (error) {
 		console.error("Failed to add message:", error);
-		throw error;
 	}
 };
 

@@ -1,4 +1,3 @@
-import { createEffect } from "solid-js";
 import { createStore } from "solid-js/store";
 
 export interface UIStore {
