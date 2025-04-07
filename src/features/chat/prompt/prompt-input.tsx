@@ -61,12 +61,14 @@ export function PromptInput(props: PromptInputProps) {
 		e.preventDefault();
 		if (prompt().trim()) {
 			onSubmit(prompt());
-			const message: Omit<TopicMessage, "id" | "tokensUsed" | "pairId"> = {
+			const message: Omit<
+				TopicMessage,
+				"id" | "pairId" | "createdAt" | "updatedAt"
+			> = {
 				role: "user",
 				topicId: topicId(),
 				content: prompt(),
-				createdAt: new Date().toISOString(),
-				updatedAt: new Date().toISOString(),
+				tokensUsed: null,
 			};
 			addMessage(message);
 
@@ -74,10 +76,6 @@ export function PromptInput(props: PromptInputProps) {
 			resetTextareaHeight();
 		}
 	};
-
-	createEffect(() => {
-		console.log("PromptInput pending: ", pending());
-	});
 
 	return (
 		<div class="overflow-y-auto min-h-[120px] max-h-[55%]">
