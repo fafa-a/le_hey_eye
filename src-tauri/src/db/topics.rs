@@ -98,7 +98,7 @@ pub async fn add_message(
     role: RoleType,
     content: String,
     tokens_used: Option<i32>,
-) -> Result<i32, String> {
+) -> Result<MessagesModel, String> {
     let timestamp = Utc::now().fixed_offset();
     let tokens_used_value = tokens_used.unwrap_or(0);
 
@@ -111,7 +111,6 @@ pub async fn add_message(
         updated_at: Set(Some(timestamp)),
         tokens_used: Set(tokens_used_value),
     };
-    println!("new_message: {:?}", new_message);
 
     let result = new_message
         .insert(&*db)
@@ -120,7 +119,7 @@ pub async fn add_message(
 
     println!("result: {:?}", result);
 
-    Ok(result.id)
+    Ok(result)
 }
 
 #[command]

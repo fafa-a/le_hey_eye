@@ -46,8 +46,12 @@ export const dbApi = {
 
 	getLastAccessedTopic: () => invoke<number | null>("get_last_accessed_topic"),
 
-	addMessage: (topicId: number, role: string, content: string) =>
-		invoke<Message>("add_message", { topicId, role, content }),
+	addMessage: (
+		topicId: number,
+		role: string,
+		content: string,
+		tokensUsed: number | null,
+	) => invoke<Message>("add_message", { topicId, role, content, tokensUsed }),
 
 	removeMessages: (messageIds: number[]) =>
 		invoke<boolean>("remove_messages", { messageIds }),
