@@ -5,6 +5,7 @@ import type {
 	StreamResponse,
 	Topic,
 	Message,
+	ModelSettings,
 } from "./types";
 
 export const llmApi = {
@@ -55,4 +56,10 @@ export const dbApi = {
 
 	removeMessages: (messageIds: number[]) =>
 		invoke<boolean>("remove_messages", { messageIds }),
+
+	addSettings: (topicId: number, settings: ModelSettings) =>
+		invoke<ModelSettings>("add_settings", { topicId, settings }),
+
+	getSettings: (topicId: number) =>
+		invoke<ModelSettings>("get_settings", { topicId }),
 };

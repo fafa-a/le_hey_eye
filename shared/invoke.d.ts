@@ -11,6 +11,8 @@ declare module '@tauri-apps/api/tauri' {
 		| 'remove_messages'
 		| 'update_topic_access'
 		| 'get_last_accessed_topic'
+		| 'add_settings'
+		| 'get_settings'
 		| 'call_cloudflare_api'
 		| 'get_all_cloudflare_ai_models'
 		| 'save_credentials'

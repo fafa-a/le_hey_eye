@@ -19,6 +19,9 @@ use entity::messages::{
 use entity::topics::{
     ActiveModel as TopicActiveModel, Column as TopicsColumn, Entity as Topics, Model,
 };
+use entity::models_settings::{
+    ActiveModel as SettingsActiveModel, Column as SettingsColumn, Entity as Settings, Model as SettingsModel,
+};
 use migration::{Migrator, MigratorTrait};
 
 
@@ -187,7 +190,7 @@ pub async fn remove_messages(
     Ok(result.rows_affected)
 }
 
-#[tauri::command]
+#[command]
 pub async fn update_topic_access(topic_id: i32, db: State<'_, DatabaseConnection>) -> Result<bool, String> {
     let topic_to_udpate = Topics::find_by_id(topic_id)
         .one(&*db)
@@ -209,7 +212,7 @@ pub async fn update_topic_access(topic_id: i32, db: State<'_, DatabaseConnection
     Ok(updated_topic.last_accessed_at == now)
 }
 
-#[tauri::command]
+#[command]
 pub async fn get_last_accessed_topic(db: State<'_, DatabaseConnection>) -> Result<Option<i32>, String> {
     let topic_result = Topics::find()
         .order_by_desc(TopicsColumn::LastAccessedAt)
@@ -219,3 +222,44 @@ pub async fn get_last_accessed_topic(db: State<'_, DatabaseConnection>) -> Resul
 
     Ok(topic_result.map(|topic| topic.id))
 }
+
+#[command]
+pub async fn add_settings(
+    db: State<'_, DatabaseConnection>,
+    topic_id: i32,
+    settings: SettingsModel,
+) -> Result<SettingsModel, String> {
+
+    let new_settings = SettingsActiveModel {
+        id: NotSet,
+        topic_id: Set(topic_id),
+        max_tokens: Set(settings.max_tokens),
+        name: Set(settings.name),
+        provider: Set(settings.provider),
+        system: Set(settings.system),
+        stream: Set(settings.stream),
+        temperature: Set(settings.temperature),
+        top_k: Set(settings.top_k),
+        top_p: Set(settings.top_p),
+    };
+
+    let result = new_settings
+        .insert(&*db)
+        .await
+        .map_err(|e: DbErr| e.to_string())?;
+
+    Ok(result)
+}
+
+#[command]
+pub async fn get_settings(
+    db: State<'_, DatabaseConnection>,
+    topic_id: i32,
+) -> Result<Vec<SettingsModel>, String> {
+    Settings::find()
+        .filter(SettingsColumn::TopicId.eq(topic_id))
+        .all(&*db)
+        .await
+        .map_err(|e| e.to_string())
+}
+
