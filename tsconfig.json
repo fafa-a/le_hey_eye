@@ -14,7 +14,8 @@
 			"@lib/*": ["src/lib/*"],
 			"@icons/*": ["./src/components/icons/*"],
 			"@features/*": ["./src/features/*"],
-			"@store/*": ["./src/store/*"]
+			"@store/*": ["./src/store/*"],
+			"@shared/*": ["./shared/*"]
 		},
 
 		/* Bundler mode */

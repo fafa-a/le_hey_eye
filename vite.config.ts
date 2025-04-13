@@ -51,6 +51,7 @@ export default defineConfig(async () => ({
 			"@icons": resolve(__dirname, "./src/components/icons"),
 			"@features": resolve(__dirname, "./src/features"),
 			"@store": resolve(__dirname, "./src/store"),
+			"@shared": resolve(__dirname, "./shared/"),
 		},
 	},
 }));
