@@ -7,6 +7,6 @@ export type Message = {
   role: Role;
   content: string;
   createdAt: string;
-  tokensUsed: number | null;
+  tokensUsed: number;
   updatedAt: string | null;
 };

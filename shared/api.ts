@@ -45,7 +45,7 @@ export const dbApi = {
 	updateTopicAccess: (topicId: number) =>
 		invoke<boolean>("update_topic_access", { topicId }),
 
-	getLastAccessedTopic: () => invoke<number | null>("get_last_accessed_topic"),
+	getLastAccessedTopic: () => invoke<number>("get_last_accessed_topic"),
 
 	addMessage: (
 		topicId: number,

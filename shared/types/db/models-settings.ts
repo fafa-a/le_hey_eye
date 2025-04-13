@@ -5,10 +5,10 @@ export type ModelSettings = {
   topicId: number;
   provider: string;
   system: string;
-  name: string;
+  modelName: string;
   stream: boolean;
   maxTokens: number;
-  temperature: number;
-  topK: number;
-  topP: number;
+  temperature?: number;
+  topK?: number;
+  topP?: number;
 };
