@@ -20,18 +20,19 @@ pub struct Model {
     pub system: String,
     pub model_name: String,
     pub stream: bool,
+    #[sea_orm(column_type = "Integer")]
     pub max_tokens: i32,
     #[ts(optional)]
-    #[sea_orm(column_type = "Float", nullable)]
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[sea_orm(column_type = "Float", nullable)]
     pub temperature: Option<f32>,
     #[ts(optional)]
-    #[sea_orm(column_type = "Float", nullable)]
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[sea_orm(column_type = "Float", nullable)]
     pub top_k: Option<f32>,
     #[ts(optional)]
-    #[sea_orm(column_type = "Float", nullable)]
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[sea_orm(column_type = "Float", nullable)]
     pub top_p: Option<f32>,
 }
 

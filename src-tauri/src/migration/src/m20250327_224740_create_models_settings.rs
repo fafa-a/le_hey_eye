@@ -18,9 +18,9 @@ impl MigrationTrait for Migration {
                     .col(string(ModelsSettings::ModelName))
                     .col(boolean(ModelsSettings::Stream))
                     .col(integer(ModelsSettings::MaxTokens))
-                    .col(float(ModelsSettings::Temperature))
-                    .col(float(ModelsSettings::TopK))
-                    .col(float(ModelsSettings::TopP))
+                    .col(float(ModelsSettings::Temperature).null())
+                    .col(float(ModelsSettings::TopK).null())
+                    .col(float(ModelsSettings::TopP).null())
                     .to_owned(),
             )
             .await

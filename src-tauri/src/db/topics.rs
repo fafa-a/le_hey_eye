@@ -229,6 +229,7 @@ pub async fn add_settings(
     topic_id: i32,
     settings: SettingsModel,
 ) -> Result<SettingsModel, String> {
+    println!("settings: {:?}", settings);
 
     let new_settings = SettingsActiveModel {
         id: NotSet,
@@ -239,14 +240,17 @@ pub async fn add_settings(
         system: Set(settings.system),
         stream: Set(settings.stream),
         temperature: Set(settings.temperature),
-        top_k: Set(settings.top_k),
-        top_p: Set(settings.top_p),
+        top_k: Set(Some(settings.top_k.unwrap_or(0.0))),
+        top_p: Set(Some(settings.top_p.unwrap_or(0.0))),
     };
+    println!("new_settings: {:?}", new_settings);
 
     let result = new_settings
         .insert(&*db)
         .await
         .map_err(|e: DbErr| e.to_string())?;
+
+    println!("result: {:?}", result);
 
     Ok(result)
 }
