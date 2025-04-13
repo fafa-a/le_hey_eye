@@ -1,5 +1,6 @@
 import { Button, buttonVariants } from "@/components/ui/button";
 import { createMemo, type JSX, Show } from "solid-js";
+
 interface NavItemProps {
 	label: string;
 	icon?: string | JSX.Element;
@@ -7,6 +8,7 @@ interface NavItemProps {
 	onKeyDown?: (e: KeyboardEvent) => void;
 	isActive?: boolean;
 }
+
 const NavItem = (props: NavItemProps) => {
 	const buttonClass = createMemo(() =>
 		buttonVariants({

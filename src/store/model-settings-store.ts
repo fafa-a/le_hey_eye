@@ -1,47 +1,79 @@
-import { invoke } from "@tauri-apps/api/core";
+import { dbApi } from "@shared/api";
+import type { ModelSettings, ProviderType } from "shared/types";
 import { createStore } from "solid-js/store";
 
-const [currentModelSettings, setCurrentModelSettings] = createStore({
-	provider: "anthropic",
-	model: "claude-3-7-sonnet-20250219",
-	temperature: 0.1,
-	maxTokens: 2048,
-});
+export interface ModelSettingsStore {
+	currentModelSettings: ModelSettings;
+	loadCurrentSettings: (topicId: number) => Promise<void>;
+	setProvider: (provider: ProviderType) => void;
+	setSystem: (system: string) => void;
+	setModelName: (modelName: string) => void;
+	setTemperature: (value: number) => void;
+	setMaxTokens: (value: number) => void;
+	setStream: (value: boolean) => void;
+	addSettings: (settings: ModelSettings) => Promise<void>;
+}
 
-const loadCurrentSettings = async (profileId) => {
+const [currentModelSettings, setCurrentModelSettings] =
+	createStore<ModelSettings>({
+		id: 0,
+		topicId: 0,
+		provider: "Anthropic",
+		system: "You are a helpful assistant.",
+		modelName: "claude-3-7-sonnet-20250219",
+		temperature: 0.1,
+		maxTokens: 2048,
+		stream: true,
+	});
+
+const loadCurrentSettings = async (lastAccessedTopic: number) => {
 	try {
-		const settings = await invoke("get_current_model_settings", {
-			profileId,
-		});
-		setCurrentModelSettings({
-			provider: settings.provider,
-			model: settings.model,
-			temperature: settings.temperature,
-			maxTokens: settings.maxTokens,
-		});
+		const settings = await dbApi.getSettings(lastAccessedTopic);
+		setCurrentModelSettings(settings);
 	} catch (error) {
 		console.error("Failed to load model settings:", error);
 	}
 };
-
-// Définir le fournisseur et modèle actuel
-const setCurrentModel = (provider, model) => {
-	setCurrentModelSettings({
-		currentProvider: provider,
-		currentModel: model,
-		// Récupérer les paramètres par défaut pour ce modèle
-		temperature: modelSettings.providers[provider]?.temperature || 0.7,
-	});
+const addSettings = async (settings: ModelSettings) => {
+	try {
+		await dbApi.addSettings(settings.id, settings);
+	} catch (error) {
+		console.error("Failed to add model settings:", error);
+	}
 };
 
-// Mettre à jour la température
-const setTemperature = (value) => {
+const setProvider = (provider: ProviderType) => {
+	setCurrentModelSettings("provider", provider);
+};
+
+const setSystem = (system: string) => {
+	setCurrentModelSettings("system", system);
+};
+
+const setModelName = (modelName: string) => {
+	setCurrentModelSettings("modelName", modelName);
+};
+
+const setTemperature = (value: number) => {
 	setCurrentModelSettings("temperature", value);
 };
 
-export const modelSettingsStore = {
+const setMaxTokens = (value: number) => {
+	setCurrentModelSettings("maxTokens", value);
+};
+
+const setStream = (value: boolean) => {
+	setCurrentModelSettings("stream", value);
+};
+
+export {
 	currentModelSettings,
 	loadCurrentSettings,
-	setCurrentModel,
+	setProvider,
+	setSystem,
+	setModelName,
 	setTemperature,
+	setMaxTokens,
+	setStream,
+	addSettings,
 };

@@ -6,10 +6,6 @@ import { Button } from "@/components/ui/button";
 
 interface SettingsPanelProps {
 	setIsOpen: (isOpen: boolean) => void;
-	model: string;
-	setModel: (model: string) => void;
-	promptSettings: any;
-	setPromptSettings: (settings: any) => void;
 }
 
 const items = [

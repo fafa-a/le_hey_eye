@@ -14,14 +14,20 @@ import NavItem from "./nav-item";
 import ProviderCredentialForm from "@/features/credentials/components/provider-credential-form";
 import { invoke } from "@tauri-apps/api/core";
 import ProviderModelSettings from "./model-settings";
+import { useGlobalContext } from "@/context/global-context";
+import { dbApi, llmApi } from "@shared/api";
+import { ProviderType } from "@shared/types";
 
 interface ProviderModelsListProps {
 	modelsData: Resource<string[]>;
 	modelsList: Accessor<string[]>;
-	setModel: Setter<string | undefined>;
-	model: Accessor<string | undefined>;
+	setModel: (model: string) => void;
+	model: string;
 }
+
 const ProviderModelsList = (props: ProviderModelsListProps) => {
+	console.log("props", props);
+
 	return (
 		<div class="h-full overflow-auto">
 			<Switch>
@@ -60,7 +66,7 @@ const ProviderModelsList = (props: ProviderModelsListProps) => {
 						{(modelName) => (
 							<NavItem
 								label={modelName}
-								isActive={modelName === props.model()}
+								isActive={modelName === props.model}
 								onClick={() => props.setModel(modelName)}
 							/>
 						)}
@@ -72,23 +78,22 @@ const ProviderModelsList = (props: ProviderModelsListProps) => {
 };
 
 interface ProviderListProps {
-	setProvider: Setter<string>;
-	provider: Accessor<string>;
+	setProvider: (provider: ProviderType) => void;
+	provider: string;
 }
 
 const ProviderList = (props: ProviderListProps) => {
-	const providerName = () => props.provider();
 	return (
 		<For each={PROVIDER_CONFIGURATION}>
 			{(provider) => (
 				<NavItem
-					onClick={() => props.setProvider(provider.name)}
+					onClick={() => props.setProvider(provider.name as ProviderType)}
 					onKeyDown={(e: KeyboardEvent) => {
 						if (e.key === "Enter") {
-							props.setProvider(provider.name);
+							props.setProvider(provider.name as ProviderType);
 						}
 					}}
-					isActive={providerName() === provider.name}
+					isActive={props.provider === provider.name}
 					icon={provider.icon}
 					label={provider.name}
 				/>
@@ -97,17 +102,17 @@ const ProviderList = (props: ProviderListProps) => {
 	);
 };
 
-async function fetchModels(provider: string) {
-	return await invoke("list_models", { provider });
+async function fetchModels(provider: ProviderType) {
+	return llmApi.listModels(provider);
 }
 
 const Providers = () => {
-	const [provider, setProvider] = createSignal<string>("Anthropic");
 	const [modelsList, setModelsList] = createSignal<string[]>([]);
-	const [model, setModel] = createSignal<string>();
+	const { setProvider, setModelName, currentModelSettings } =
+		useGlobalContext().modelSettings;
 
-	const [modelsData, { mutate, refetch }] = createResource<string[]>(
-		() => provider(),
+	const [modelsData] = createResource(
+		() => currentModelSettings.provider,
 		fetchModels,
 	);
 
@@ -119,19 +124,22 @@ const Providers = () => {
 		} else if (modelsData.state === "ready") {
 			console.log("Models loaded:", modelsData());
 			setModelsList(modelsData());
-			setModel(modelsData()[0]);
 		}
 	});
+
 	return (
 		<>
 			<div class="p-2">
 				<h2 class="text-2xl font-bold mb-4">Providers</h2>
-				<ProviderList setProvider={setProvider} provider={provider} />
+				<ProviderList
+					setProvider={setProvider}
+					provider={currentModelSettings.provider}
+				/>
 			</div>
 
 			<div class="p-2">
 				<h2 class="text-2xl font-bold mb-4">Credentials</h2>
-				<ProviderCredentialForm provider={provider()} />
+				<ProviderCredentialForm provider={currentModelSettings.provider} />
 			</div>
 
 			<div class="p-2">
@@ -139,39 +147,17 @@ const Providers = () => {
 				<ProviderModelsList
 					modelsData={modelsData}
 					modelsList={modelsList}
-					setModel={setModel}
-					model={model}
+					setModel={setModelName}
+					model={currentModelSettings.modelName}
 				/>
 			</div>
 
 			<div class="p-2">
 				<h2 class="text-2xl font-bold mb-4">Settings</h2>
-				<ProviderModelSettings provider={provider()} />
+				<ProviderModelSettings provider={currentModelSettings.provider} />
 			</div>
 		</>
 	);
 };
-// 	return (
-// 		<div class="w-full h-full flex">
-// 			<div class="w-2/5 p-2">
-// 				<h2 class="text-2xl font-bold mb-6">Providers</h2>
-// 				<ProviderList setProvider={setProvider} provider={provider} />
-// 				<h2 class="text-2xl font-bold mt-6 mb-2">Models List</h2>
-// 				<ProviderModelsList
-// 					modelsData={modelsData}
-// 					modelsList={modelsList}
-// 					setModel={setModel}
-// 					model={model}
-// 				/>
-// 			</div>
-// 			<div class="w-3/5 p-2">
-// 				<h2 class="text-2xl font-bold mb-6">Credentials</h2>
-// 				<ProviderCredentialForm provider={provider()} />
-// 				<h2 class="text-2xl font-bold mt-6 mb-2">Settings</h2>
-// 				<ProviderModelSettings provider={provider()} />
-// 			</div>
-// 		</div>
-// 	);
-// };
 
 export default Providers;
