@@ -16,11 +16,11 @@ export type ProviderFormField = {
 };
 
 export interface ModelSettings {
-	max_tokens: number;
+	maxTokens: number;
 	stream: boolean;
 	temperature: number;
-	top_p: number;
-	top_k: number;
+	topP: number;
+	topK: number;
 }
 
 export type ProviderFormConfig = {

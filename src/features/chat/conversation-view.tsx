@@ -24,24 +24,26 @@ import { helper } from "@/lib/helper";
 import { llmApi } from "../../../shared/api";
 import { unwrap } from "solid-js/store";
 
-interface ConversationViewProps {
-	system: Accessor<string>;
-	currentProvider: Accessor<ProviderType>;
-	model: Accessor<string>;
-	setModel: Setter<string>;
-	setPromptSettings: Setter<
-		Omit<ChatRequest, "messages" | "functions" | "tools">
-	>;
-	promptSettings: Accessor<
-		Omit<ChatRequest, "messages" | "functions" | "tools">
-	>;
-}
+// interface ConversationViewProps {
+// 	system: Accessor<string>;
+// 	currentProvider: Accessor<ProviderType>;
+// 	model: Accessor<string>;
+// 	setModel: Setter<string>;
+// 	setPromptSettings: Setter<
+// 		Omit<ChatRequest, "messages" | "functions" | "tools">
+// 	>;
+// 	promptSettings: Accessor<
+// 		Omit<ChatRequest, "messages" | "functions" | "tools">
+// 	>;
+// }
 
 const MAX_MESSAGES = 4;
 
-const ConversationView = (props: ConversationViewProps) => {
+const ConversationView = () => {
 	const { topics, currentTopicId, currentTopicMessages, addMessage } =
 		useGlobalContext().topics;
+	const { currentModelSettings, setModelName } =
+		useGlobalContext().modelSettings;
 
 	const { settingsPanelOpen } = useGlobalContext().ui;
 	const [messageHistory, setMessageHistory] = createSignal<
@@ -90,22 +92,15 @@ const ConversationView = (props: ConversationViewProps) => {
 
 			const apiRequest: ChatRequest = {
 				messages,
-				system: props.system(),
-				model: props.model(),
-				max_tokens: props.promptSettings().max_tokens,
-				stream: props.promptSettings().stream,
-				// top_p: promptSettings().top_p,
-				// top_k: promptSettings().top_k,
-				// seed: promptSettings().seed,
-				// repetition_penalty: promptSettings().repetition_penalty,
-				// frequency_penalty: promptSettings().frequency_penalty,
-				// presence_penalty: promptSettings().presence_penalty,
-				// temperature: promptSettings().temperature,
+				system: currentModelSettings.system,
+				model: currentModelSettings.modelName,
+				max_tokens: currentModelSettings.maxTokens,
+				stream: currentModelSettings.stream,
 			};
 
 			return await llmApi.sendMessage(
-				props.currentProvider(),
-				props.model(),
+				currentModelSettings.provider,
+				currentModelSettings.modelName,
 				apiRequest,
 			);
 		},
@@ -115,23 +110,17 @@ const ConversationView = (props: ConversationViewProps) => {
 				topicId: currentTopicId(),
 				content: response.response,
 				tokensUsed: response.usage?.completion_tokens,
-			};
+			} as TopicMessage;
 
 			addMessage(newAssistantMessage);
 			console.log("response", response);
 			setRequest(() => {
 				return {
 					messages: getMessagesForAPI(messageHistory(), MAX_MESSAGES),
-					model: props.model(),
-					max_tokens: props.promptSettings().max_tokens,
-					stream: props.promptSettings().stream,
-					top_p: props.promptSettings().top_p,
-					top_k: props.promptSettings().top_k,
-					seed: props.promptSettings().seed,
-					repetition_penalty: props.promptSettings().repetition_penalty,
-					frequency_penalty: props.promptSettings().frequency_penalty,
-					presence_penalty: props.promptSettings().presence_penalty,
-					temperature: props.promptSettings().temperature,
+					model: currentModelSettings.modelName,
+					max_tokens: currentModelSettings.maxTokens,
+					stream: currentModelSettings.stream,
+					temperature: currentModelSettings.temperature,
 				};
 			});
 		},
@@ -161,10 +150,8 @@ const ConversationView = (props: ConversationViewProps) => {
 			<PromptInput
 				onSubmit={handleSubmit}
 				mutation={mutation}
-				model={props.model}
-				setModel={props.setModel}
-				setPromptSettings={props.setPromptSettings}
-				promptSettings={props.promptSettings}
+				model={currentModelSettings.modelName}
+				setModel={setModelName}
 				topicId={currentTopicId()}
 			/>
 		</div>

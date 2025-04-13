@@ -4,18 +4,12 @@ import TopicListEntryThumbnail from "@/components/common/topic-list-entry-thumbn
 import Add from "@icons/add";
 import SidePanelClose from "@icons/side-panel-close";
 import SidePanelOpen from "@icons/side-panel-open";
-import { type Accessor, For, type Setter, Show } from "solid-js";
+import { For, Show } from "solid-js";
 import Settings from "@icons/settings";
 import ComponentTooltip from "@/components/common/component-tooltip";
 import { useGlobalContext } from "@/context/global-context";
-import type { ProviderType } from "shared/types";
 
-interface SidebarProps {
-	setCurrentProvider: Setter<ProviderType>;
-	currentProvider: Accessor<ProviderType>;
-}
-
-export function Sidebar(props: SidebarProps) {
+export function Sidebar() {
 	const {
 		sidebarCollapsed,
 		toggleSidebar,

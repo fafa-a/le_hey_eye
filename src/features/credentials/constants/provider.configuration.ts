@@ -31,11 +31,11 @@ export const PROVIDER_CONFIGURATION: ProviderFormConfig[] = [
 			},
 		],
 		settings: {
-			max_tokens: 1024,
+			maxTokens: 1024,
 			stream: true,
 			temperature: 0.1,
-			top_k: 1,
-			top_p: 0.1,
+			topK: 1,
+			topP: 0.1,
 		},
 	},
 	{
@@ -59,11 +59,11 @@ export const PROVIDER_CONFIGURATION: ProviderFormConfig[] = [
 			},
 		],
 		settings: {
-			max_tokens: 1024,
+			maxTokens: 1024,
 			stream: true,
 			temperature: 0.1,
-			top_k: 1,
-			top_p: 0.1,
+			topK: 1,
+			topP: 0.1,
 		},
 	},
 ];

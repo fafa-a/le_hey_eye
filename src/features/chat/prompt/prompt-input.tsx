@@ -25,14 +25,8 @@ interface PromptInputProps {
 		TopicMessage[],
 		unknown
 	>;
-	model: Accessor<string>;
-	setModel: Setter<string>;
-	setPromptSettings: Setter<
-		Omit<ChatRequest, "messages" | "functions" | "tools">
-	>;
-	promptSettings: Accessor<
-		Omit<ChatRequest, "messages" | "functions" | "tools">
-	>;
+	model: string;
+	setModel: (model: string) => void;
 	topicId: number;
 }
 
@@ -119,12 +113,12 @@ export function PromptInput(props: PromptInputProps) {
 								</Match>
 							</Switch>
 						</Button>
-						<ModelSettingsPopover
-							model={props.model}
-							setModel={props.setModel}
-							promptSettings={props.promptSettings}
-							setPromptSettings={props.setPromptSettings}
-						/>
+						{/* <ModelSettingsPopover */}
+						{/* 	model={props.model} */}
+						{/* 	setModel={props.setModel} */}
+						{/* 	promptSettings={props.promptSettings} */}
+						{/* 	setPromptSettings={props.setPromptSettings} */}
+						{/* /> */}
 					</div>
 				</div>
 			</form>
