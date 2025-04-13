@@ -1,9 +1,8 @@
 import { Slider } from "@kobalte/core/slider";
-import type { Setter } from "solid-js";
 
 interface SliderProps {
 	label?: string;
-	onChange: Setter<boolean>;
+	onChange: (value: number[]) => void;
 	value: number;
 	minValue?: number;
 	maxValue?: number;
