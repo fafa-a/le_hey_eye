@@ -15,7 +15,7 @@ impl MigrationTrait for Migration {
                     .col(integer(ModelsSettings::TopicId))
                     .col(string(ModelsSettings::Provider))
                     .col(string(ModelsSettings::System))
-                    .col(string(ModelsSettings::Name))
+                    .col(string(ModelsSettings::ModelName))
                     .col(boolean(ModelsSettings::Stream))
                     .col(integer(ModelsSettings::MaxTokens))
                     .col(float(ModelsSettings::Temperature))
@@ -40,7 +40,7 @@ enum ModelsSettings {
     TopicId,
     Provider,
     System,
-    Name,
+    ModelName,
     Stream,
     MaxTokens,
     Temperature,

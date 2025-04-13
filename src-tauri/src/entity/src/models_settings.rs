@@ -18,15 +18,21 @@ pub struct Model {
     pub topic_id: i32,
     pub provider: String,
     pub system: String,
-    pub name: String,
+    pub model_name: String,
     pub stream: bool,
     pub max_tokens: i32,
+    #[ts(optional)]
     #[sea_orm(column_type = "Float", nullable)]
-    pub temperature: f32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub temperature: Option<f32>,
+    #[ts(optional)]
     #[sea_orm(column_type = "Float", nullable)]
-    pub top_k: i32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub top_k: Option<f32>,
+    #[ts(optional)]
     #[sea_orm(column_type = "Float", nullable)]
-    pub top_p: f32,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub top_p: Option<f32>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

@@ -234,7 +234,7 @@ pub async fn add_settings(
         id: NotSet,
         topic_id: Set(topic_id),
         max_tokens: Set(settings.max_tokens),
-        name: Set(settings.name),
+        model_name: Set(settings.model_name),
         provider: Set(settings.provider),
         system: Set(settings.system),
         stream: Set(settings.stream),
